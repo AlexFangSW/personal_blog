@@ -9,9 +9,14 @@ type LoggerSetting struct {
 	Level string `json:"level"`
 }
 
+type DBSetting struct {
+	DSNURL string `json:"dsnURL"`
+}
+
 type Config struct {
 	Server ServerSetting `json:"server"`
 	Logger LoggerSetting `json:"logger"`
+	DB     DBSetting     `json:"db"`
 }
 
 func NewConfig() *Config {
@@ -22,6 +27,9 @@ func NewConfig() *Config {
 		},
 		Logger: LoggerSetting{
 			Level: "INFO",
+		},
+		DB: DBSetting{
+			DSNURL: "./example.db",
 		},
 	}
 }
