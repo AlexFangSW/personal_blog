@@ -14,11 +14,12 @@ CREATE TABLE IF NOT EXISTS blogs(
   visible BOOLEAN DEFAULT 0
 );
 
--- auto update 'update_ts'
+-- Auto update 'update_ts' on updated row
+-- Currently, sqlite trigger only supports FOR EACH ROW (fire on each effected row)
 CREATE TRIGGER IF NOT EXISTS blogs_update_ts
 AFTER UPDATE ON blogs
 BEGIN 
-  UPDATE blogs SET updated_at = (strftime('%FT%T+00:00'));
+  UPDATE blogs SET updated_at = (strftime('%FT%T+00:00')) WHERE id = NEW.id;
 END;
 
 CREATE TABLE IF NOT EXISTS topics(
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS topics(
 CREATE TRIGGER IF NOT EXISTS topics_update_ts
 AFTER UPDATE ON topics
 BEGIN 
-  UPDATE topics SET updated_at = (strftime('%FT%T+00:00'));
+  UPDATE topics SET updated_at = (strftime('%FT%T+00:00')) WHERE id = NEW.id;
 END;
 
 CREATE TABLE IF NOT EXISTS tags(
@@ -54,7 +55,7 @@ CREATE TABLE IF NOT EXISTS tags(
 CREATE TRIGGER IF NOT EXISTS tags_update_ts
 AFTER UPDATE ON tags
 BEGIN 
-  UPDATE tags SET updated_at = (strftime('%FT%T+00:00'));
+  UPDATE tags SET updated_at = (strftime('%FT%T+00:00')) WHERE id = NEW.id;
 END;
 
 CREATE TABLE IF NOT EXISTS blog_tags(
