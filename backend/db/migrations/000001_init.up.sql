@@ -13,8 +13,13 @@ CREATE TABLE IF NOT EXISTS blogs(
   pined BOOLEAN DEFAULT 0,
   visible BOOLEAN DEFAULT 0
 );
--- SQlite automatically creates an index for UNIQUE columns
--- CREATE UNIQUE INDEX IF NOT EXISTS blog_slug ON blogs (slug);
+
+-- auto update 'update_ts'
+CREATE TRIGGER IF NOT EXISTS blogs_update_ts
+AFTER UPDATE ON blogs
+BEGIN 
+  UPDATE blogs SET updated_at = (strftime('%FT%T+00:00'));
+END;
 
 CREATE TABLE IF NOT EXISTS topics(
   id INTEGER NOT NULL UNIQUE PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +32,12 @@ CREATE TABLE IF NOT EXISTS topics(
   description TEXT DEFAULT "",
   slug TEXT NOT NULL UNIQUE
 );
--- CREATE UNIQUE INDEX IF NOT EXISTS topic_slug ON topics (slug);
+
+CREATE TRIGGER IF NOT EXISTS topics_update_ts
+AFTER UPDATE ON topics
+BEGIN 
+  UPDATE topics SET updated_at = (strftime('%FT%T+00:00'));
+END;
 
 CREATE TABLE IF NOT EXISTS tags(
   id INTEGER NOT NULL UNIQUE PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +50,12 @@ CREATE TABLE IF NOT EXISTS tags(
   description TEXT DEFAULT "",
   slug TEXT NOT NULL UNIQUE
 );
--- CREATE UNIQUE INDEX IF NOT EXISTS tag_slug ON tags (slug);
+
+CREATE TRIGGER IF NOT EXISTS tags_update_ts
+AFTER UPDATE ON tags
+BEGIN 
+  UPDATE tags SET updated_at = (strftime('%FT%T+00:00'));
+END;
 
 CREATE TABLE IF NOT EXISTS blog_tags(
   blog_id INTEGER NOT NULL,
@@ -59,6 +74,14 @@ CREATE TABLE IF NOT EXISTS blog_topics(
 );
 CREATE INDEX IF NOT EXISTS blog_topics_blog ON blog_topics (blog_id);
 CREATE INDEX IF NOT EXISTS blog_topics_topic ON blog_topics (topic_id);
+
+-- only one user 
+CREATE TABLE IF NOT EXISTS users(
+  id INTEGER NOT NULL UNIQUE PRIMARY KEY CHECK (id = 0),
+  name TEXT NOT NULL UNIQUE,
+  -- encoded password
+  pwd TEXT NOT NULL
+);
 
 -- Remamber to set foreign_keys ON to enforce foreign key constraint
 -- SQlite disables it by default... 
