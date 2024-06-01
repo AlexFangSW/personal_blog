@@ -1,19 +1,21 @@
 package api
 
 import (
+	"blog/db/models"
 	"blog/structs"
 	"log/slog"
 	"net/http"
 )
 
 type Server struct {
-	Config *structs.Config
+	Config structs.Config
+	models models.Models
 }
 
-func NewServer(config structs.Config) *Server {
-	// set up db connection here...
+func NewServer(config structs.Config, models models.Models) *Server {
 	return &Server{
-		Config: &config,
+		Config: config,
+		models: models,
 	}
 }
 
