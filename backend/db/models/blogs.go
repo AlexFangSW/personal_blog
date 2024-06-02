@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/gosimple/slug"
@@ -86,6 +87,10 @@ func (m *Models) CreateBlog(ctx context.Context, blog InBlog) (OutBlog, error) {
 	RETURNING *;
 	`
 
+	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
+		fmt.Println("CreateBlog:", stmt)
+	}
+
 	tx, err := m.db.BeginTx(ctxTimeout, &sql.TxOptions{})
 	if err != nil {
 		return OutBlog{}, fmt.Errorf("CreateBlog: begin transaction error: %w", err)
@@ -103,7 +108,7 @@ func (m *Models) CreateBlog(ctx context.Context, blog InBlog) (OutBlog, error) {
 	)
 	if err := row.Err(); err != nil {
 		if err := tx.Rollback(); err != nil {
-			return OutBlog{}, fmt.Errorf("CreateBlog: rollback error: %w", err)
+			return OutBlog{}, fmt.Errorf("CreateBlog: query rollback error: %w", err)
 		}
 		return OutBlog{}, fmt.Errorf("CreateBlog: insert blog failed: %w", err)
 	}
@@ -122,17 +127,39 @@ func (m *Models) CreateBlog(ctx context.Context, blog InBlog) (OutBlog, error) {
 		&newBlog.Visible,
 	)
 	if scanErr != nil {
+		if err := tx.Rollback(); err != nil {
+			return OutBlog{}, fmt.Errorf("CreateBlog: scan rollback error: %w", err)
+		}
 		return OutBlog{}, fmt.Errorf("CreateBlog: scan error: %w", scanErr)
 	}
 
-	// TODO: update relation between tags and blogs
+	if err := m.createBlogTags(ctxTimeout, tx, newBlog.ID, blog.Tags); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return OutBlog{}, fmt.Errorf("CreateBlog: insert blog_tags rollback error: %w", err)
+		}
+		return OutBlog{}, fmt.Errorf("CreateBlog: insert blog_tags error: %w", err)
+	}
+
+	if err := m.createBlogTopics(ctxTimeout, tx, newBlog.ID, blog.Topics); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return OutBlog{}, fmt.Errorf("CreateBlog: insert blog_topics rollback error: %w", err)
+		}
+		return OutBlog{}, fmt.Errorf("CreateBlog: insert blog_topics error: %w", err)
+	}
 
 	if err := tx.Commit(); err != nil {
 		return OutBlog{}, fmt.Errorf("CreateBlog: commit error: %w", err)
 	}
 
-	// TODO: get tags and blogs
-	outBlog := NewOutBlog(*newBlog, []Tag{}, []Topic{})
+	tags, err := m.GetTagsByBlogID(ctxTimeout, newBlog.ID)
+	if err != nil {
+		return OutBlog{}, fmt.Errorf("CreateBlog: get tags by blog id error: %w", err)
+	}
+	topics, err := m.GetTopicsByBlogID(ctxTimeout, newBlog.ID)
+	if err != nil {
+		return OutBlog{}, fmt.Errorf("CreateBlog: get topics by blog id error: %w", err)
+	}
 
+	outBlog := NewOutBlog(*newBlog, tags, topics)
 	return *outBlog, nil
 }

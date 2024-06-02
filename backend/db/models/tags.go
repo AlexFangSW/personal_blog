@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/gosimple/slug"
@@ -48,6 +49,10 @@ func (m *Models) CreateTag(ctx context.Context, tag Tag) (Tag, error) {
 	RETURNING *;
 	`
 
+	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
+		fmt.Println("CreateTag:", stmt)
+	}
+
 	tx, err := m.db.BeginTx(ctxTimeout, &sql.TxOptions{})
 	if err != nil {
 		return Tag{}, fmt.Errorf("CreateTag: begin transaction error: %w", err)
@@ -85,4 +90,60 @@ func (m *Models) CreateTag(ctx context.Context, tag Tag) (Tag, error) {
 	}
 
 	return *newTag, nil
+}
+
+func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]Tag, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
+	defer cancel()
+
+	stmt := `
+	SELECT 
+		tags.id, 
+		tags.created_at, 
+		tags.updated_at, 
+		tags.name, 
+		tags.description, 
+		tags.slug 
+	FROM tags INNER JOIN blog_tags
+	WHERE 
+		(blog_tags.blog_id = ?) AND (blog_tags.tag_id = tags.id);
+	`
+
+	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
+		fmt.Println("GetTagsByBlogID:", stmt)
+	}
+
+	rows, err := m.db.QueryContext(
+		ctxTimeout,
+		stmt,
+		blog_id,
+	)
+	if err != nil {
+		return []Tag{}, fmt.Errorf("GetTagsByBlogID: query context failed: %w", err)
+	}
+
+	result := []Tag{}
+	for {
+		tag := Tag{}
+		if next := rows.Next(); next != true {
+			break
+		}
+		err := rows.Scan(
+			&tag.ID,
+			&tag.Created_at,
+			&tag.Updated_at,
+			&tag.Name,
+			&tag.Description,
+			&tag.Slug,
+		)
+		if err != nil {
+			if err := rows.Close(); err != nil {
+				return []Tag{}, fmt.Errorf("GetTagsByBlogID: close rows error: %w", err)
+			}
+			return []Tag{}, fmt.Errorf("GetTagsByBlogID: scan error: %w", err)
+		}
+		result = append(result, tag)
+	}
+
+	return result, nil
 }

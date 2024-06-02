@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/gosimple/slug"
@@ -24,12 +25,12 @@ func (t *Topic) GenSlug() {
 }
 
 func NewTopic(name, description string) *Topic {
-	tag := &Topic{
+	topic := &Topic{
 		Name:        name,
 		Description: description,
 	}
-	tag.GenSlug()
-	return tag
+	topic.GenSlug()
+	return topic
 }
 
 func (m *Models) CreateTopic(ctx context.Context, topic Topic) (Topic, error) {
@@ -47,6 +48,10 @@ func (m *Models) CreateTopic(ctx context.Context, topic Topic) (Topic, error) {
 	( ?, ?, ? )
 	RETURNING *;
 	`
+
+	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
+		fmt.Println("CreateTopic:", stmt)
+	}
 
 	tx, err := m.db.BeginTx(ctxTimeout, &sql.TxOptions{})
 	if err != nil {
@@ -85,4 +90,60 @@ func (m *Models) CreateTopic(ctx context.Context, topic Topic) (Topic, error) {
 	}
 
 	return *newTopic, nil
+}
+
+func (m *Models) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]Topic, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
+	defer cancel()
+
+	stmt := `
+	SELECT 
+		topics.id, 
+		topics.created_at, 
+		topics.updated_at, 
+		topics.name, 
+		topics.description, 
+		topics.slug 
+	FROM topics INNER JOIN blog_topics
+	WHERE 
+		(blog_topics.blog_id = ?) AND (blog_topics.topic_id = topics.id);
+	`
+
+	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
+		fmt.Println("GetTopicsByBlogID:", stmt)
+	}
+
+	rows, err := m.db.QueryContext(
+		ctxTimeout,
+		stmt,
+		blog_id,
+	)
+	if err != nil {
+		return []Topic{}, fmt.Errorf("GetTopicsByBlogID: query context failed: %w", err)
+	}
+
+	result := []Topic{}
+	for {
+		topic := Topic{}
+		if next := rows.Next(); next != true {
+			break
+		}
+		err := rows.Scan(
+			&topic.ID,
+			&topic.Created_at,
+			&topic.Updated_at,
+			&topic.Name,
+			&topic.Description,
+			&topic.Slug,
+		)
+		if err != nil {
+			if err := rows.Close(); err != nil {
+				return []Topic{}, fmt.Errorf("GetTopicsByBlogID: close rows error: %w", err)
+			}
+			return []Topic{}, fmt.Errorf("GetTopicsByBlogID: scan error: %w", err)
+		}
+		result = append(result, topic)
+	}
+
+	return result, nil
 }

@@ -9,23 +9,23 @@ import (
 	"time"
 )
 
-type BlogTag struct {
-	BlogID int `json:"blog_id"`
-	TagID  int `json:"tag_id"`
+type BlogTopic struct {
+	BlogID  int `json:"blog_id"`
+	TopicID int `json:"tag_id"`
 }
 
-func NewBlogTag(blogID, tagID int) *BlogTag {
-	blogTag := &BlogTag{
-		BlogID: blogID,
-		TagID:  tagID,
+func NewBlogTopic(blogID, topicID int) *BlogTopic {
+	blogTopic := &BlogTopic{
+		BlogID:  blogID,
+		TopicID: topicID,
 	}
-	return blogTag
+	return blogTopic
 }
 
 // Used in conjunction with CreateBlog.
 // DOES NOT rollback or commit transaction
-func (m *Models) createBlogTags(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []int) error {
-	if len(tagIDs) == 0 {
+func (m *Models) createBlogTopics(ctx context.Context, tx *sql.Tx, blogID int, topicIDs []int) error {
+	if len(topicIDs) == 0 {
 		return nil
 	}
 
@@ -33,24 +33,24 @@ func (m *Models) createBlogTags(ctx context.Context, tx *sql.Tx, blogID int, tag
 	defer cancel()
 
 	var values strings.Builder
-	for i, id := range tagIDs {
+	for i, id := range topicIDs {
 		values.WriteString("(" + fmt.Sprint(blogID) + "," + fmt.Sprint(id) + ")")
-		if i < len(tagIDs)-1 {
+		if i < len(topicIDs)-1 {
 			values.WriteString(",")
 		}
 	}
 
 	stmt := `
-	INSERT INTO blog_tags
+	INSERT INTO blog_topics
 	(
 		blog_id,
-		tag_id
+		topic_id
 	)
 	VALUES 
 	` + values.String() + ";"
 
 	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
-		fmt.Println("CreateBlogTags:", stmt)
+		fmt.Println("createBlogTopics:", stmt)
 	}
 
 	_, insertErr := tx.ExecContext(
@@ -58,7 +58,7 @@ func (m *Models) createBlogTags(ctx context.Context, tx *sql.Tx, blogID int, tag
 		stmt,
 	)
 	if insertErr != nil {
-		return fmt.Errorf("CreateBlogTags: insert blog_tags failed: %w", insertErr)
+		return fmt.Errorf("createBlogTopics: insert blog_topics failed: %w", insertErr)
 	}
 
 	return nil
