@@ -1,10 +1,12 @@
+-- +goose Up
+-- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS blogs(
   id INTEGER NOT NULL UNIQUE PRIMARY KEY AUTOINCREMENT,
 
   -- ISO 8061
   created_at TEXT NOT NULL DEFAULT (strftime('%FT%T+00:00')), 
   updated_at TEXT NOT NULL DEFAULT (strftime('%FT%T+00:00')), 
-  deleted_at TEXT DEFAULT NULL, 
+  deleted_at TEXT DEFAULT "", 
 
   title TEXT NOT NULL UNIQUE,
   content TEXT DEFAULT "",
@@ -83,7 +85,26 @@ CREATE TABLE IF NOT EXISTS users(
   -- encoded password
   pwd TEXT NOT NULL
 );
+-- +goose StatementEnd
 
--- Remamber to set foreign_keys ON to enforce foreign key constraint
--- SQlite disables it by default... 
--- PRAGMA foreign_keys = ON;
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE IF EXISTS blogs;
+DROP TRIGGER IF EXISTS blogs_update_ts;
+
+DROP TABLE IF EXISTS topics;
+DROP TRIGGER IF EXISTS topics_update_ts; 
+
+DROP TABLE IF EXISTS tags;
+DROP TRIGGER IF EXISTS tags_update_ts;
+
+DROP TABLE IF EXISTS blog_tags;
+DROP INDEX IF EXISTS blog_tags_blog;
+DROP INDEX IF EXISTS blog_tags_tag;
+
+DROP TABLE IF EXISTS blog_topics;
+DROP INDEX IF EXISTS blog_topics_blog;
+DROP INDEX IF EXISTS blog_topics_topic;
+
+DROP TABLE IF EXISTS users;
+-- +goose StatementEnd
