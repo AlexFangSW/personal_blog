@@ -1,20 +1,46 @@
 package api
 
 import (
+	"blog/db/models"
+	"context"
+	"encoding/json"
+	"log/slog"
 	"net/http"
 )
 
-func (s *Server) hTopicsCreate(w http.ResponseWriter, r *http.Request) {
+func (s *Server) CreateTopic(w http.ResponseWriter, r *http.Request) error {
+	body := &models.Topic{}
+	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
+		slog.Error("CreateTopic: decode error", "error", err.Error())
+		return writeJSON(w, err, "", http.StatusBadRequest)
+	}
+	inTopic := models.NewTopic(
+		body.Name,
+		body.Description,
+	)
+
+	ctx := context.Background()
+	outTopic, err := s.models.CreateTopic(ctx, *inTopic)
+	if err != nil {
+		slog.Error("CreateTopic: create topic error", "error", err.Error())
+		return writeJSON(w, err, "", http.StatusInternalServerError)
+	}
+
+	return writeJSON(w, nil, outTopic, http.StatusOK)
 }
 
-func (s *Server) hTopicsGetAll(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ListTopics(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }
 
-func (s *Server) hTopicsGetOne(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetTopic(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }
 
-func (s *Server) hTopicsUpdate(w http.ResponseWriter, r *http.Request) {
+func (s *Server) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }
 
-func (s *Server) hTopicsDelete(w http.ResponseWriter, r *http.Request) {
+func (s *Server) DeleteTopic(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }

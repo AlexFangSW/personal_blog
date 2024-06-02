@@ -3,6 +3,6 @@
     "level": "DEBUG"
   },
   "db": {
-    "dsnURL": "sqlite://blog.db"
+    "dsnURL": "./blog.db"
   }
 }

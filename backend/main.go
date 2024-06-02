@@ -36,20 +36,15 @@ func run() error {
 	util.InitLogger(config.Logger.Level)
 
 	// db connection
-	// TODO: different types of migration (including noop)
-	db, err := sql.Open("sqlite3", "./blog.db")
+	db, err := sql.Open("sqlite3", config.DB.DSNURL)
 	if err != nil {
 		return fmt.Errorf("Run: failed to open db connection: %w", err)
 	}
 
-	// init models
-	model := models.New(db, config.DB)
-	if err := model.MigrateUp(); err != nil {
-		return fmt.Errorf("Run: db migration error: %w", err)
-	}
+	models := models.NewModels(db, config.DB)
 
 	// setup server
-	server := api.NewServer(*config, *model)
+	server := api.NewServer(*config, *models)
 	if err := server.Start(); err != nil {
 		return fmt.Errorf("Run: server error: %w", err)
 	}
@@ -57,6 +52,8 @@ func run() error {
 	return nil
 }
 
+// TODO: graceful shutdown
+// TODO: activate sqlite foreign key
 func main() {
 	if err := run(); err != nil {
 		log.Fatal(err)

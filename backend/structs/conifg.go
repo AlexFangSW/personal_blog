@@ -10,7 +10,8 @@ type LoggerSetting struct {
 }
 
 type DBSetting struct {
-	DSNURL string `json:"dsnURL"`
+	DSNURL  string `json:"dsnURL"`
+	Timeout int    `json:"timeout"`
 }
 
 type Config struct {
@@ -29,7 +30,8 @@ func NewConfig() *Config {
 			Level: "INFO",
 		},
 		DB: DBSetting{
-			DSNURL: "./example.db",
+			DSNURL:  "./example.db",
+			Timeout: 30,
 		},
 	}
 }
