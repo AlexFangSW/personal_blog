@@ -2,7 +2,6 @@ package api
 
 import (
 	"blog/db/models"
-	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -19,8 +18,7 @@ func (s *Server) CreateTag(w http.ResponseWriter, r *http.Request) error {
 		body.Description,
 	)
 
-	ctx := context.Background()
-	outTag, err := s.models.CreateTag(ctx, *inTag)
+	outTag, err := s.models.CreateTag(r.Context(), *inTag)
 	if err != nil {
 		slog.Error("CreateTag: create tag error", "error", err.Error())
 		return writeJSON(w, err, "", http.StatusInternalServerError)

@@ -2,7 +2,6 @@ package api
 
 import (
 	"blog/db/models"
-	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -27,8 +26,7 @@ func (s *Server) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 		body.Topics,
 	)
 
-	ctx := context.Background()
-	outBlog, err := s.models.CreateBlog(ctx, *inBlog)
+	outBlog, err := s.models.CreateBlog(r.Context(), *inBlog)
 	if err != nil {
 		slog.Error("CreateBlog: create blog error", "error", err.Error())
 		return writeJSON(w, err, "", http.StatusInternalServerError)

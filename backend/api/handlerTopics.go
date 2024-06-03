@@ -2,7 +2,6 @@ package api
 
 import (
 	"blog/db/models"
-	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -19,8 +18,7 @@ func (s *Server) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 		body.Description,
 	)
 
-	ctx := context.Background()
-	outTopic, err := s.models.CreateTopic(ctx, *inTopic)
+	outTopic, err := s.models.CreateTopic(r.Context(), *inTopic)
 	if err != nil {
 		slog.Error("CreateTopic: create topic error", "error", err.Error())
 		return writeJSON(w, err, "", http.StatusInternalServerError)
