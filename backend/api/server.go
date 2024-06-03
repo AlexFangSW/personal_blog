@@ -34,8 +34,8 @@ func (s *Server) Start() error {
 	// mux.HandleFunc(s.delete("/blogs/deleted"), withMiddleware(s.DeleteBlog))
 
 	mux.HandleFunc(s.post("/tags"), withMiddleware(s.CreateTag))
-	// mux.HandleFunc(s.get("/tags"), withMiddleware(s.TagsGetAll))
-	// mux.HandleFunc(s.get("/tags/{id}"), withMiddleware(s.TagsGetOne))
+	mux.HandleFunc(s.get("/tags"), withMiddleware(s.ListTags))
+	mux.HandleFunc(s.get("/tags/{id}"), withMiddleware(s.GetTag))
 	// mux.HandleFunc(s.patch("/tags/{id}"), withMiddleware(s.TagsUpdate))
 	// mux.HandleFunc(s.delete("/tags/{id}"), withMiddleware(s.TagsDelete))
 	//

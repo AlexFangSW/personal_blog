@@ -1,6 +1,7 @@
 package models
 
 import (
+	"blog/util"
 	"context"
 	"database/sql"
 	"fmt"
@@ -120,7 +121,7 @@ func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]Tag, error
 	result := []Tag{}
 	for {
 		tag := Tag{}
-		if next := rows.Next(); next != true {
+		if !rows.Next() {
 			break
 		}
 		err := rows.Scan(
@@ -133,12 +134,86 @@ func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]Tag, error
 		)
 		if err != nil {
 			if err := rows.Close(); err != nil {
-				return []Tag{}, fmt.Errorf("GetTagsByBlogID: close rows error: %w", err)
+				return []Tag{}, fmt.Errorf("GetTagsByBlogID: close rows failed: %w", err)
 			}
-			return []Tag{}, fmt.Errorf("GetTagsByBlogID: scan error: %w", err)
+			return []Tag{}, fmt.Errorf("GetTagsByBlogID: scan failed: %w", err)
 		}
 		result = append(result, tag)
 	}
 
+	if err := rows.Err(); err != nil {
+		return []Tag{}, fmt.Errorf("GetTagsByBlogID: rows iteration error: %w", err)
+	}
+
 	return result, nil
+}
+
+func (m *Models) ListTags(ctx context.Context) ([]Tag, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
+	defer cancel()
+
+	stmt := `SELECT * FROM tags;`
+	util.LogQuery(ctxTimeout, "ListTags:", stmt)
+
+	rows, err := m.db.QueryContext(ctxTimeout, stmt)
+	if err != nil {
+		return []Tag{}, fmt.Errorf("ListTags: query failed: %w", err)
+	}
+
+	result := []Tag{}
+	for {
+		if !rows.Next() {
+			break
+		}
+		tag := Tag{}
+		err := rows.Scan(
+			&tag.ID,
+			&tag.Created_at,
+			&tag.Updated_at,
+			&tag.Name,
+			&tag.Description,
+			&tag.Slug,
+		)
+		if err != nil {
+			if err := rows.Close(); err != nil {
+				return []Tag{}, fmt.Errorf("ListTags: close rows failed: %w", err)
+			}
+			return []Tag{}, fmt.Errorf("ListTags: scan failed: %w", err)
+		}
+		result = append(result, tag)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []Tag{}, fmt.Errorf("ListTags: rows iteration error: %w", err)
+	}
+
+	return result, nil
+}
+
+func (m *Models) GetTag(ctx context.Context, id int) (Tag, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
+	defer cancel()
+
+	stmt := `SELECT * FROM tags WHERE id = ?;`
+	util.LogQuery(ctxTimeout, "GetTag:", stmt)
+
+	row := m.db.QueryRowContext(ctxTimeout, stmt, id)
+	if err := row.Err(); err != nil {
+		return Tag{}, fmt.Errorf("GetTag: query failed: %w", err)
+	}
+
+	tag := Tag{}
+	err := row.Scan(
+		&tag.ID,
+		&tag.Created_at,
+		&tag.Updated_at,
+		&tag.Name,
+		&tag.Description,
+		&tag.Slug,
+	)
+	if err != nil {
+		return Tag{}, fmt.Errorf("GetTag: row scan failed: %w", err)
+	}
+
+	return tag, nil
 }
