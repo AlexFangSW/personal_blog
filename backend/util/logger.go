@@ -1,6 +1,8 @@
 package util
 
 import (
+	"context"
+	"fmt"
 	"log/slog"
 )
 
@@ -17,4 +19,10 @@ func InitLogger(level string) {
 	}
 
 	slog.SetLogLoggerLevel(realLevel)
+}
+
+func LogQuery(ctx context.Context, prefix, stmt string) {
+	if fire := slog.Default().Enabled(ctx, slog.LevelDebug); fire {
+		fmt.Println(prefix, stmt)
+	}
 }

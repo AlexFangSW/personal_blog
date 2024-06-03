@@ -8,10 +8,12 @@ import (
 )
 
 func (s *Server) CreateBlog(w http.ResponseWriter, r *http.Request) error {
+	slog.Debug("CreateTag")
+
 	body := &models.InBlog{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateBlog: decode failed", "error", err.Error())
-		return writeJSON(w, err, "", http.StatusBadRequest)
+		return writeJSON(w, err, nil, http.StatusBadRequest)
 	}
 	blog := models.NewBlog(
 		body.Title,
@@ -29,7 +31,7 @@ func (s *Server) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	outBlog, err := s.models.CreateBlog(r.Context(), *inBlog)
 	if err != nil {
 		slog.Error("CreateBlog: create blog failed", "error", err.Error())
-		return writeJSON(w, err, "", http.StatusInternalServerError)
+		return writeJSON(w, err, nil, http.StatusInternalServerError)
 	}
 
 	return writeJSON(w, nil, outBlog, http.StatusOK)

@@ -1,10 +1,10 @@
 package models
 
 import (
+	"blog/util"
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/gosimple/slug"
@@ -49,9 +49,7 @@ func (m *Models) CreateTopic(ctx context.Context, topic Topic) (Topic, error) {
 	RETURNING *;
 	`
 
-	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
-		fmt.Println("CreateTopic:", stmt)
-	}
+	util.LogQuery(ctxTimeout, "CreateTopic:", stmt)
 
 	tx, err := m.db.BeginTx(ctxTimeout, &sql.TxOptions{})
 	if err != nil {
@@ -109,9 +107,7 @@ func (m *Models) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]Topic, e
 		(blog_topics.blog_id = ?) AND (blog_topics.topic_id = topics.id);
 	`
 
-	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
-		fmt.Println("GetTopicsByBlogID:", stmt)
-	}
+	util.LogQuery(ctxTimeout, "GetTopicsByBlogID:", stmt)
 
 	rows, err := m.db.QueryContext(
 		ctxTimeout,
@@ -125,7 +121,7 @@ func (m *Models) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]Topic, e
 	result := []Topic{}
 	for {
 		topic := Topic{}
-		if next := rows.Next(); next != true {
+		if !rows.Next() {
 			break
 		}
 		err := rows.Scan(
@@ -143,6 +139,10 @@ func (m *Models) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]Topic, e
 			return []Topic{}, fmt.Errorf("GetTopicsByBlogID: scan error: %w", err)
 		}
 		result = append(result, topic)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []Topic{}, fmt.Errorf("GetTopicsByBlogID: rows iteration error: %w", err)
 	}
 
 	return result, nil

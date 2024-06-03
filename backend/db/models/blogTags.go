@@ -1,10 +1,10 @@
 package models
 
 import (
+	"blog/util"
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"strings"
 	"time"
 )
@@ -49,16 +49,14 @@ func (m *Models) createBlogTags(ctx context.Context, tx *sql.Tx, blogID int, tag
 	VALUES 
 	` + values.String() + ";"
 
-	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
-		fmt.Println("CreateBlogTags:", stmt)
-	}
+	util.LogQuery(ctxTimeout, "createBlogTags:", stmt)
 
 	_, insertErr := tx.ExecContext(
 		ctxTimeout,
 		stmt,
 	)
 	if insertErr != nil {
-		return fmt.Errorf("CreateBlogTags: insert blog_tags failed: %w", insertErr)
+		return fmt.Errorf("createBlogTags: insert blog_tags failed: %w", insertErr)
 	}
 
 	return nil

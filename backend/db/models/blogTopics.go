@@ -1,10 +1,10 @@
 package models
 
 import (
+	"blog/util"
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"strings"
 	"time"
 )
@@ -49,9 +49,7 @@ func (m *Models) createBlogTopics(ctx context.Context, tx *sql.Tx, blogID int, t
 	VALUES 
 	` + values.String() + ";"
 
-	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
-		fmt.Println("createBlogTopics:", stmt)
-	}
+	util.LogQuery(ctxTimeout, "createBlogTopics:", stmt)
 
 	_, insertErr := tx.ExecContext(
 		ctxTimeout,

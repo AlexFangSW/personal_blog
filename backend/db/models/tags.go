@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/gosimple/slug"
@@ -49,9 +48,7 @@ func (m *Models) CreateTag(ctx context.Context, tag Tag) (Tag, error) {
 	RETURNING *;
 	`
 
-	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
-		fmt.Println("CreateTag:", stmt)
-	}
+	util.LogQuery(ctxTimeout, "CreateTag:", stmt)
 
 	tx, err := m.db.BeginTx(ctxTimeout, &sql.TxOptions{})
 	if err != nil {
@@ -109,9 +106,7 @@ func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]Tag, error
 		(blog_tags.blog_id = ?) AND (blog_tags.tag_id = tags.id);
 	`
 
-	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
-		fmt.Println("GetTagsByBlogID:", stmt)
-	}
+	util.LogQuery(ctxTimeout, "GetTagsByBlogID:", stmt)
 
 	rows, err := m.db.QueryContext(
 		ctxTimeout,

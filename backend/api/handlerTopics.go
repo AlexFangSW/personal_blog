@@ -8,10 +8,12 @@ import (
 )
 
 func (s *Server) CreateTopic(w http.ResponseWriter, r *http.Request) error {
+	slog.Debug("CreateTopic")
+
 	body := &models.Topic{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateTopic: decode failed", "error", err.Error())
-		return writeJSON(w, err, "", http.StatusBadRequest)
+		return writeJSON(w, err, nil, http.StatusBadRequest)
 	}
 	inTopic := models.NewTopic(
 		body.Name,
@@ -21,7 +23,7 @@ func (s *Server) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 	outTopic, err := s.models.CreateTopic(r.Context(), *inTopic)
 	if err != nil {
 		slog.Error("CreateTopic: create topic failed", "error", err.Error())
-		return writeJSON(w, err, "", http.StatusInternalServerError)
+		return writeJSON(w, err, nil, http.StatusInternalServerError)
 	}
 
 	return writeJSON(w, nil, outTopic, http.StatusOK)

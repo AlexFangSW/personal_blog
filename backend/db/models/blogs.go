@@ -1,10 +1,10 @@
 package models
 
 import (
+	"blog/util"
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/gosimple/slug"
@@ -87,9 +87,7 @@ func (m *Models) CreateBlog(ctx context.Context, blog InBlog) (OutBlog, error) {
 	RETURNING *;
 	`
 
-	if debug := slog.Default().Enabled(ctxTimeout, slog.LevelDebug); debug {
-		fmt.Println("CreateBlog:", stmt)
-	}
+	util.LogQuery(ctxTimeout, "CreateBlog:", stmt)
 
 	tx, err := m.db.BeginTx(ctxTimeout, &sql.TxOptions{})
 	if err != nil {
