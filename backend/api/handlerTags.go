@@ -10,7 +10,7 @@ import (
 func (s *Server) CreateTag(w http.ResponseWriter, r *http.Request) error {
 	body := &models.Tag{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
-		slog.Error("CreateTag: decode error", "error", err.Error())
+		slog.Error("CreateTag: decode failed", "error", err.Error())
 		return writeJSON(w, err, "", http.StatusBadRequest)
 	}
 	inTag := models.NewTag(
@@ -20,7 +20,7 @@ func (s *Server) CreateTag(w http.ResponseWriter, r *http.Request) error {
 
 	outTag, err := s.models.CreateTag(r.Context(), *inTag)
 	if err != nil {
-		slog.Error("CreateTag: create tag error", "error", err.Error())
+		slog.Error("CreateTag: create tag failed", "error", err.Error())
 		return writeJSON(w, err, "", http.StatusInternalServerError)
 	}
 

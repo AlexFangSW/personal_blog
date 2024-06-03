@@ -10,7 +10,7 @@ import (
 func (s *Server) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 	body := &models.Topic{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
-		slog.Error("CreateTopic: decode error", "error", err.Error())
+		slog.Error("CreateTopic: decode failed", "error", err.Error())
 		return writeJSON(w, err, "", http.StatusBadRequest)
 	}
 	inTopic := models.NewTopic(
@@ -20,7 +20,7 @@ func (s *Server) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 
 	outTopic, err := s.models.CreateTopic(r.Context(), *inTopic)
 	if err != nil {
-		slog.Error("CreateTopic: create topic error", "error", err.Error())
+		slog.Error("CreateTopic: create topic failed", "error", err.Error())
 		return writeJSON(w, err, "", http.StatusInternalServerError)
 	}
 
