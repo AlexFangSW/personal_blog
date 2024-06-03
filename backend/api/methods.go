@@ -1,21 +1,33 @@
 package api
 
+import (
+	"log/slog"
+)
+
 func (s *Server) get(path string) string {
 	prefix := s.Config.Server.Prefix
-	return "GET " + prefix + path
+	result := "GET " + prefix + path
+	slog.Info("new route", "route", result)
+	return result
 }
 
 func (s *Server) post(path string) string {
 	prefix := s.Config.Server.Prefix
-	return "POST " + prefix + path
+	result := "POST " + prefix + path
+	slog.Info("new route", "route", result)
+	return result
 }
 
 func (s *Server) delete(path string) string {
 	prefix := s.Config.Server.Prefix
-	return "DELETE " + prefix + path
+	result := "DELETE " + prefix + path
+	slog.Info("new route", "route", result)
+	return result
 }
 
 func (s *Server) patch(path string) string {
 	prefix := s.Config.Server.Prefix
-	return "PATCH " + prefix + path
+	result := "PATCH " + prefix + path
+	slog.Info("new route", "route", result)
+	return result
 }
