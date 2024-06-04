@@ -64,14 +64,18 @@ func (t *Topics) Create(ctx context.Context, topic entities.Topic) (*entities.To
 	return newTopic, nil
 }
 
-func (t *Topics) GetByBlogID(ctx context.Context, blog_id int) ([]entities.Topic, error) {
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
-	defer cancel()
+func (t *Topics) List(ctx context.Context) ([]entities.Topic, error) {
+	return []entities.Topic{}, nil
+}
 
-	topics, err := t.models.topics.GetByBlogID(ctxTimeout, t.db, blog_id)
-	if err != nil {
-		return []entities.Topic{}, fmt.Errorf("GetByBlogID: model get topics by blog id failed: %w", err)
-	}
+func (t *Topics) Get(ctx context.Context, id int) (*entities.Topic, error) {
+	return &entities.Topic{}, nil
+}
 
-	return topics, nil
+func (t *Topics) Update(ctx context.Context, topic entities.Topic) (*entities.Topic, error) {
+	return &entities.Topic{}, nil
+}
+
+func (t *Topics) Delete(ctx context.Context, id int) error {
+	return nil
 }

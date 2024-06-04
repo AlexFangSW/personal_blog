@@ -66,14 +66,14 @@ func (b *Blogs) Create(ctx context.Context, blog entities.InBlog) (*entities.Out
 		return &entities.OutBlog{}, fmt.Errorf("Create: models create blog failed: %w", err)
 	}
 
-	if err := b.models.blogTags.Create(ctxTimeout, tx, newBlog.ID, blog.Tags); err != nil {
+	if err := b.models.blogTags.Upsert(ctxTimeout, tx, newBlog.ID, blog.Tags); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return &entities.OutBlog{}, fmt.Errorf("Create: model create blog_tags rollback error: %w", err)
 		}
 		return &entities.OutBlog{}, fmt.Errorf("Create: model create blog_tags error: %w", err)
 	}
 
-	if err := b.models.blogTopics.Create(ctxTimeout, tx, newBlog.ID, blog.Topics); err != nil {
+	if err := b.models.blogTopics.Upsert(ctxTimeout, tx, newBlog.ID, blog.Topics); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return &entities.OutBlog{}, fmt.Errorf("Create: model create blog_topics rollback error: %w", err)
 		}
@@ -128,7 +128,7 @@ func (b *Blogs) AdminListByTopicID(ctx context.Context, topicID int) ([]entities
 	return []entities.OutBlog{}, nil
 }
 
-func (b *Blogs) SoftDelele(ctx context.Context, id int) error {
+func (b *Blogs) SoftDelete(ctx context.Context, id int) error {
 	return nil
 }
 func (b *Blogs) Delele(ctx context.Context, id int) error {

@@ -11,4 +11,6 @@ type TagsModel interface {
 	GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]entities.Tag, error)
 	List(ctx context.Context, db *sql.DB) ([]entities.Tag, error)
 	Get(ctx context.Context, db *sql.DB, id int) (*entities.Tag, error)
+	Update(ctx context.Context, db *sql.DB, tag entities.Tag) (*entities.Tag, error)
+	Delete(ctx context.Context, db *sql.DB, id int) error
 }
