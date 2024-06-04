@@ -96,3 +96,44 @@ func (b *Blogs) Create(ctx context.Context, blog entities.InBlog) (*entities.Out
 	outBlog := entities.NewOutBlog(*newBlog, tags, topics)
 	return outBlog, nil
 }
+
+func (b *Blogs) Update(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error) {
+	return &entities.OutBlog{}, nil
+}
+
+func (b *Blogs) Get(ctx context.Context, id int) (*entities.OutBlog, error) {
+	return &entities.OutBlog{}, nil
+}
+func (b *Blogs) AdminGet(ctx context.Context, id int) (*entities.OutBlog, error) {
+
+	return &entities.OutBlog{}, nil
+}
+
+func (b *Blogs) List(ctx context.Context) ([]entities.OutBlog, error) {
+
+	return []entities.OutBlog{}, nil
+}
+func (b *Blogs) ListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error) {
+
+	return []entities.OutBlog{}, nil
+}
+
+func (b *Blogs) AdminList(ctx context.Context) ([]entities.OutBlog, error) {
+
+	return []entities.OutBlog{}, nil
+}
+
+func (b *Blogs) AdminListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error) {
+
+	return []entities.OutBlog{}, nil
+}
+
+func (b *Blogs) SoftDelele(ctx context.Context, id int) error {
+	return nil
+}
+func (b *Blogs) Delele(ctx context.Context, id int) error {
+	return nil
+}
+func (b *Blogs) RestoreDeleted(ctx context.Context, id int) (*entities.OutBlog, error) {
+	return &entities.OutBlog{}, nil
+}

@@ -15,6 +15,8 @@ type tagsRepository interface {
 	Create(ctx context.Context, tag entities.Tag) (*entities.Tag, error)
 	List(ctx context.Context) ([]entities.Tag, error)
 	Get(ctx context.Context, id int) (*entities.Tag, error)
+	Update(ctx context.Context, tag entities.Tag) (*entities.Tag, error)
+	Delete(ctx context.Context, id int) error
 }
 
 type Tags struct {

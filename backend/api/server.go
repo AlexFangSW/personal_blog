@@ -9,12 +9,13 @@ import (
 
 type blogsHandler interface {
 	CreateBlog(w http.ResponseWriter, r *http.Request) error
+
+	// scops: visible, deleted, all
 	ListBlogs(w http.ResponseWriter, r *http.Request) error
 	GetBlog(w http.ResponseWriter, r *http.Request) error
+
 	UpdateBlog(w http.ResponseWriter, r *http.Request) error
 	SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error
-	ListDeletedBlogs(w http.ResponseWriter, r *http.Request) error
-	GetDeletedBlog(w http.ResponseWriter, r *http.Request) error
 	RestoreDeletedBlog(w http.ResponseWriter, r *http.Request) error
 	DeleteBlog(w http.ResponseWriter, r *http.Request) error
 }
@@ -56,26 +57,24 @@ func (s *Server) Start() error {
 	// routes
 	mux := &http.ServeMux{}
 
+	// TODO: use middleware to block 'list, get ?all=true' requests that dosen't have token
 	mux.HandleFunc(s.post("/blogs"), withMiddleware(s.blogs.CreateBlog))
 	// mux.HandleFunc(s.get("/blogs"), withMiddleware(s.ListBlogs))
 	// mux.HandleFunc(s.get("/blogs/{id}"), withMiddleware(s.GetBlog))
-	// mux.HandleFunc(s.patch("/blogs/{id}"), withMiddleware(s.UpdateBlog))
+	// mux.HandleFunc(s.put("/blogs/{id}"), withMiddleware(s.UpdateBlog))
 	// mux.HandleFunc(s.delete("/blogs/{id}"), withMiddleware(s.SoftDeleteBlog))
-	// mux.HandleFunc(s.get("/blogs/deleted"), withMiddleware(s.ListDeletedBlogs))
-	// mux.HandleFunc(s.get("/blogs/deleted/{id}"), withMiddleware(s.GetDeletedBlog))
-	// mux.HandleFunc(s.patch("/blogs/deleted"), withMiddleware(s.RestoreDeletedBlog))
-	// mux.HandleFunc(s.delete("/blogs/deleted"), withMiddleware(s.DeleteBlog))
+	// mux.HandleFunc(s.delete("/blogs/deleted/{id}"), withMiddleware(s.DeleteBlog))
 
 	mux.HandleFunc(s.post("/tags"), withMiddleware(s.tags.CreateTag))
 	mux.HandleFunc(s.get("/tags"), withMiddleware(s.tags.ListTags))
 	mux.HandleFunc(s.get("/tags/{id}"), withMiddleware(s.tags.GetTag))
-	// mux.HandleFunc(s.patch("/tags/{id}"), withMiddleware(s.TagsUpdate))
+	// mux.HandleFunc(s.put("/tags/{id}"), withMiddleware(s.TagsUpdate))
 	// mux.HandleFunc(s.delete("/tags/{id}"), withMiddleware(s.TagsDelete))
 	//
 	mux.HandleFunc(s.post("/topics"), withMiddleware(s.topics.CreateTopic))
 	// mux.HandleFunc(s.get("/topics"), withMiddleware(s.TopicsGetAll))
 	// mux.HandleFunc(s.get("/topics/{id}"), withMiddleware(s.TopicsGetOne))
-	// mux.HandleFunc(s.patch("/topics/{id}"), withMiddleware(s.TopicsUpdate))
+	// mux.HandleFunc(s.put("/topics/{id}"), withMiddleware(s.TopicsUpdate))
 	// mux.HandleFunc(s.delete("/topics/{id}"), withMiddleware(s.TopicsDelete))
 
 	s.server = &http.Server{
