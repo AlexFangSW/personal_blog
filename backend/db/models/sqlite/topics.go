@@ -6,12 +6,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 )
 
-func (m *Models) CreateTopic(ctx context.Context, topic entities.Topic) (entities.Topic, error) {
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
-	defer cancel()
+type Topics struct{}
+
+func NewTopics() *Topics {
+	return &Topics{}
+}
+
+func (t *Topics) Create(ctx context.Context, tx *sql.Tx, topic entities.Topic) (*entities.Topic, error) {
 
 	stmt := `
 	INSERT INTO topics
@@ -25,28 +28,20 @@ func (m *Models) CreateTopic(ctx context.Context, topic entities.Topic) (entitie
 	RETURNING *;
 	`
 
-	util.LogQuery(ctxTimeout, "CreateTopic:", stmt)
-
-	tx, err := m.db.BeginTx(ctxTimeout, &sql.TxOptions{})
-	if err != nil {
-		return entities.Topic{}, fmt.Errorf("CreateTopic: begin transaction error: %w", err)
-	}
+	util.LogQuery(ctx, "CreateTopic:", stmt)
 
 	row := tx.QueryRowContext(
-		ctxTimeout,
+		ctx,
 		stmt,
 		topic.Name,
 		topic.Description,
 		topic.Slug,
 	)
 	if err := row.Err(); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return entities.Topic{}, fmt.Errorf("CreateTopic: rollback error: %w", err)
-		}
-		return entities.Topic{}, fmt.Errorf("CreateTopic: insert topic failed: %w", err)
+		return &entities.Topic{}, fmt.Errorf("CreateTopic: insert topic failed: %w", err)
 	}
 
-	newTopic := &entities.Topic{}
+	newTopic := entities.Topic{}
 	scanErr := row.Scan(
 		&newTopic.ID,
 		&newTopic.Created_at,
@@ -56,19 +51,13 @@ func (m *Models) CreateTopic(ctx context.Context, topic entities.Topic) (entitie
 		&newTopic.Slug,
 	)
 	if scanErr != nil {
-		return entities.Topic{}, fmt.Errorf("CreateTopic: scan error: %w", scanErr)
+		return &entities.Topic{}, fmt.Errorf("CreateTopic: scan error: %w", scanErr)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return entities.Topic{}, fmt.Errorf("CreateTopic: commit error: %w", err)
-	}
-
-	return *newTopic, nil
+	return &newTopic, nil
 }
 
-func (m *Models) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]entities.Topic, error) {
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
-	defer cancel()
+func (t *Topics) GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]entities.Topic, error) {
 
 	stmt := `
 	SELECT 
@@ -83,10 +72,10 @@ func (m *Models) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]entities
 		(blog_topics.blog_id = ?) AND (blog_topics.topic_id = topics.id);
 	`
 
-	util.LogQuery(ctxTimeout, "GetTopicsByBlogID:", stmt)
+	util.LogQuery(ctx, "GetTopicsByBlogID:", stmt)
 
-	rows, err := m.db.QueryContext(
-		ctxTimeout,
+	rows, err := db.QueryContext(
+		ctx,
 		stmt,
 		blog_id,
 	)

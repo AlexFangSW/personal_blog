@@ -6,18 +6,18 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
-	"time"
 )
 
-// Used in conjunction with CreateBlog.
-// DOES NOT rollback or commit transaction
-func (m *Models) createBlogTags(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []int) error {
+type BlogTags struct{}
+
+func NewBlogTags() *BlogTags {
+	return &BlogTags{}
+}
+
+func (b *BlogTags) Create(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []int) error {
 	if len(tagIDs) == 0 {
 		return nil
 	}
-
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
-	defer cancel()
 
 	var values strings.Builder
 	for i, id := range tagIDs {
@@ -36,14 +36,14 @@ func (m *Models) createBlogTags(ctx context.Context, tx *sql.Tx, blogID int, tag
 	VALUES 
 	` + values.String() + ";"
 
-	util.LogQuery(ctxTimeout, "createBlogTags:", stmt)
+	util.LogQuery(ctx, "CreateBlogTags:", stmt)
 
 	_, insertErr := tx.ExecContext(
-		ctxTimeout,
+		ctx,
 		stmt,
 	)
 	if insertErr != nil {
-		return fmt.Errorf("createBlogTags: insert blog_tags failed: %w", insertErr)
+		return fmt.Errorf("CreateBlogTags: insert blog_tags failed: %w", insertErr)
 	}
 
 	return nil

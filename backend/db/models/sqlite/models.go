@@ -20,8 +20,8 @@ func New(db *sql.DB, config config.DBSetting) *Models {
 	}
 }
 
-func (m *Models) Prepare(ctx context.Context, timeout int) error {
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+func (m *Models) Prepare(ctx context.Context) error {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
 	defer cancel()
 
 	// enable sqlite foreign key

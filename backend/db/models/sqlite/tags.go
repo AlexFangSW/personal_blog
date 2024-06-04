@@ -6,12 +6,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 )
 
-func (m *Models) CreateTag(ctx context.Context, tag entities.Tag) (entities.Tag, error) {
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
-	defer cancel()
+type Tags struct{}
+
+func NewTags() *Tags {
+	return &Tags{}
+}
+
+func (t *Tags) Create(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entities.Tag, error) {
 
 	stmt := `
 	INSERT INTO tags
@@ -25,25 +28,17 @@ func (m *Models) CreateTag(ctx context.Context, tag entities.Tag) (entities.Tag,
 	RETURNING *;
 	`
 
-	util.LogQuery(ctxTimeout, "CreateTag:", stmt)
-
-	tx, err := m.db.BeginTx(ctxTimeout, &sql.TxOptions{})
-	if err != nil {
-		return entities.Tag{}, fmt.Errorf("CreateTag: begin transaction error: %w", err)
-	}
+	util.LogQuery(ctx, "CreateTag:", stmt)
 
 	row := tx.QueryRowContext(
-		ctxTimeout,
+		ctx,
 		stmt,
 		tag.Name,
 		tag.Description,
 		tag.Slug,
 	)
 	if err := row.Err(); err != nil {
-		if err := tx.Rollback(); err != nil {
-			return entities.Tag{}, fmt.Errorf("CreateTag: rollback error: %w", err)
-		}
-		return entities.Tag{}, fmt.Errorf("CreateTag: insert tag failed: %w", err)
+		return &entities.Tag{}, fmt.Errorf("CreateTag: insert tag failed: %w", err)
 	}
 
 	newTag := &entities.Tag{}
@@ -56,20 +51,13 @@ func (m *Models) CreateTag(ctx context.Context, tag entities.Tag) (entities.Tag,
 		&newTag.Slug,
 	)
 	if scanErr != nil {
-		return entities.Tag{}, fmt.Errorf("CreateTag: scan error: %w", scanErr)
+		return &entities.Tag{}, fmt.Errorf("CreateTag: scan error: %w", scanErr)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return entities.Tag{}, fmt.Errorf("CreateTag: commit error: %w", err)
-	}
-
-	return *newTag, nil
+	return newTag, nil
 }
 
-func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]entities.Tag, error) {
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
-	defer cancel()
-
+func (t *Tags) GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]entities.Tag, error) {
 	stmt := `
 	SELECT 
 		tags.id, 
@@ -83,10 +71,10 @@ func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]entities.T
 		(blog_tags.blog_id = ?) AND (blog_tags.tag_id = tags.id);
 	`
 
-	util.LogQuery(ctxTimeout, "GetTagsByBlogID:", stmt)
+	util.LogQuery(ctx, "GetTagsByBlogID:", stmt)
 
-	rows, err := m.db.QueryContext(
-		ctxTimeout,
+	rows, err := db.QueryContext(
+		ctx,
 		stmt,
 		blog_id,
 	)
@@ -124,14 +112,12 @@ func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]entities.T
 	return result, nil
 }
 
-func (m *Models) ListTags(ctx context.Context) ([]entities.Tag, error) {
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
-	defer cancel()
+func (t *Tags) List(ctx context.Context, db *sql.DB) ([]entities.Tag, error) {
 
 	stmt := `SELECT * FROM tags;`
-	util.LogQuery(ctxTimeout, "ListTags:", stmt)
+	util.LogQuery(ctx, "ListTags:", stmt)
 
-	rows, err := m.db.QueryContext(ctxTimeout, stmt)
+	rows, err := db.QueryContext(ctx, stmt)
 	if err != nil {
 		return []entities.Tag{}, fmt.Errorf("ListTags: query failed: %w", err)
 	}
@@ -166,16 +152,13 @@ func (m *Models) ListTags(ctx context.Context) ([]entities.Tag, error) {
 	return result, nil
 }
 
-func (m *Models) GetTag(ctx context.Context, id int) (entities.Tag, error) {
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
-	defer cancel()
-
+func (t *Tags) Get(ctx context.Context, db *sql.DB, id int) (*entities.Tag, error) {
 	stmt := `SELECT * FROM tags WHERE id = ?;`
-	util.LogQuery(ctxTimeout, "GetTag:", stmt)
+	util.LogQuery(ctx, "GetTag:", stmt)
 
-	row := m.db.QueryRowContext(ctxTimeout, stmt, id)
+	row := db.QueryRowContext(ctx, stmt, id)
 	if err := row.Err(); err != nil {
-		return entities.Tag{}, fmt.Errorf("GetTag: query failed: %w", err)
+		return &entities.Tag{}, fmt.Errorf("GetTag: query failed: %w", err)
 	}
 
 	tag := entities.Tag{}
@@ -188,8 +171,8 @@ func (m *Models) GetTag(ctx context.Context, id int) (entities.Tag, error) {
 		&tag.Slug,
 	)
 	if err != nil {
-		return entities.Tag{}, fmt.Errorf("GetTag: row scan failed: %w", err)
+		return &entities.Tag{}, fmt.Errorf("GetTag: row scan failed: %w", err)
 	}
 
-	return tag, nil
+	return &tag, nil
 }
