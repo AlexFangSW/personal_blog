@@ -1,4 +1,4 @@
-package repository
+package repositories
 
 import (
 	"blog/config"
@@ -40,21 +40,21 @@ func NewTopics(db *sql.DB, config config.DBSetting, models TopicsRepoModels) *To
 	}
 }
 
-func (t *Topics) CreateTopic(ctx context.Context, topic entities.Topic) (*entities.Topic, error) {
+func (t *Topics) Create(ctx context.Context, topic entities.Topic) (*entities.Topic, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
 	defer cancel()
 
 	tx, err := t.db.BeginTx(ctxTimeout, &sql.TxOptions{})
 	if err != nil {
-		return &entities.Topic{}, fmt.Errorf("RepoCreateTopic: begin transaction error: %w", err)
+		return &entities.Topic{}, fmt.Errorf("Create: begin transaction error: %w", err)
 	}
 
 	newTopic, err := t.models.topics.Create(ctxTimeout, tx, topic)
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
-			return &entities.Topic{}, fmt.Errorf("RepoCreateTopic: rollback error: %w", err)
+			return &entities.Topic{}, fmt.Errorf("Create: model create topic rollback error: %w", err)
 		}
-		return &entities.Topic{}, fmt.Errorf("RepoCreateTopic: insert topic failed: %w", err)
+		return &entities.Topic{}, fmt.Errorf("Create: model create topic failed: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -64,13 +64,13 @@ func (t *Topics) CreateTopic(ctx context.Context, topic entities.Topic) (*entiti
 	return newTopic, nil
 }
 
-func (t *Topics) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]entities.Topic, error) {
+func (t *Topics) GetByBlogID(ctx context.Context, blog_id int) ([]entities.Topic, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
 	defer cancel()
 
 	topics, err := t.models.topics.GetByBlogID(ctxTimeout, t.db, blog_id)
 	if err != nil {
-		return []entities.Topic{}, fmt.Errorf("RepoGetTopicsByBlogID: query context failed: %w", err)
+		return []entities.Topic{}, fmt.Errorf("GetByBlogID: model get topics by blog id failed: %w", err)
 	}
 
 	return topics, nil

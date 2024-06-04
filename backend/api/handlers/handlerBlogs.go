@@ -9,7 +9,7 @@ import (
 )
 
 type blogsRepository interface {
-	CreateBlog(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error)
+	Create(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error)
 }
 
 type Blogs struct {
@@ -43,9 +43,9 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 		body.Topics,
 	)
 
-	outBlog, err := b.repo.CreateBlog(r.Context(), *inBlog)
+	outBlog, err := b.repo.Create(r.Context(), *inBlog)
 	if err != nil {
-		slog.Error("CreateBlog: create blog failed", "error", err.Error())
+		slog.Error("CreateBlog: repo create failed", "error", err.Error())
 		return writeJSON(w, err, nil, http.StatusInternalServerError)
 	}
 

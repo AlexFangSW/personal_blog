@@ -38,7 +38,7 @@ func (t *Topics) Create(ctx context.Context, tx *sql.Tx, topic entities.Topic) (
 		topic.Slug,
 	)
 	if err := row.Err(); err != nil {
-		return &entities.Topic{}, fmt.Errorf("CreateTopic: insert topic failed: %w", err)
+		return &entities.Topic{}, fmt.Errorf("Create: insert topic failed: %w", err)
 	}
 
 	newTopic := entities.Topic{}
@@ -51,7 +51,7 @@ func (t *Topics) Create(ctx context.Context, tx *sql.Tx, topic entities.Topic) (
 		&newTopic.Slug,
 	)
 	if scanErr != nil {
-		return &entities.Topic{}, fmt.Errorf("CreateTopic: scan error: %w", scanErr)
+		return &entities.Topic{}, fmt.Errorf("Create: scan error: %w", scanErr)
 	}
 
 	return &newTopic, nil
@@ -80,7 +80,7 @@ func (t *Topics) GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]en
 		blog_id,
 	)
 	if err != nil {
-		return []entities.Topic{}, fmt.Errorf("GetTopicsByBlogID: query context failed: %w", err)
+		return []entities.Topic{}, fmt.Errorf("GetByBlogID: query context failed: %w", err)
 	}
 
 	result := []entities.Topic{}
@@ -99,15 +99,15 @@ func (t *Topics) GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]en
 		)
 		if err != nil {
 			if err := rows.Close(); err != nil {
-				return []entities.Topic{}, fmt.Errorf("GetTopicsByBlogID: close rows error: %w", err)
+				return []entities.Topic{}, fmt.Errorf("GetByBlogID: close rows error: %w", err)
 			}
-			return []entities.Topic{}, fmt.Errorf("GetTopicsByBlogID: scan error: %w", err)
+			return []entities.Topic{}, fmt.Errorf("GetByBlogID: scan error: %w", err)
 		}
 		result = append(result, topic)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []entities.Topic{}, fmt.Errorf("GetTopicsByBlogID: rows iteration error: %w", err)
+		return []entities.Topic{}, fmt.Errorf("GetByBlogID: rows iteration error: %w", err)
 	}
 
 	return result, nil

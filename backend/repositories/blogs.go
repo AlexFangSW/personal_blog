@@ -1,4 +1,4 @@
-package repository
+package repositories
 
 import (
 	"blog/config"
@@ -18,7 +18,7 @@ type BlogRepoModels struct {
 	topics     interfaces.TopicsModel
 }
 
-func NewBlogRepoModels(
+func NewBlogsRepoModels(
 	blog interfaces.BlogsModel,
 	blogTags interfaces.BlogTagsModel,
 	blogTopics interfaces.BlogTopicsModel,
@@ -55,42 +55,42 @@ func (b *Blogs) Create(ctx context.Context, blog entities.InBlog) (*entities.Out
 
 	tx, err := b.db.BeginTx(ctxTimeout, &sql.TxOptions{})
 	if err != nil {
-		return &entities.OutBlog{}, fmt.Errorf("RepoCreateBlog: begin transaction error: %w", err)
+		return &entities.OutBlog{}, fmt.Errorf("Create: begin transaction error: %w", err)
 	}
 
 	newBlog, err := b.models.blog.Create(ctxTimeout, tx, blog)
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
-			return &entities.OutBlog{}, fmt.Errorf("RepoCreateBlog: query rollback error: %w", err)
+			return &entities.OutBlog{}, fmt.Errorf("Create: query rollback error: %w", err)
 		}
-		return &entities.OutBlog{}, fmt.Errorf("RepoCreateBlog: insert blog failed: %w", err)
+		return &entities.OutBlog{}, fmt.Errorf("Create: models create blog failed: %w", err)
 	}
 
 	if err := b.models.blogTags.Create(ctxTimeout, tx, newBlog.ID, blog.Tags); err != nil {
 		if err := tx.Rollback(); err != nil {
-			return &entities.OutBlog{}, fmt.Errorf("RepoCreateBlog: insert blog_tags rollback error: %w", err)
+			return &entities.OutBlog{}, fmt.Errorf("Create: model create blog_tags rollback error: %w", err)
 		}
-		return &entities.OutBlog{}, fmt.Errorf("RepoCreateBlog: insert blog_tags error: %w", err)
+		return &entities.OutBlog{}, fmt.Errorf("Create: model create blog_tags error: %w", err)
 	}
 
 	if err := b.models.blogTopics.Create(ctxTimeout, tx, newBlog.ID, blog.Topics); err != nil {
 		if err := tx.Rollback(); err != nil {
-			return &entities.OutBlog{}, fmt.Errorf("RepoCreateBlog: insert blog_topics rollback error: %w", err)
+			return &entities.OutBlog{}, fmt.Errorf("Create: model create blog_topics rollback error: %w", err)
 		}
-		return &entities.OutBlog{}, fmt.Errorf("RepoCreateBlog: insert blog_topics error: %w", err)
+		return &entities.OutBlog{}, fmt.Errorf("Create: model create blog_topics error: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return &entities.OutBlog{}, fmt.Errorf("RepoCreateBlog: commit error: %w", err)
+		return &entities.OutBlog{}, fmt.Errorf("Create: commit error: %w", err)
 	}
 
 	tags, err := b.models.tags.GetByBlogID(ctxTimeout, b.db, newBlog.ID)
 	if err != nil {
-		return &entities.OutBlog{}, fmt.Errorf("RepoCreateBlog: get tags by blog id error: %w", err)
+		return &entities.OutBlog{}, fmt.Errorf("Create: model get tags by blog id error: %w", err)
 	}
 	topics, err := b.models.topics.GetByBlogID(ctxTimeout, b.db, newBlog.ID)
 	if err != nil {
-		return &entities.OutBlog{}, fmt.Errorf("RepoCreateBlog: get topics by blog id error: %w", err)
+		return &entities.OutBlog{}, fmt.Errorf("Create: model get topics by blog id error: %w", err)
 	}
 
 	outBlog := entities.NewOutBlog(*newBlog, tags, topics)

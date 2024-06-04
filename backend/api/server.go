@@ -41,12 +41,12 @@ type Server struct {
 	tags   tagsHandler
 }
 
-func NewServer(config config.ServerSetting, blogs blogsHandler, topics topicsHandler, tags tagsHandler) *Server {
+func NewServer(config config.ServerSetting, blogs blogsHandler, tags tagsHandler, topics topicsHandler) *Server {
 	return &Server{
 		config: config,
 		blogs:  blogs,
-		topics: topics,
 		tags:   tags,
+		topics: topics,
 	}
 }
 

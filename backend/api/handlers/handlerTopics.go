@@ -9,8 +9,8 @@ import (
 )
 
 type topicsRepository interface {
-	CreateTopic(ctx context.Context, topic entities.Topic) (*entities.Topic, error)
-	GetTopicsByBlogID(ctx context.Context, blog_id int) ([]entities.Topic, error)
+	Create(ctx context.Context, topic entities.Topic) (*entities.Topic, error)
+	GetByBlogID(ctx context.Context, blog_id int) ([]entities.Topic, error)
 }
 
 type Topics struct {
@@ -36,9 +36,9 @@ func (t *Topics) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 		body.Description,
 	)
 
-	outTopic, err := t.repo.CreateTopic(r.Context(), *inTopic)
+	outTopic, err := t.repo.Create(r.Context(), *inTopic)
 	if err != nil {
-		slog.Error("CreateTopic: create topic failed", "error", err.Error())
+		slog.Error("CreateTopic: repo create failed", "error", err.Error())
 		return writeJSON(w, err, nil, http.StatusInternalServerError)
 	}
 

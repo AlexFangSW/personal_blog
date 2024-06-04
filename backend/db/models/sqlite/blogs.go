@@ -44,7 +44,7 @@ func (b *Blogs) Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 		blog.Visible,
 	)
 	if err := row.Err(); err != nil {
-		return &entities.Blog{}, fmt.Errorf("CreateBlog: insert blog failed: %w", err)
+		return &entities.Blog{}, fmt.Errorf("Create: insert blog failed: %w", err)
 	}
 
 	newBlog := &entities.Blog{}
@@ -61,7 +61,7 @@ func (b *Blogs) Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 		&newBlog.Visible,
 	)
 	if scanErr != nil {
-		return &entities.Blog{}, fmt.Errorf("CreateBlog: scan error: %w", scanErr)
+		return &entities.Blog{}, fmt.Errorf("Create: scan error: %w", scanErr)
 	}
 
 	return newBlog, nil

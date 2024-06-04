@@ -38,7 +38,7 @@ func (t *Tags) Create(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entit
 		tag.Slug,
 	)
 	if err := row.Err(); err != nil {
-		return &entities.Tag{}, fmt.Errorf("CreateTag: insert tag failed: %w", err)
+		return &entities.Tag{}, fmt.Errorf("Create: insert tag failed: %w", err)
 	}
 
 	newTag := &entities.Tag{}
@@ -51,7 +51,7 @@ func (t *Tags) Create(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entit
 		&newTag.Slug,
 	)
 	if scanErr != nil {
-		return &entities.Tag{}, fmt.Errorf("CreateTag: scan error: %w", scanErr)
+		return &entities.Tag{}, fmt.Errorf("Create: scan error: %w", scanErr)
 	}
 
 	return newTag, nil
@@ -79,7 +79,7 @@ func (t *Tags) GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]enti
 		blog_id,
 	)
 	if err != nil {
-		return []entities.Tag{}, fmt.Errorf("GetTagsByBlogID: query context failed: %w", err)
+		return []entities.Tag{}, fmt.Errorf("GetByBlogID: query context failed: %w", err)
 	}
 
 	result := []entities.Tag{}
@@ -98,15 +98,15 @@ func (t *Tags) GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]enti
 		)
 		if err != nil {
 			if err := rows.Close(); err != nil {
-				return []entities.Tag{}, fmt.Errorf("GetTagsByBlogID: close rows failed: %w", err)
+				return []entities.Tag{}, fmt.Errorf("GetByBlogID: close rows failed: %w", err)
 			}
-			return []entities.Tag{}, fmt.Errorf("GetTagsByBlogID: scan failed: %w", err)
+			return []entities.Tag{}, fmt.Errorf("GetByBlogID: scan failed: %w", err)
 		}
 		result = append(result, tag)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []entities.Tag{}, fmt.Errorf("GetTagsByBlogID: rows iteration error: %w", err)
+		return []entities.Tag{}, fmt.Errorf("GetByBlogID: rows iteration error: %w", err)
 	}
 
 	return result, nil
@@ -119,7 +119,7 @@ func (t *Tags) List(ctx context.Context, db *sql.DB) ([]entities.Tag, error) {
 
 	rows, err := db.QueryContext(ctx, stmt)
 	if err != nil {
-		return []entities.Tag{}, fmt.Errorf("ListTags: query failed: %w", err)
+		return []entities.Tag{}, fmt.Errorf("List: query failed: %w", err)
 	}
 
 	result := []entities.Tag{}
@@ -138,15 +138,15 @@ func (t *Tags) List(ctx context.Context, db *sql.DB) ([]entities.Tag, error) {
 		)
 		if err != nil {
 			if err := rows.Close(); err != nil {
-				return []entities.Tag{}, fmt.Errorf("ListTags: close rows failed: %w", err)
+				return []entities.Tag{}, fmt.Errorf("List: close rows failed: %w", err)
 			}
-			return []entities.Tag{}, fmt.Errorf("ListTags: scan failed: %w", err)
+			return []entities.Tag{}, fmt.Errorf("List: scan failed: %w", err)
 		}
 		result = append(result, tag)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []entities.Tag{}, fmt.Errorf("ListTags: rows iteration error: %w", err)
+		return []entities.Tag{}, fmt.Errorf("List: rows iteration error: %w", err)
 	}
 
 	return result, nil
@@ -158,7 +158,7 @@ func (t *Tags) Get(ctx context.Context, db *sql.DB, id int) (*entities.Tag, erro
 
 	row := db.QueryRowContext(ctx, stmt, id)
 	if err := row.Err(); err != nil {
-		return &entities.Tag{}, fmt.Errorf("GetTag: query failed: %w", err)
+		return &entities.Tag{}, fmt.Errorf("Get: query failed: %w", err)
 	}
 
 	tag := entities.Tag{}
@@ -171,7 +171,7 @@ func (t *Tags) Get(ctx context.Context, db *sql.DB, id int) (*entities.Tag, erro
 		&tag.Slug,
 	)
 	if err != nil {
-		return &entities.Tag{}, fmt.Errorf("GetTag: row scan failed: %w", err)
+		return &entities.Tag{}, fmt.Errorf("Get: row scan failed: %w", err)
 	}
 
 	return &tag, nil

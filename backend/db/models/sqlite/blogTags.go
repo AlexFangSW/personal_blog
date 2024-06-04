@@ -43,7 +43,7 @@ func (b *BlogTags) Create(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []
 		stmt,
 	)
 	if insertErr != nil {
-		return fmt.Errorf("CreateBlogTags: insert blog_tags failed: %w", insertErr)
+		return fmt.Errorf("Create: insert blog_tags failed: %w", insertErr)
 	}
 
 	return nil

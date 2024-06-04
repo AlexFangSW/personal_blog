@@ -43,7 +43,7 @@ func (b *BlogTopics) Create(ctx context.Context, tx *sql.Tx, blogID int, topicID
 		stmt,
 	)
 	if insertErr != nil {
-		return fmt.Errorf("CreateBlogTopics: insert blog_topics failed: %w", insertErr)
+		return fmt.Errorf("Create: insert blog_topics failed: %w", insertErr)
 	}
 
 	return nil

@@ -2,8 +2,10 @@ package main
 
 import (
 	"blog/api"
+	"blog/api/handlers"
 	"blog/config"
 	"blog/db/models/sqlite"
+	"blog/repositories"
 	"blog/util"
 	"context"
 	"database/sql"
@@ -41,17 +43,56 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("run: open db connection failed: %w", err)
 	}
+	// TODO: specify connection config
 
-	// TODO: refector models to <db>model.<blogs | tags | topics>
-	// let server use interfaces
+	// db prepare
 	model := sqlite.New(db, config.DB)
 	ctx := context.Background()
-	if err := model.Prepare(ctx, config.DB.Timeout); err != nil {
+	if err := model.Prepare(ctx); err != nil {
 		return fmt.Errorf("run: model prepare failed: %w", err)
 	}
 
+	// models
+	blogsModel := sqlite.NewBlogs()
+	blogTagsModel := sqlite.NewBlogTags()
+	blogTopicsModel := sqlite.NewBlogTopics()
+	TagsModel := sqlite.NewTags()
+	TopicsModel := sqlite.NewTopics()
+
+	// repositories
+	blogsRepoModels := repositories.NewBlogsRepoModels(
+		blogsModel,
+		blogTagsModel,
+		blogTopicsModel,
+		TagsModel,
+		TopicsModel,
+	)
+	blogsRepo := repositories.NewBlogs(db, config.DB, *blogsRepoModels)
+
+	tagsRepoModels := repositories.NewTagsRepoModels(
+		blogTagsModel,
+		TagsModel,
+	)
+	tagsRepo := repositories.NewTags(db, config.DB, *tagsRepoModels)
+
+	topicsRepoModels := repositories.NewTopicsRepoModels(
+		blogTopicsModel,
+		TopicsModel,
+	)
+	topicsRepo := repositories.NewTopics(db, config.DB, *topicsRepoModels)
+
+	// handlers
+	blogsHandler := handlers.NewBlogs(blogsRepo)
+	tagsHandler := handlers.NewTags(tagsRepo)
+	topicsHandler := handlers.NewTopics(topicsRepo)
+
 	// setup server
-	server := api.NewServer(*config, *model)
+	server := api.NewServer(
+		config.Server,
+		blogsHandler,
+		tagsHandler,
+		topicsHandler,
+	)
 	if err := server.Start(); err != nil {
 		return fmt.Errorf("run: server start failed: %w", err)
 	}
