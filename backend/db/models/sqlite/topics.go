@@ -112,3 +112,14 @@ func (t *Topics) GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]en
 
 	return result, nil
 }
+
+func (t *Topics) List(ctx context.Context, db *sql.DB) ([]entities.Topic, error) {
+	return []entities.Topic{}, nil
+}
+func (t *Topics) Get(ctx context.Context, db *sql.DB, id int) (*entities.Topic, error) {
+	return &entities.Topic{}, nil
+}
+func (t *Topics) Update(ctx context.Context, db *sql.DB, topic entities.Topic) (*entities.Topic, error) {
+	return &entities.Topic{}, nil
+}
+func (t *Topics) Delete(ctx context.Context, db *sql.DB, id int) error { return nil }

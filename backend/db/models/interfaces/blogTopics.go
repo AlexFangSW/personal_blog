@@ -6,5 +6,7 @@ import (
 )
 
 type BlogTopicsModel interface {
-	Create(ctx context.Context, tx *sql.Tx, blogID int, topicIDs []int) error
+	Upsert(ctx context.Context, tx *sql.Tx, blogID int, topicIDs []int) error
+	Delete(ctx context.Context, tx *sql.Tx, blogID int, topicIDs []int) error
+	InverseDelete(ctx context.Context, tx *sql.Tx, blogID int, topicIDs []int) error
 }

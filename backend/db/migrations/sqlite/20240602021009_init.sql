@@ -64,7 +64,8 @@ CREATE TABLE IF NOT EXISTS blog_tags(
   blog_id INTEGER NOT NULL,
   tag_id INTEGER NOT NULL,
   FOREIGN KEY(blog_id) REFERENCES blogs(id),
-  FOREIGN KEY(tag_id) REFERENCES tags(id)
+  FOREIGN KEY(tag_id) REFERENCES tags(id),
+  PRIMARY KEY(blog_id, tag_id)
 );
 CREATE INDEX IF NOT EXISTS blog_tags_blog ON blog_tags (blog_id);
 CREATE INDEX IF NOT EXISTS blog_tags_tag ON blog_tags (tag_id);
@@ -73,7 +74,8 @@ CREATE TABLE IF NOT EXISTS blog_topics(
   blog_id INTEGER NOT NULL,
   topic_id INTEGER NOT NULL,
   FOREIGN KEY(blog_id) REFERENCES blogs(id),
-  FOREIGN KEY(topic_id) REFERENCES topics(id)
+  FOREIGN KEY(topic_id) REFERENCES topics(id),
+  PRIMARY KEY(blog_id, topic_id)
 );
 CREATE INDEX IF NOT EXISTS blog_topics_blog ON blog_topics (blog_id);
 CREATE INDEX IF NOT EXISTS blog_topics_topic ON blog_topics (topic_id);

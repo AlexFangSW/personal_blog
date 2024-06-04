@@ -10,6 +10,19 @@ import (
 
 type blogsRepository interface {
 	Create(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error)
+	Update(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error)
+
+	Get(ctx context.Context, id int) (*entities.OutBlog, error)
+	List(ctx context.Context) ([]entities.OutBlog, error)
+	ListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error)
+
+	AdminGet(ctx context.Context, id int) (*entities.OutBlog, error)
+	AdminList(ctx context.Context) ([]entities.OutBlog, error)
+	AdminListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error)
+
+	SoftDelete(ctx context.Context, id int) error
+	Delele(ctx context.Context, id int) error
+	RestoreDeleted(ctx context.Context, id int) (*entities.OutBlog, error)
 }
 
 type Blogs struct {
@@ -52,10 +65,22 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	return writeJSON(w, nil, outBlog, http.StatusOK)
 }
 
+/*
+queries:
+
+  - all=bool
+  - topic=int
+*/
 func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+/*
+queries:
+
+  - all=bool
+  - topic=int
+*/
 func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
@@ -65,14 +90,6 @@ func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (b *Blogs) SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
-func (b *Blogs) ListDeletedBlogs(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
-func (b *Blogs) GetDeletedBlog(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 

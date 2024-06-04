@@ -31,3 +31,10 @@ func (s *Server) patch(path string) string {
 	slog.Info("new route", "route", result)
 	return result
 }
+
+func (s *Server) put(path string) string {
+	prefix := s.config.Prefix
+	result := "PUT " + prefix + path
+	slog.Info("new route", "route", result)
+	return result
+}

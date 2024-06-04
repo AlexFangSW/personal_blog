@@ -64,18 +64,6 @@ func (t *Tags) Create(ctx context.Context, tag entities.Tag) (*entities.Tag, err
 	return newTag, nil
 }
 
-func (t *Tags) GetByBlogID(ctx context.Context, blog_id int) ([]entities.Tag, error) {
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
-	defer cancel()
-
-	tags, err := t.models.tags.GetByBlogID(ctxTimeout, t.db, blog_id)
-	if err != nil {
-		return []entities.Tag{}, fmt.Errorf("GetByBlogID: model get tags by blog id failed: %w", err)
-	}
-
-	return tags, nil
-}
-
 func (t *Tags) List(ctx context.Context) ([]entities.Tag, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
 	defer cancel()
@@ -98,4 +86,12 @@ func (t *Tags) Get(ctx context.Context, id int) (*entities.Tag, error) {
 	}
 
 	return tag, nil
+}
+
+func (t *Tags) Update(ctx context.Context, tag entities.Tag) (*entities.Tag, error) {
+	return &entities.Tag{}, nil
+}
+
+func (t *Tags) Delete(ctx context.Context, id int) error {
+	return nil
 }

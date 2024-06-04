@@ -14,7 +14,7 @@ func NewBlogTopics() *BlogTopics {
 	return &BlogTopics{}
 }
 
-func (b *BlogTopics) Create(ctx context.Context, tx *sql.Tx, blogID int, topicIDs []int) error {
+func (b *BlogTopics) Upsert(ctx context.Context, tx *sql.Tx, blogID int, topicIDs []int) error {
 	if len(topicIDs) == 0 {
 		return nil
 	}
@@ -28,7 +28,7 @@ func (b *BlogTopics) Create(ctx context.Context, tx *sql.Tx, blogID int, topicID
 	}
 
 	stmt := `
-	INSERT INTO blog_topics
+	REPLACE INTO blog_topics
 	(
 		blog_id,
 		topic_id
@@ -46,5 +46,12 @@ func (b *BlogTopics) Create(ctx context.Context, tx *sql.Tx, blogID int, topicID
 		return fmt.Errorf("Create: insert blog_topics failed: %w", insertErr)
 	}
 
+	return nil
+}
+
+func (b *BlogTopics) Delete(ctx context.Context, tx *sql.Tx, blogID int, topicIDs []int) error {
+	return nil
+}
+func (b *BlogTopics) InverseDelete(ctx context.Context, tx *sql.Tx, blogID int, topicIDs []int) error {
 	return nil
 }

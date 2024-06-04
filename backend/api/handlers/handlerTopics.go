@@ -10,7 +10,10 @@ import (
 
 type topicsRepository interface {
 	Create(ctx context.Context, topic entities.Topic) (*entities.Topic, error)
-	GetByBlogID(ctx context.Context, blog_id int) ([]entities.Topic, error)
+	List(ctx context.Context) ([]entities.Topic, error)
+	Get(ctx context.Context, id int) (*entities.Topic, error)
+	Update(ctx context.Context, topic entities.Topic) (*entities.Topic, error)
+	Delete(ctx context.Context, id int) error
 }
 
 type Topics struct {
