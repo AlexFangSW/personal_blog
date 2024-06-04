@@ -2,6 +2,7 @@ package api
 
 import (
 	"blog/config"
+	"context"
 	"log/slog"
 	"net/http"
 )
@@ -35,6 +36,7 @@ type tagsHandler interface {
 }
 
 type Server struct {
+	server *http.Server
 	config config.ServerSetting
 	blogs  blogsHandler
 	topics topicsHandler
@@ -76,6 +78,15 @@ func (s *Server) Start() error {
 	// mux.HandleFunc(s.patch("/topics/{id}"), withMiddleware(s.TopicsUpdate))
 	// mux.HandleFunc(s.delete("/topics/{id}"), withMiddleware(s.TopicsDelete))
 
+	s.server = &http.Server{
+		Addr:    s.config.Port,
+		Handler: mux,
+	}
 	slog.Info("Server is listening on", "port", s.config.Port)
-	return http.ListenAndServe(s.config.Port, mux)
+	return s.server.ListenAndServe()
+}
+
+func (s *Server) Stop(ctx context.Context) error {
+	slog.Warn("Stop: server shutting down")
+	return s.server.Shutdown(ctx)
 }

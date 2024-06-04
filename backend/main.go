@@ -10,11 +10,16 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -43,7 +48,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("run: open db connection failed: %w", err)
 	}
-	// TODO: specify connection config
+	db.SetMaxOpenConns(config.DB.Connections)
+	defer db.Close()
 
 	// db prepare
 	model := sqlite.New(db, config.DB)
@@ -93,14 +99,27 @@ func run() error {
 		tagsHandler,
 		topicsHandler,
 	)
-	if err := server.Start(); err != nil {
-		return fmt.Errorf("run: server start failed: %w", err)
-	}
 
-	return nil
+	go func() {
+		if err := server.Start(); !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal("run: server failed: %w", err)
+		}
+		slog.Info("run: server gracfully stoped")
+	}()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan
+
+	shutdownTimeout, shutdownCancel := context.WithTimeout(
+		ctx,
+		time.Duration(config.Server.ShutdownTimeout)*time.Second,
+	)
+	defer shutdownCancel()
+
+	return server.Stop(shutdownTimeout)
 }
 
-// TODO: graceful shutdown
 func main() {
 	if err := run(); err != nil {
 		log.Fatal(err)
