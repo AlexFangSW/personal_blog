@@ -100,13 +100,15 @@ func run() error {
 		topicsHandler,
 	)
 
+	// start server
 	go func() {
 		if err := server.Start(); !errors.Is(err, http.ErrServerClosed) {
-			log.Fatal("run: server failed: %w", err)
+			log.Fatal("run: server failed:", err)
 		}
 		slog.Info("run: server gracfully stoped")
 	}()
 
+	// graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
