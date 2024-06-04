@@ -1,4 +1,4 @@
-package models
+package sqlite
 
 import (
 	"blog/util"
@@ -8,19 +8,6 @@ import (
 	"strings"
 	"time"
 )
-
-type BlogTopic struct {
-	BlogID  int `json:"blog_id"`
-	TopicID int `json:"tag_id"`
-}
-
-func NewBlogTopic(blogID, topicID int) *BlogTopic {
-	blogTopic := &BlogTopic{
-		BlogID:  blogID,
-		TopicID: topicID,
-	}
-	return blogTopic
-}
 
 // Used in conjunction with CreateBlog.
 // DOES NOT rollback or commit transaction

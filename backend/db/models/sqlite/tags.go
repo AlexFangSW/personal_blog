@@ -1,39 +1,15 @@
-package models
+package sqlite
 
 import (
+	"blog/entities"
 	"blog/util"
 	"context"
 	"database/sql"
 	"fmt"
 	"time"
-
-	"github.com/gosimple/slug"
 )
 
-// xxx_at are all in ISO 8601.
-type Tag struct {
-	ID          int    `json:"id"`
-	Created_at  string `json:"created_at"`
-	Updated_at  string `json:"updated_at"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Slug        string `json:"slug"`
-}
-
-func (t *Tag) GenSlug() {
-	t.Slug = slug.Make(t.Name)
-}
-
-func NewTag(name, description string) *Tag {
-	tag := &Tag{
-		Name:        name,
-		Description: description,
-	}
-	tag.GenSlug()
-	return tag
-}
-
-func (m *Models) CreateTag(ctx context.Context, tag Tag) (Tag, error) {
+func (m *Models) CreateTag(ctx context.Context, tag entities.Tag) (entities.Tag, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
 	defer cancel()
 
@@ -53,7 +29,7 @@ func (m *Models) CreateTag(ctx context.Context, tag Tag) (Tag, error) {
 
 	tx, err := m.db.BeginTx(ctxTimeout, &sql.TxOptions{})
 	if err != nil {
-		return Tag{}, fmt.Errorf("CreateTag: begin transaction error: %w", err)
+		return entities.Tag{}, fmt.Errorf("CreateTag: begin transaction error: %w", err)
 	}
 
 	row := tx.QueryRowContext(
@@ -65,12 +41,12 @@ func (m *Models) CreateTag(ctx context.Context, tag Tag) (Tag, error) {
 	)
 	if err := row.Err(); err != nil {
 		if err := tx.Rollback(); err != nil {
-			return Tag{}, fmt.Errorf("CreateTag: rollback error: %w", err)
+			return entities.Tag{}, fmt.Errorf("CreateTag: rollback error: %w", err)
 		}
-		return Tag{}, fmt.Errorf("CreateTag: insert tag failed: %w", err)
+		return entities.Tag{}, fmt.Errorf("CreateTag: insert tag failed: %w", err)
 	}
 
-	newTag := &Tag{}
+	newTag := &entities.Tag{}
 	scanErr := row.Scan(
 		&newTag.ID,
 		&newTag.Created_at,
@@ -80,17 +56,17 @@ func (m *Models) CreateTag(ctx context.Context, tag Tag) (Tag, error) {
 		&newTag.Slug,
 	)
 	if scanErr != nil {
-		return Tag{}, fmt.Errorf("CreateTag: scan error: %w", scanErr)
+		return entities.Tag{}, fmt.Errorf("CreateTag: scan error: %w", scanErr)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return Tag{}, fmt.Errorf("CreateTag: commit error: %w", err)
+		return entities.Tag{}, fmt.Errorf("CreateTag: commit error: %w", err)
 	}
 
 	return *newTag, nil
 }
 
-func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]Tag, error) {
+func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]entities.Tag, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
 	defer cancel()
 
@@ -115,12 +91,12 @@ func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]Tag, error
 		blog_id,
 	)
 	if err != nil {
-		return []Tag{}, fmt.Errorf("GetTagsByBlogID: query context failed: %w", err)
+		return []entities.Tag{}, fmt.Errorf("GetTagsByBlogID: query context failed: %w", err)
 	}
 
-	result := []Tag{}
+	result := []entities.Tag{}
 	for {
-		tag := Tag{}
+		tag := entities.Tag{}
 		if !rows.Next() {
 			break
 		}
@@ -134,21 +110,21 @@ func (m *Models) GetTagsByBlogID(ctx context.Context, blog_id int) ([]Tag, error
 		)
 		if err != nil {
 			if err := rows.Close(); err != nil {
-				return []Tag{}, fmt.Errorf("GetTagsByBlogID: close rows failed: %w", err)
+				return []entities.Tag{}, fmt.Errorf("GetTagsByBlogID: close rows failed: %w", err)
 			}
-			return []Tag{}, fmt.Errorf("GetTagsByBlogID: scan failed: %w", err)
+			return []entities.Tag{}, fmt.Errorf("GetTagsByBlogID: scan failed: %w", err)
 		}
 		result = append(result, tag)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []Tag{}, fmt.Errorf("GetTagsByBlogID: rows iteration error: %w", err)
+		return []entities.Tag{}, fmt.Errorf("GetTagsByBlogID: rows iteration error: %w", err)
 	}
 
 	return result, nil
 }
 
-func (m *Models) ListTags(ctx context.Context) ([]Tag, error) {
+func (m *Models) ListTags(ctx context.Context) ([]entities.Tag, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
 	defer cancel()
 
@@ -157,15 +133,15 @@ func (m *Models) ListTags(ctx context.Context) ([]Tag, error) {
 
 	rows, err := m.db.QueryContext(ctxTimeout, stmt)
 	if err != nil {
-		return []Tag{}, fmt.Errorf("ListTags: query failed: %w", err)
+		return []entities.Tag{}, fmt.Errorf("ListTags: query failed: %w", err)
 	}
 
-	result := []Tag{}
+	result := []entities.Tag{}
 	for {
 		if !rows.Next() {
 			break
 		}
-		tag := Tag{}
+		tag := entities.Tag{}
 		err := rows.Scan(
 			&tag.ID,
 			&tag.Created_at,
@@ -176,21 +152,21 @@ func (m *Models) ListTags(ctx context.Context) ([]Tag, error) {
 		)
 		if err != nil {
 			if err := rows.Close(); err != nil {
-				return []Tag{}, fmt.Errorf("ListTags: close rows failed: %w", err)
+				return []entities.Tag{}, fmt.Errorf("ListTags: close rows failed: %w", err)
 			}
-			return []Tag{}, fmt.Errorf("ListTags: scan failed: %w", err)
+			return []entities.Tag{}, fmt.Errorf("ListTags: scan failed: %w", err)
 		}
 		result = append(result, tag)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []Tag{}, fmt.Errorf("ListTags: rows iteration error: %w", err)
+		return []entities.Tag{}, fmt.Errorf("ListTags: rows iteration error: %w", err)
 	}
 
 	return result, nil
 }
 
-func (m *Models) GetTag(ctx context.Context, id int) (Tag, error) {
+func (m *Models) GetTag(ctx context.Context, id int) (entities.Tag, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
 	defer cancel()
 
@@ -199,10 +175,10 @@ func (m *Models) GetTag(ctx context.Context, id int) (Tag, error) {
 
 	row := m.db.QueryRowContext(ctxTimeout, stmt, id)
 	if err := row.Err(); err != nil {
-		return Tag{}, fmt.Errorf("GetTag: query failed: %w", err)
+		return entities.Tag{}, fmt.Errorf("GetTag: query failed: %w", err)
 	}
 
-	tag := Tag{}
+	tag := entities.Tag{}
 	err := row.Scan(
 		&tag.ID,
 		&tag.Created_at,
@@ -212,7 +188,7 @@ func (m *Models) GetTag(ctx context.Context, id int) (Tag, error) {
 		&tag.Slug,
 	)
 	if err != nil {
-		return Tag{}, fmt.Errorf("GetTag: row scan failed: %w", err)
+		return entities.Tag{}, fmt.Errorf("GetTag: row scan failed: %w", err)
 	}
 
 	return tag, nil

@@ -1,7 +1,7 @@
 package api
 
 import (
-	"blog/db/models"
+	"blog/entities"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -10,19 +10,19 @@ import (
 func (s *Server) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTag")
 
-	body := &models.InBlog{}
+	body := &entities.InBlog{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateBlog: decode failed", "error", err.Error())
 		return writeJSON(w, err, nil, http.StatusBadRequest)
 	}
-	blog := models.NewBlog(
+	blog := entities.NewBlog(
 		body.Title,
 		body.Content,
 		body.Description,
 		body.Pined,
 		body.Visible,
 	)
-	inBlog := models.NewInBlog(
+	inBlog := entities.NewInBlog(
 		*blog,
 		body.Tags,
 		body.Topics,

@@ -1,39 +1,15 @@
-package models
+package sqlite
 
 import (
+	"blog/entities"
 	"blog/util"
 	"context"
 	"database/sql"
 	"fmt"
 	"time"
-
-	"github.com/gosimple/slug"
 )
 
-// xxx_at are all in ISO 8601.
-type Topic struct {
-	ID          int    `json:"id"`
-	Created_at  string `json:"created_at"`
-	Updated_at  string `json:"updated_at"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Slug        string `json:"slug"`
-}
-
-func (t *Topic) GenSlug() {
-	t.Slug = slug.Make(t.Name)
-}
-
-func NewTopic(name, description string) *Topic {
-	topic := &Topic{
-		Name:        name,
-		Description: description,
-	}
-	topic.GenSlug()
-	return topic
-}
-
-func (m *Models) CreateTopic(ctx context.Context, topic Topic) (Topic, error) {
+func (m *Models) CreateTopic(ctx context.Context, topic entities.Topic) (entities.Topic, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
 	defer cancel()
 
@@ -53,7 +29,7 @@ func (m *Models) CreateTopic(ctx context.Context, topic Topic) (Topic, error) {
 
 	tx, err := m.db.BeginTx(ctxTimeout, &sql.TxOptions{})
 	if err != nil {
-		return Topic{}, fmt.Errorf("CreateTopic: begin transaction error: %w", err)
+		return entities.Topic{}, fmt.Errorf("CreateTopic: begin transaction error: %w", err)
 	}
 
 	row := tx.QueryRowContext(
@@ -65,12 +41,12 @@ func (m *Models) CreateTopic(ctx context.Context, topic Topic) (Topic, error) {
 	)
 	if err := row.Err(); err != nil {
 		if err := tx.Rollback(); err != nil {
-			return Topic{}, fmt.Errorf("CreateTopic: rollback error: %w", err)
+			return entities.Topic{}, fmt.Errorf("CreateTopic: rollback error: %w", err)
 		}
-		return Topic{}, fmt.Errorf("CreateTopic: insert topic failed: %w", err)
+		return entities.Topic{}, fmt.Errorf("CreateTopic: insert topic failed: %w", err)
 	}
 
-	newTopic := &Topic{}
+	newTopic := &entities.Topic{}
 	scanErr := row.Scan(
 		&newTopic.ID,
 		&newTopic.Created_at,
@@ -80,17 +56,17 @@ func (m *Models) CreateTopic(ctx context.Context, topic Topic) (Topic, error) {
 		&newTopic.Slug,
 	)
 	if scanErr != nil {
-		return Topic{}, fmt.Errorf("CreateTopic: scan error: %w", scanErr)
+		return entities.Topic{}, fmt.Errorf("CreateTopic: scan error: %w", scanErr)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return Topic{}, fmt.Errorf("CreateTopic: commit error: %w", err)
+		return entities.Topic{}, fmt.Errorf("CreateTopic: commit error: %w", err)
 	}
 
 	return *newTopic, nil
 }
 
-func (m *Models) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]Topic, error) {
+func (m *Models) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]entities.Topic, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(m.config.Timeout)*time.Second)
 	defer cancel()
 
@@ -115,12 +91,12 @@ func (m *Models) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]Topic, e
 		blog_id,
 	)
 	if err != nil {
-		return []Topic{}, fmt.Errorf("GetTopicsByBlogID: query context failed: %w", err)
+		return []entities.Topic{}, fmt.Errorf("GetTopicsByBlogID: query context failed: %w", err)
 	}
 
-	result := []Topic{}
+	result := []entities.Topic{}
 	for {
-		topic := Topic{}
+		topic := entities.Topic{}
 		if !rows.Next() {
 			break
 		}
@@ -134,15 +110,15 @@ func (m *Models) GetTopicsByBlogID(ctx context.Context, blog_id int) ([]Topic, e
 		)
 		if err != nil {
 			if err := rows.Close(); err != nil {
-				return []Topic{}, fmt.Errorf("GetTopicsByBlogID: close rows error: %w", err)
+				return []entities.Topic{}, fmt.Errorf("GetTopicsByBlogID: close rows error: %w", err)
 			}
-			return []Topic{}, fmt.Errorf("GetTopicsByBlogID: scan error: %w", err)
+			return []entities.Topic{}, fmt.Errorf("GetTopicsByBlogID: scan error: %w", err)
 		}
 		result = append(result, topic)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []Topic{}, fmt.Errorf("GetTopicsByBlogID: rows iteration error: %w", err)
+		return []entities.Topic{}, fmt.Errorf("GetTopicsByBlogID: rows iteration error: %w", err)
 	}
 
 	return result, nil

@@ -2,8 +2,8 @@ package main
 
 import (
 	"blog/api"
-	"blog/db/models"
-	"blog/structs"
+	"blog/config"
+	"blog/db/models/sqlite"
 	"blog/util"
 	"context"
 	"database/sql"
@@ -30,7 +30,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("run: load config failed: %w", err)
 	}
-	config := structs.NewConfig()
+	config := config.NewConfig()
 	json.Unmarshal(rawConfig, config)
 
 	// init logger
@@ -42,14 +42,16 @@ func run() error {
 		return fmt.Errorf("run: open db connection failed: %w", err)
 	}
 
-	newModels := models.NewModels(db, config.DB)
+	// TODO: refector models to <db>model.<blogs | tags | topics>
+	// let server use interfaces
+	model := sqlite.New(db, config.DB)
 	ctx := context.Background()
-	if err := newModels.PrepareSqlite(ctx, config.DB.Timeout); err != nil {
-		return fmt.Errorf("run: prepare sqlite failed: %w", err)
+	if err := model.Prepare(ctx, config.DB.Timeout); err != nil {
+		return fmt.Errorf("run: model prepare failed: %w", err)
 	}
 
 	// setup server
-	server := api.NewServer(*config, *newModels)
+	server := api.NewServer(*config, *model)
 	if err := server.Start(); err != nil {
 		return fmt.Errorf("run: server start failed: %w", err)
 	}

@@ -1,7 +1,7 @@
 package api
 
 import (
-	"blog/db/models"
+	"blog/entities"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -13,12 +13,12 @@ import (
 func (s *Server) CreateTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTag")
 
-	body := &models.Tag{}
+	body := &entities.Tag{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateTag: decode failed", "error", err.Error())
 		return writeJSON(w, err, nil, http.StatusBadRequest)
 	}
-	inTag := models.NewTag(
+	inTag := entities.NewTag(
 		body.Name,
 		body.Description,
 	)

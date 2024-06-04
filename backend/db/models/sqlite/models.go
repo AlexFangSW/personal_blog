@@ -1,7 +1,7 @@
-package models
+package sqlite
 
 import (
-	"blog/structs"
+	"blog/config"
 	"context"
 	"database/sql"
 	"fmt"
@@ -10,17 +10,17 @@ import (
 
 type Models struct {
 	db     *sql.DB
-	config structs.DBSetting
+	config config.DBSetting
 }
 
-func NewModels(db *sql.DB, config structs.DBSetting) *Models {
+func New(db *sql.DB, config config.DBSetting) *Models {
 	return &Models{
 		db:     db,
 		config: config,
 	}
 }
 
-func (m *Models) PrepareSqlite(ctx context.Context, timeout int) error {
+func (m *Models) Prepare(ctx context.Context, timeout int) error {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 	defer cancel()
 

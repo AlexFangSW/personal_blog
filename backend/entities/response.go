@@ -1,4 +1,4 @@
-package structs
+package entities
 
 type Ret struct {
 	Error  any `json:"error"`

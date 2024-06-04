@@ -1,18 +1,18 @@
 package api
 
 import (
-	"blog/db/models"
-	"blog/structs"
+	"blog/config"
+	"blog/db/models/sqlite"
 	"log/slog"
 	"net/http"
 )
 
 type Server struct {
-	Config structs.Config
-	models models.Models
+	Config config.Config
+	models sqlite.Models
 }
 
-func NewServer(config structs.Config, models models.Models) *Server {
+func NewServer(config config.Config, models sqlite.Models) *Server {
 	return &Server{
 		Config: config,
 		models: models,
