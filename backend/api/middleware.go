@@ -8,7 +8,9 @@ import (
 type apiHandler func(w http.ResponseWriter, r *http.Request) error
 
 // Adds middleware on top of base handler func
-// A middleware for logging paths will be added by default
+// Default middlewares:
+// - error handling
+// - logging
 func withMiddleware(
 	base apiHandler,
 	handlers ...func(http.HandlerFunc) http.HandlerFunc,
