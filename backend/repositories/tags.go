@@ -92,7 +92,17 @@ func (t *Tags) Update(ctx context.Context, tag entities.Tag) (*entities.Tag, err
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
 	defer cancel()
 
-	return &entities.Tag{}, nil
+	tx, err := t.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return &entities.Tag{}, fmt.Errorf("Update: begin transaction error: %w", err)
+	}
+
+	newTag, err := t.models.tags.Update(ctxTimeout, tx, tag)
+	if err != nil {
+		return &entities.Tag{}, fmt.Errorf("Update: model update tag failed: %w", err)
+	}
+
+	return newTag, nil
 }
 
 func (t *Tags) Delete(ctx context.Context, id int) error {
