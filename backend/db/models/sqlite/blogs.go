@@ -70,34 +70,34 @@ func (b *Blogs) Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 func (b *Blogs) Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*entities.Blog, error) {
 	return &entities.Blog{}, nil
 }
-func (b *Blogs) Get(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error) {
+func (b *Blogs) Get(ctx context.Context, db *sql.DB, id int) (*entities.Blog, error) {
 	return &entities.Blog{}, nil
 }
 
-func (b *Blogs) List(ctx context.Context, tx *sql.Tx) ([]entities.Blog, error) {
+func (b *Blogs) List(ctx context.Context, db *sql.DB) ([]entities.Blog, error) {
 	return []entities.Blog{}, nil
 }
 
-func (b *Blogs) ListByTopicID(ctx context.Context, tx *sql.Tx, topicID int) ([]entities.Blog, error) {
+func (b *Blogs) ListByTopicID(ctx context.Context, db *sql.DB, topicID int) ([]entities.Blog, error) {
 	return []entities.Blog{}, nil
 }
 
-func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, tx *sql.Tx, topicID, tagID []int) ([]entities.Blog, error) {
+func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicID, tagID []int) ([]entities.Blog, error) {
 	return []entities.Blog{}, nil
 }
 
-func (b *Blogs) AdminGet(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error) {
+func (b *Blogs) AdminGet(ctx context.Context, db *sql.DB, id int) (*entities.Blog, error) {
 	return &entities.Blog{}, nil
 }
 
-func (b *Blogs) AdminList(ctx context.Context, tx *sql.Tx) ([]entities.Blog, error) {
+func (b *Blogs) AdminList(ctx context.Context, db *sql.DB) ([]entities.Blog, error) {
 	return []entities.Blog{}, nil
 }
-func (b *Blogs) AdminListByTopicID(ctx context.Context, tx *sql.Tx, topicID int) ([]entities.Blog, error) {
+func (b *Blogs) AdminListByTopicID(ctx context.Context, db *sql.DB, topicID int) ([]entities.Blog, error) {
 	return []entities.Blog{}, nil
 }
 
-func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, tx *sql.Tx, topicID, tagID []int) ([]entities.Blog, error) {
+func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicID, tagID []int) ([]entities.Blog, error) {
 	return []entities.Blog{}, nil
 }
 func (b *Blogs) SoftDelete(ctx context.Context, tx *sql.Tx, id int) error { return nil }

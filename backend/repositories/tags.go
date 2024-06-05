@@ -89,6 +89,9 @@ func (t *Tags) Get(ctx context.Context, id int) (*entities.Tag, error) {
 }
 
 func (t *Tags) Update(ctx context.Context, tag entities.Tag) (*entities.Tag, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
+	defer cancel()
+
 	return &entities.Tag{}, nil
 }
 

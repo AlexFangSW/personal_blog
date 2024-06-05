@@ -177,7 +177,7 @@ func (t *Tags) Get(ctx context.Context, db *sql.DB, id int) (*entities.Tag, erro
 	return &tag, nil
 }
 
-func (t *Tags) Update(ctx context.Context, db *sql.DB, tag entities.Tag) (*entities.Tag, error) {
+func (t *Tags) Update(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entities.Tag, error) {
 	return &entities.Tag{}, nil
 }
-func (t *Tags) Delete(ctx context.Context, db *sql.DB, id int) error { return nil }
+func (t *Tags) Delete(ctx context.Context, tx *sql.Tx, id int) error { return nil }
