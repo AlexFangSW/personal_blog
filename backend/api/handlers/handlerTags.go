@@ -16,7 +16,7 @@ type tagsRepository interface {
 	List(ctx context.Context) ([]entities.Tag, error)
 	Get(ctx context.Context, id int) (*entities.Tag, error)
 	Update(ctx context.Context, tag entities.Tag) (*entities.Tag, error)
-	Delete(ctx context.Context, id int) error
+	Delete(ctx context.Context, id int) (int, error)
 }
 
 type Tags struct {
@@ -77,7 +77,7 @@ func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 		// differentiate if it's db error or that the user supplied id dosen't exist
 		slog.Error("GetTag: repo get failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return writeJSON(w, err, nil, http.StatusBadRequest)
+			return writeJSON(w, ErrorTargetNotFound, nil, http.StatusNotFound)
 		} else {
 			return writeJSON(w, err, nil, http.StatusInternalServerError)
 		}
@@ -87,9 +87,61 @@ func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	slog.Debug("UpdateTag")
+
+	// load body
+	body := &entities.Tag{}
+	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
+		slog.Error("UpdateTag: decode failed", "error", err.Error())
+		return writeJSON(w, err, nil, http.StatusBadRequest)
+	}
+	inTag := entities.NewTag(
+		body.Name,
+		body.Description,
+	)
+
+	// get target id
+	rawID := r.PathValue("id")
+	id, err := strconv.Atoi(rawID)
+	if err != nil {
+		slog.Error("UpdateTag: id string to int failed", "error", err.Error())
+		return writeJSON(w, err, nil, http.StatusBadRequest)
+	}
+	inTag.ID = id
+
+	outTag, err := t.repo.Update(r.Context(), *inTag)
+	if err != nil {
+		slog.Error("UpdateTag: repo update failed", "error", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return writeJSON(w, ErrorTargetNotFound, nil, http.StatusNotFound)
+		} else {
+			return writeJSON(w, err, nil, http.StatusInternalServerError)
+		}
+	}
+
+	return writeJSON(w, nil, outTag, http.StatusOK)
 }
 
 func (t *Tags) DeleteTag(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	slog.Info("DeleteTag")
+
+	// get target id
+	rawID := r.PathValue("id")
+	id, err := strconv.Atoi(rawID)
+	if err != nil {
+		slog.Error("DeleteTag: id string to int failed", "error", err.Error())
+		return writeJSON(w, err, nil, http.StatusBadRequest)
+	}
+
+	affectedRows, err := t.repo.Delete(r.Context(), id)
+	if err != nil {
+		slog.Error("DeleteTag: repo delete failed", "error", err.Error())
+		return writeJSON(w, err, nil, http.StatusInternalServerError)
+	}
+
+	if affectedRows == 0 {
+		return writeJSON(w, ErrorTargetNotFound, nil, http.StatusNotFound)
+	}
+
+	return writeJSON(w, nil, affectedRowsResponse(affectedRows), http.StatusOK)
 }

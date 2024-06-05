@@ -68,14 +68,14 @@ func (s *Server) Start() error {
 	mux.HandleFunc(s.post("/tags"), withMiddleware(s.tags.CreateTag))
 	mux.HandleFunc(s.get("/tags"), withMiddleware(s.tags.ListTags))
 	mux.HandleFunc(s.get("/tags/{id}"), withMiddleware(s.tags.GetTag))
-	// mux.HandleFunc(s.put("/tags/{id}"), withMiddleware(s.TagsUpdate))
-	// mux.HandleFunc(s.delete("/tags/{id}"), withMiddleware(s.TagsDelete))
-	//
+	mux.HandleFunc(s.put("/tags/{id}"), withMiddleware(s.tags.UpdateTag))
+	mux.HandleFunc(s.delete("/tags/{id}"), withMiddleware(s.tags.DeleteTag))
+
 	mux.HandleFunc(s.post("/topics"), withMiddleware(s.topics.CreateTopic))
-	// mux.HandleFunc(s.get("/topics"), withMiddleware(s.TopicsGetAll))
-	// mux.HandleFunc(s.get("/topics/{id}"), withMiddleware(s.TopicsGetOne))
-	// mux.HandleFunc(s.put("/topics/{id}"), withMiddleware(s.TopicsUpdate))
-	// mux.HandleFunc(s.delete("/topics/{id}"), withMiddleware(s.TopicsDelete))
+	mux.HandleFunc(s.get("/topics"), withMiddleware(s.topics.ListTopics))
+	mux.HandleFunc(s.get("/topics/{id}"), withMiddleware(s.topics.GetTopic))
+	mux.HandleFunc(s.put("/topics/{id}"), withMiddleware(s.topics.UpdateTopic))
+	mux.HandleFunc(s.delete("/topics/{id}"), withMiddleware(s.topics.DeleteTopic))
 
 	s.server = &http.Server{
 		Addr:    s.config.Port,

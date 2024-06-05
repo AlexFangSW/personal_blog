@@ -178,6 +178,61 @@ func (t *Tags) Get(ctx context.Context, db *sql.DB, id int) (*entities.Tag, erro
 }
 
 func (t *Tags) Update(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entities.Tag, error) {
-	return &entities.Tag{}, nil
+	stmt := `
+	UPDATE tags
+	SET
+		name = ?,
+		description = ?,
+		slug = ?
+	WHERE 
+		id = ?
+	RETURNING *;
+	`
+	util.LogQuery(ctx, "UpdateTag:", stmt)
+
+	row := tx.QueryRowContext(
+		ctx,
+		stmt,
+		tag.Name,
+		tag.Description,
+		tag.Slug,
+		tag.ID,
+	)
+	if err := row.Err(); err != nil {
+		return &entities.Tag{}, fmt.Errorf("Update: update query failed: %w", err)
+	}
+
+	newTag := entities.Tag{}
+	scanErr := row.Scan(
+		&newTag.ID,
+		&newTag.Created_at,
+		&newTag.Updated_at,
+		&newTag.Name,
+		&newTag.Description,
+		&newTag.Slug,
+	)
+	if scanErr != nil {
+		return &entities.Tag{}, fmt.Errorf("Update: scan error: %w", scanErr)
+	}
+
+	return &newTag, nil
 }
-func (t *Tags) Delete(ctx context.Context, tx *sql.Tx, id int) error { return nil }
+
+func (t *Tags) Delete(ctx context.Context, tx *sql.Tx, id int) (int, error) {
+	stmt := `
+	DELETE FROM tags WHERE id = ?;
+	`
+	util.LogQuery(ctx, "DeleteTags:", stmt)
+
+	res, err := tx.ExecContext(ctx, stmt, id)
+	if err != nil {
+		return 0, fmt.Errorf("Delete: delete error: %w", err)
+	}
+
+	affectedRows, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("Delete: delete error: %w", err)
+	}
+
+	return int(affectedRows), nil
+}

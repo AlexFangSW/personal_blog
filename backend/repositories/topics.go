@@ -58,24 +58,80 @@ func (t *Topics) Create(ctx context.Context, topic entities.Topic) (*entities.To
 	}
 
 	if err := tx.Commit(); err != nil {
-		return &entities.Topic{}, fmt.Errorf("RepoCreateTopic: commit error: %w", err)
+		return &entities.Topic{}, fmt.Errorf("Create: commit error: %w", err)
 	}
 
 	return newTopic, nil
 }
 
 func (t *Topics) List(ctx context.Context) ([]entities.Topic, error) {
-	return []entities.Topic{}, nil
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
+	defer cancel()
+
+	topics, err := t.models.topics.List(ctxTimeout, t.db)
+	if err != nil {
+		return []entities.Topic{}, fmt.Errorf("List: model list topics failed: %w", err)
+	}
+
+	return topics, nil
 }
 
 func (t *Topics) Get(ctx context.Context, id int) (*entities.Topic, error) {
-	return &entities.Topic{}, nil
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
+	defer cancel()
+
+	topic, err := t.models.topics.Get(ctxTimeout, t.db, id)
+	if err != nil {
+		return &entities.Topic{}, fmt.Errorf("Get: model get topic failed: %w", err)
+	}
+
+	return topic, nil
 }
 
 func (t *Topics) Update(ctx context.Context, topic entities.Topic) (*entities.Topic, error) {
-	return &entities.Topic{}, nil
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := t.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return &entities.Topic{}, fmt.Errorf("Update: begin transaction error: %w", err)
+	}
+
+	newTopic, err := t.models.topics.Update(ctxTimeout, tx, topic)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.Topic{}, fmt.Errorf("Update: model update topic rollback error: %w", err)
+		}
+		return &entities.Topic{}, fmt.Errorf("Update: model update topic failed: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return &entities.Topic{}, fmt.Errorf("Update: commit error: %w", err)
+	}
+
+	return newTopic, nil
 }
 
-func (t *Topics) Delete(ctx context.Context, id int) error {
-	return nil
+func (t *Topics) Delete(ctx context.Context, id int) (int, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := t.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return 0, fmt.Errorf("Delete: begin transaction error: %w", err)
+	}
+
+	affectedRows, err := t.models.topics.Delete(ctxTimeout, tx, id)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("Delete: model delete topic rollback error: %w", err)
+		}
+		return 0, fmt.Errorf("Delete: model delete topic failed: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("Delete: commit error: %w", err)
+	}
+
+	return affectedRows, nil
 }

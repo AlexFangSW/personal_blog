@@ -12,5 +12,5 @@ type TagsModel interface {
 	List(ctx context.Context, db *sql.DB) ([]entities.Tag, error)
 	Get(ctx context.Context, db *sql.DB, id int) (*entities.Tag, error)
 	Update(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entities.Tag, error)
-	Delete(ctx context.Context, tx *sql.Tx, id int) error
+	Delete(ctx context.Context, tx *sql.Tx, id int) (int, error)
 }

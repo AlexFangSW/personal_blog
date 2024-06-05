@@ -99,12 +99,39 @@ func (t *Tags) Update(ctx context.Context, tag entities.Tag) (*entities.Tag, err
 
 	newTag, err := t.models.tags.Update(ctxTimeout, tx, tag)
 	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.Tag{}, fmt.Errorf("Update: model update tag rollback error: %w", err)
+		}
 		return &entities.Tag{}, fmt.Errorf("Update: model update tag failed: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return &entities.Tag{}, fmt.Errorf("Update: commit error: %w", err)
 	}
 
 	return newTag, nil
 }
 
-func (t *Tags) Delete(ctx context.Context, id int) error {
-	return nil
+func (t *Tags) Delete(ctx context.Context, id int) (int, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := t.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return 0, fmt.Errorf("Delete: begin transaction error: %w", err)
+	}
+
+	affectedRows, err := t.models.tags.Delete(ctxTimeout, tx, id)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("Delete: model delete tag rollback error: %w", err)
+		}
+		return 0, fmt.Errorf("Delete: model delete tag failed: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("Delete: commit error: %w", err)
+	}
+
+	return affectedRows, nil
 }

@@ -3,9 +3,14 @@ package handlers
 import (
 	"blog/entities"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+)
+
+var (
+	ErrorTargetNotFound = errors.New("Target not found")
 )
 
 func writeJSON(w http.ResponseWriter, err error, msg any, status int) error {
@@ -22,4 +27,10 @@ func writeJSON(w http.ResponseWriter, err error, msg any, status int) error {
 		return fmt.Errorf("writeJSON: encode error: %w", err)
 	}
 	return nil
+}
+
+func affectedRowsResponse(affectedRows int) map[string]int {
+	return map[string]int{
+		"affactedRows": affectedRows,
+	}
 }
