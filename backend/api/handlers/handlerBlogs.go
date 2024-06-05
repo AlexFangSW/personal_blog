@@ -15,10 +15,12 @@ type blogsRepository interface {
 	Get(ctx context.Context, id int) (*entities.OutBlog, error)
 	List(ctx context.Context) ([]entities.OutBlog, error)
 	ListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error)
+	ListByTopicAndTagIDs(ctx context.Context, topicID, tagID []int) ([]entities.OutBlog, error)
 
 	AdminGet(ctx context.Context, id int) (*entities.OutBlog, error)
 	AdminList(ctx context.Context) ([]entities.OutBlog, error)
 	AdminListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error)
+	AdminListByTopicAndTagIDs(ctx context.Context, topicID, tagID []int) ([]entities.OutBlog, error)
 
 	SoftDelete(ctx context.Context, id int) error
 	Delele(ctx context.Context, id int) error

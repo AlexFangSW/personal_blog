@@ -118,6 +118,10 @@ func (b *Blogs) ListByTopicID(ctx context.Context, topicID int) ([]entities.OutB
 	return []entities.OutBlog{}, nil
 }
 
+func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, topicID, tagID []int) ([]entities.OutBlog, error) {
+	return []entities.OutBlog{}, nil
+}
+
 func (b *Blogs) AdminList(ctx context.Context) ([]entities.OutBlog, error) {
 
 	return []entities.OutBlog{}, nil
@@ -125,6 +129,10 @@ func (b *Blogs) AdminList(ctx context.Context) ([]entities.OutBlog, error) {
 
 func (b *Blogs) AdminListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error) {
 
+	return []entities.OutBlog{}, nil
+}
+
+func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, topicID, tagID []int) ([]entities.OutBlog, error) {
 	return []entities.OutBlog{}, nil
 }
 

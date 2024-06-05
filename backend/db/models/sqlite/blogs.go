@@ -82,6 +82,10 @@ func (b *Blogs) ListByTopicID(ctx context.Context, tx *sql.Tx, topicID int) ([]e
 	return []entities.Blog{}, nil
 }
 
+func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, tx *sql.Tx, topicID, tagID []int) ([]entities.Blog, error) {
+	return []entities.Blog{}, nil
+}
+
 func (b *Blogs) AdminGet(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error) {
 	return &entities.Blog{}, nil
 }
@@ -90,6 +94,10 @@ func (b *Blogs) AdminList(ctx context.Context, tx *sql.Tx) ([]entities.Blog, err
 	return []entities.Blog{}, nil
 }
 func (b *Blogs) AdminListByTopicID(ctx context.Context, tx *sql.Tx, topicID int) ([]entities.Blog, error) {
+	return []entities.Blog{}, nil
+}
+
+func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, tx *sql.Tx, topicID, tagID []int) ([]entities.Blog, error) {
 	return []entities.Blog{}, nil
 }
 func (b *Blogs) SoftDelete(ctx context.Context, tx *sql.Tx, id int) error { return nil }

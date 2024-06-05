@@ -12,9 +12,11 @@ type BlogsModel interface {
 	Get(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error)
 	List(ctx context.Context, tx *sql.Tx) ([]entities.Blog, error)
 	ListByTopicID(ctx context.Context, tx *sql.Tx, topicID int) ([]entities.Blog, error)
+	ListByTopicAndTagIDs(ctx context.Context, tx *sql.Tx, topicID, tagID []int) ([]entities.Blog, error)
 	AdminGet(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error)
 	AdminList(ctx context.Context, tx *sql.Tx) ([]entities.Blog, error)
 	AdminListByTopicID(ctx context.Context, tx *sql.Tx, topicID int) ([]entities.Blog, error)
+	AdminListByTopicAndTagIDs(ctx context.Context, tx *sql.Tx, topicID, tagID []int) ([]entities.Blog, error)
 	SoftDelete(ctx context.Context, tx *sql.Tx, id int) error
 	Delete(ctx context.Context, tx *sql.Tx, id int) error
 	RestoreDeleted(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error)
