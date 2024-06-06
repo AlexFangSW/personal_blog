@@ -8,15 +8,18 @@ import (
 	"net/http"
 )
 
+// Concrete implementations are at repository/<name>
 type blogsRepository interface {
 	Create(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error)
 	Update(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error)
 
+	// This group of functions will only return rows with 'visible=true' and 'deleted_at=""'
 	Get(ctx context.Context, id int) (*entities.OutBlog, error)
 	List(ctx context.Context) ([]entities.OutBlog, error)
 	ListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error)
 	ListByTopicAndTagIDs(ctx context.Context, topicID, tagID []int) ([]entities.OutBlog, error)
 
+	// Returns all rows regardless of visiblility and soft delete status
 	AdminGet(ctx context.Context, id int) (*entities.OutBlog, error)
 	AdminList(ctx context.Context) ([]entities.OutBlog, error)
 	AdminListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error)

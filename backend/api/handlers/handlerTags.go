@@ -11,6 +11,7 @@ import (
 	"strconv"
 )
 
+// Concrete implementations are at repository/<name>
 type tagsRepository interface {
 	Create(ctx context.Context, tag entities.Tag) (*entities.Tag, error)
 	List(ctx context.Context) ([]entities.Tag, error)

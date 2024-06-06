@@ -31,7 +31,7 @@ func NewServer(
 
 func (s *Server) Start() error {
 	// routes
-	mux := &http.ServeMux{}
+	mux := http.NewServeMux()
 
 	// TODO: use middleware to block 'list, get ?all=true' requests that dosen't have token
 	mux.HandleFunc(s.post("/blogs"), withMiddleware(s.blogs.CreateBlog))

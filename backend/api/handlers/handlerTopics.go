@@ -11,6 +11,7 @@ import (
 	"strconv"
 )
 
+// Concrete implementations are at repository/<name>
 type topicsRepository interface {
 	Create(ctx context.Context, topic entities.Topic) (*entities.Topic, error)
 	List(ctx context.Context) ([]entities.Topic, error)
