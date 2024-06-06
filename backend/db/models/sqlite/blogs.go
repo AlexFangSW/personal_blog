@@ -68,6 +68,20 @@ func (b *Blogs) Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 }
 
 func (b *Blogs) Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*entities.Blog, error) {
+	stmt := `
+	UPDATE blogs 
+	SET
+		title = ?,
+		content = ?,
+		description = ?,
+		slug = ?,
+		pined = ?,
+		visible = ?
+	WHERE 
+		id = ?
+	RETURING *;
+	`
+
 	return &entities.Blog{}, nil
 }
 func (b *Blogs) Get(ctx context.Context, db *sql.DB, id int) (*entities.Blog, error) {
