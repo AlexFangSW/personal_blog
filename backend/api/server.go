@@ -1,50 +1,26 @@
 package api
 
 import (
+	"blog/api/handlers"
 	"blog/config"
 	"context"
 	"log/slog"
 	"net/http"
 )
 
-type blogsHandler interface {
-	CreateBlog(w http.ResponseWriter, r *http.Request) error
-
-	// scops: visible, deleted, all
-	ListBlogs(w http.ResponseWriter, r *http.Request) error
-	GetBlog(w http.ResponseWriter, r *http.Request) error
-
-	UpdateBlog(w http.ResponseWriter, r *http.Request) error
-	SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error
-	RestoreDeletedBlog(w http.ResponseWriter, r *http.Request) error
-	DeleteBlog(w http.ResponseWriter, r *http.Request) error
-}
-
-type topicsHandler interface {
-	CreateTopic(w http.ResponseWriter, r *http.Request) error
-	ListTopics(w http.ResponseWriter, r *http.Request) error
-	GetTopic(w http.ResponseWriter, r *http.Request) error
-	UpdateTopic(w http.ResponseWriter, r *http.Request) error
-	DeleteTopic(w http.ResponseWriter, r *http.Request) error
-}
-
-type tagsHandler interface {
-	CreateTag(w http.ResponseWriter, r *http.Request) error
-	ListTags(w http.ResponseWriter, r *http.Request) error
-	GetTag(w http.ResponseWriter, r *http.Request) error
-	UpdateTag(w http.ResponseWriter, r *http.Request) error
-	DeleteTag(w http.ResponseWriter, r *http.Request) error
-}
-
 type Server struct {
 	server *http.Server
 	config config.ServerSetting
-	blogs  blogsHandler
-	topics topicsHandler
-	tags   tagsHandler
+	blogs  handlers.Blogs
+	topics handlers.Topics
+	tags   handlers.Tags
 }
 
-func NewServer(config config.ServerSetting, blogs blogsHandler, tags tagsHandler, topics topicsHandler) *Server {
+func NewServer(
+	config config.ServerSetting,
+	blogs handlers.Blogs,
+	tags handlers.Tags,
+	topics handlers.Topics) *Server {
 	return &Server{
 		config: config,
 		blogs:  blogs,

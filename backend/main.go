@@ -95,9 +95,9 @@ func run() error {
 	// setup server
 	server := api.NewServer(
 		config.Server,
-		blogsHandler,
-		tagsHandler,
-		topicsHandler,
+		*blogsHandler,
+		*tagsHandler,
+		*topicsHandler,
 	)
 
 	// start server
