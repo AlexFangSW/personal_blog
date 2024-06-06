@@ -37,3 +37,6 @@ TODO
 ### Class diagram
 TODO
 
+
+## TODO
+- Remove unassasary interfaces.... 
