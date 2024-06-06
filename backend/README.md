@@ -45,6 +45,15 @@ TODO
     - blogTags
 - Implement handlers
     - blogs
+- Auth 
+    - handler
+        - login
+        - middleware
+    - repo:
+        - user
+    - model:
+        - user
+    - utility to create user
 - Remove unassasary interfaces.... 
     - Preferably, only use interface for connecting handlers and repositories (will change DB, or use ORM)
 - Better naming. EX: Models -> Tables
