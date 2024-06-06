@@ -6,6 +6,7 @@ import (
 	"database/sql"
 )
 
+// Concrete implementations are at db/models/<db name>/
 type TopicsModel interface {
 	Create(ctx context.Context, tx *sql.Tx, topic entities.Topic) (*entities.Topic, error)
 	GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]entities.Topic, error)

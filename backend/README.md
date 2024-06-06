@@ -42,3 +42,4 @@ TODO
 - Remove unassasary interfaces.... 
     - Preferably, only use interface for connecting handlers and repositories (will change DB, or use ORM)
 - Better naming. EX: Models -> Tables
+- Intergration tests on CRUD operations

@@ -6,6 +6,7 @@ import (
 	"database/sql"
 )
 
+// Concrete implementations are at db/models/<db name>/
 type BlogsModel interface {
 	Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*entities.Blog, error)
 	Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*entities.Blog, error)
@@ -17,7 +18,7 @@ type BlogsModel interface {
 	AdminList(ctx context.Context, db *sql.DB) ([]entities.Blog, error)
 	AdminListByTopicID(ctx context.Context, db *sql.DB, topicID int) ([]entities.Blog, error)
 	AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicID, tagID []int) ([]entities.Blog, error)
-	SoftDelete(ctx context.Context, tx *sql.Tx, id int) error
-	Delete(ctx context.Context, tx *sql.Tx, id int) error
+	SoftDelete(ctx context.Context, tx *sql.Tx, id int) (int, error)
+	Delete(ctx context.Context, tx *sql.Tx, id int) (int, error)
 	RestoreDeleted(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error)
 }

@@ -6,6 +6,7 @@ import (
 	"database/sql"
 )
 
+// Concrete implementations are at db/models/<db name>/
 type TagsModel interface {
 	Create(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entities.Tag, error)
 	GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]entities.Tag, error)

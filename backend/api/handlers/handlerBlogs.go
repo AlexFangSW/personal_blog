@@ -22,8 +22,8 @@ type blogsRepository interface {
 	AdminListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error)
 	AdminListByTopicAndTagIDs(ctx context.Context, topicID, tagID []int) ([]entities.OutBlog, error)
 
-	SoftDelete(ctx context.Context, id int) error
-	Delele(ctx context.Context, id int) error
+	SoftDelete(ctx context.Context, id int) (int, error)
+	Delele(ctx context.Context, id int) (int, error)
 	RestoreDeleted(ctx context.Context, id int) (*entities.OutBlog, error)
 }
 

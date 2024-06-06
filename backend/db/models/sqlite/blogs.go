@@ -100,8 +100,8 @@ func (b *Blogs) AdminListByTopicID(ctx context.Context, db *sql.DB, topicID int)
 func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicID, tagID []int) ([]entities.Blog, error) {
 	return []entities.Blog{}, nil
 }
-func (b *Blogs) SoftDelete(ctx context.Context, tx *sql.Tx, id int) error { return nil }
-func (b *Blogs) Delete(ctx context.Context, tx *sql.Tx, id int) error     { return nil }
+func (b *Blogs) SoftDelete(ctx context.Context, tx *sql.Tx, id int) (int, error) { return 0, nil }
+func (b *Blogs) Delete(ctx context.Context, tx *sql.Tx, id int) (int, error)     { return 0, nil }
 func (b *Blogs) RestoreDeleted(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error) {
 	return &entities.Blog{}, nil
 }
