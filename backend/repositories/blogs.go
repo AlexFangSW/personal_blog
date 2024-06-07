@@ -212,13 +212,13 @@ Only return blogs with field values:
 
 - deleted_at: ""
 */
-func (b *Blogs) ListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error) {
+func (b *Blogs) ListByTopicIDs(ctx context.Context, topicID []int) ([]entities.OutBlog, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
 	defer cancel()
 
-	blogs, err := b.models.blog.ListByTopicID(ctxTimeout, b.db, topicID)
+	blogs, err := b.models.blog.ListByTopicIDs(ctxTimeout, b.db, topicID)
 	if err != nil {
-		return []entities.OutBlog{}, fmt.Errorf("ListByTopicID: model list blogs by topic id failed: %w", err)
+		return []entities.OutBlog{}, fmt.Errorf("ListByTopicIDs: model list blogs by topic id failed: %w", err)
 	}
 
 	result := []entities.OutBlog{}
@@ -226,7 +226,7 @@ func (b *Blogs) ListByTopicID(ctx context.Context, topicID int) ([]entities.OutB
 	for _, blog := range blogs {
 		outBlog, err := b.fillOutBlog(ctxTimeout, blog)
 		if err != nil {
-			return []entities.OutBlog{}, fmt.Errorf("ListByTopicID: fill OutBlog failed: %w", err)
+			return []entities.OutBlog{}, fmt.Errorf("ListByTopicIDs: fill OutBlog failed: %w", err)
 		}
 		result = append(result, *outBlog)
 	}
@@ -305,13 +305,13 @@ func (b *Blogs) AdminList(ctx context.Context) ([]entities.OutBlog, error) {
 }
 
 // Returns all matched blogs
-func (b *Blogs) AdminListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error) {
+func (b *Blogs) AdminListByTopicIDs(ctx context.Context, topicID []int) ([]entities.OutBlog, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
 	defer cancel()
 
-	blogs, err := b.models.blog.AdminListByTopicID(ctxTimeout, b.db, topicID)
+	blogs, err := b.models.blog.AdminListByTopicIDs(ctxTimeout, b.db, topicID)
 	if err != nil {
-		return []entities.OutBlog{}, fmt.Errorf("AdminListByTopicID: model list blogs by topic id failed: %w", err)
+		return []entities.OutBlog{}, fmt.Errorf("AdminListByTopicIDs: model list blogs by topic id failed: %w", err)
 	}
 
 	result := []entities.OutBlog{}
@@ -319,7 +319,7 @@ func (b *Blogs) AdminListByTopicID(ctx context.Context, topicID int) ([]entities
 	for _, blog := range blogs {
 		outBlog, err := b.fillOutBlog(ctxTimeout, blog)
 		if err != nil {
-			return []entities.OutBlog{}, fmt.Errorf("AdminListByTopicID: fill OutBlog failed: %w", err)
+			return []entities.OutBlog{}, fmt.Errorf("AdminListByTopicIDs: fill OutBlog failed: %w", err)
 		}
 		result = append(result, *outBlog)
 	}

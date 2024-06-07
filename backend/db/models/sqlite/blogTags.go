@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"strconv"
 	"strings"
 )
 
@@ -62,14 +61,15 @@ func (b *BlogTags) Delete(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []
 		var inIDs strings.Builder
 
 		// DELETE FROM blog_tags WHERE blog_id = ? AND tag_id IN (x,x,x,x,x);
-		inIDs.WriteString("AND tag_id IN (")
-		for i, id := range tagIDs {
-			inIDs.WriteString(strconv.Itoa(id))
-			if i != len(tagIDs)-1 {
-				inIDs.WriteString(",")
-			}
+		inIDs.WriteString("AND tag_id IN ")
+
+		values, err := genInCondition(tagIDs)
+		if err != nil {
+			return fmt.Errorf("Delete: gen IN condition failed: %w", err)
 		}
-		inIDs.WriteString(");")
+		inIDs.WriteString(values)
+
+		inIDs.WriteString(";")
 
 		stmt += inIDs.String()
 	}
@@ -93,19 +93,16 @@ func (b *BlogTags) InverseDelete(ctx context.Context, tx *sql.Tx, blogID int, ta
 		return nil
 	}
 
-	var values strings.Builder
-	for i, id := range tagIDs {
-		values.WriteString(strconv.Itoa(id))
-		if i != len(tagIDs) {
-			values.WriteString(",")
-		}
+	values, err := genInCondition(tagIDs)
+	if err != nil {
+		return fmt.Errorf("InverseDelete: gen IN condition failed: %w", err)
 	}
 
 	stmt := `
 	DELETE FROM blog_tags
 	WHERE 
 		blog_id = ?
-	AND tag_id NOT IN (` + values.String() + `)`
+	AND tag_id NOT IN ` + values
 
 	util.LogQuery(ctx, "InverseDeleteBlogTags:", stmt)
 

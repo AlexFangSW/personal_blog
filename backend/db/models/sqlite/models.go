@@ -5,6 +5,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -31,4 +33,30 @@ func (m *Models) Prepare(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// ex: SELECT * FROM xxx WHERE bbb IN '(1,3,4,5)'
+//
+// (1,3,4,5) <-- this is what we will generate
+func genInCondition(inpt []int) (string, error) {
+	var condition strings.Builder
+	if _, err := condition.WriteString("("); err != nil {
+		return "", fmt.Errorf("genInCondition: write string '(' failed: %w", err)
+	}
+
+	for i, id := range inpt {
+		if _, err := condition.WriteString(strconv.Itoa(id)); err != nil {
+			return "", fmt.Errorf("genInCondition: write string 'id' failed: %w", err)
+		}
+		if i != len(inpt) {
+			if _, err := condition.WriteString(","); err != nil {
+				return "", fmt.Errorf("genInCondition: write string ',' failed: %w", err)
+			}
+		}
+	}
+	if _, err := condition.WriteString(")"); err != nil {
+		return "", fmt.Errorf("genInCondition: write string ')' failed: %w", err)
+	}
+
+	return condition.String(), nil
 }

@@ -48,9 +48,9 @@ TODO
 
 ## TODO
 - Implement sqlite models
-    - blogs
-    - blogTopics
-    - blogTags
+    - blogs [ok]
+    - blogTopics [ok]
+    - blogTags [ok]
 - Implement handlers
     - blogs
 - Log request after response (with status code)

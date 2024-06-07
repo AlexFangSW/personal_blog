@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 )
 
 type Blogs struct{}
@@ -141,32 +142,285 @@ func (b *Blogs) List(ctx context.Context, db *sql.DB) ([]entities.Blog, error) {
 	return result, nil
 }
 
-func (b *Blogs) ListByTopicID(ctx context.Context, db *sql.DB, topicID int) ([]entities.Blog, error) {
-	return []entities.Blog{}, nil
+// only return visible and none soft deleted blogs
+func (b *Blogs) ListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) ([]entities.Blog, error) {
+	values, err := genInCondition(topicIDs)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("ListByTopicIDs: gen IN condition failed: %w", err)
+	}
+
+	stmt := `
+	SELECT * FROM blogs
+	WHERE id IN (
+		SELECT blog_id FROM blogTopics
+		WHERE topic_id IN ` + values + `
+	)
+	AND visible = 1 AND deleted_at = "";`
+
+	util.LogQuery(ctx, "ListBlogsByTopicIDs:", stmt)
+
+	rows, err := db.QueryContext(ctx, stmt)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("ListByTopicIDs: list blogs failed: %w", err)
+	}
+
+	result := []entities.Blog{}
+	for {
+		if !rows.Next() {
+			break
+		}
+		blog, err := scanBlogRows(rows)
+		if err != nil {
+			return []entities.Blog{}, fmt.Errorf("ListByTopicIDs: scan row failed: %w", err)
+		}
+		result = append(result, *blog)
+	}
+
+	return result, nil
 }
 
-func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicID, tagID []int) ([]entities.Blog, error) {
-	return []entities.Blog{}, nil
+// only return visible and none soft deleted blogs
+func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicIDs, tagIDs []int) ([]entities.Blog, error) {
+
+	topicCondition, err := genInCondition(topicIDs)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("ListByTopicAndTagIDs: gen topic IN condition failed: %w", err)
+	}
+
+	tagCondition, err := genInCondition(tagIDs)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("ListByTopicAndTagIDs: gen tag IN condition failed: %w", err)
+	}
+
+	stmt := `
+	SELECT * FROM blogs
+	WHERE id IN (
+			SELECT blog_id FROM ( 
+				blog_topic JOIN blog_tags ON blog_topics.blog_id = blog_tags.blog_id 
+			)
+			WEHRE topic_id IN ` + topicCondition + " AND tag_id IN " + tagCondition + `
+	) 
+	AND visible = 1 
+	AND deleted_at = "";`
+
+	util.LogQuery(ctx, "ListBlogsByTopicAndTagIDs:", stmt)
+
+	rows, err := db.QueryContext(ctx, stmt)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("ListByTopicAndTagIDs: list blogs failed: %w", err)
+	}
+
+	result := []entities.Blog{}
+	for {
+		if !rows.Next() {
+			break
+		}
+		blog, err := scanBlogRows(rows)
+		if err != nil {
+			return []entities.Blog{}, fmt.Errorf("ListByTopicAndTagIDs: scan row failed: %w", err)
+		}
+		result = append(result, *blog)
+	}
+
+	return result, nil
 }
 
+// return blogs regardless of visiblility and soft delete status
 func (b *Blogs) AdminGet(ctx context.Context, db *sql.DB, id int) (*entities.Blog, error) {
-	return &entities.Blog{}, nil
+	stmt := `
+	SELECT * FROM blogs WHERE id = ?;
+	`
+	util.LogQuery(ctx, "AdminGetBlog:", stmt)
+
+	row := db.QueryRowContext(ctx, stmt, id)
+	if err := row.Err(); err != nil {
+		return &entities.Blog{}, fmt.Errorf("AdminGet: get blog failed: %w", err)
+	}
+
+	blog, err := scanBlog(row)
+	if err != nil {
+		return &entities.Blog{}, fmt.Errorf("AdminGet: scan blog failed: %w", err)
+	}
+
+	return blog, nil
 }
 
+// return blogs regardless of visiblility and soft delete status
 func (b *Blogs) AdminList(ctx context.Context, db *sql.DB) ([]entities.Blog, error) {
-	return []entities.Blog{}, nil
-}
-func (b *Blogs) AdminListByTopicID(ctx context.Context, db *sql.DB, topicID int) ([]entities.Blog, error) {
-	return []entities.Blog{}, nil
+	stmt := `
+	SELECT * FROM blogs;
+	`
+	util.LogQuery(ctx, "AdminListBlogs:", stmt)
+
+	rows, err := db.QueryContext(ctx, stmt)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("AdminList: list blogs failed: %w", err)
+	}
+
+	result := []entities.Blog{}
+	for {
+		if !rows.Next() {
+			break
+		}
+		blog, err := scanBlogRows(rows)
+		if err != nil {
+			return []entities.Blog{}, fmt.Errorf("AdminList: scan blogs failed: %w", err)
+		}
+		result = append(result, *blog)
+	}
+
+	return result, nil
 }
 
-func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicID, tagID []int) ([]entities.Blog, error) {
-	return []entities.Blog{}, nil
+// return blogs regardless of visiblility and soft delete status
+func (b *Blogs) AdminListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) ([]entities.Blog, error) {
+	values, err := genInCondition(topicIDs)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("AdminListByTopicIDs: gen IN condition failed: %w", err)
+	}
+
+	stmt := `
+	SELECT * FROM blogs
+	WHERE id IN (
+		SELECT blog_id FROM blogTopics
+		WHERE topic_id IN ` + values + `
+	);`
+
+	util.LogQuery(ctx, "AdminListBlogsByTopicIDs:", stmt)
+
+	rows, err := db.QueryContext(ctx, stmt)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("AdminListBlogsByTopicIDs: list blogs failed: %w", err)
+	}
+
+	result := []entities.Blog{}
+	for {
+		if !rows.Next() {
+			break
+		}
+		blog, err := scanBlogRows(rows)
+		if err != nil {
+			return []entities.Blog{}, fmt.Errorf("AdminListBlogsByTopicIDs: scan row failed: %w", err)
+		}
+		result = append(result, *blog)
+	}
+
+	return result, nil
 }
-func (b *Blogs) SoftDelete(ctx context.Context, tx *sql.Tx, id int) (int, error) { return 0, nil }
-func (b *Blogs) Delete(ctx context.Context, tx *sql.Tx, id int) (int, error)     { return 0, nil }
+
+// return blogs regardless of visiblility and soft delete status
+func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicIDs, tagIDs []int) ([]entities.Blog, error) {
+	topicCondition, err := genInCondition(topicIDs)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("AdminListByTopicAndTagIDs: gen topic IN condition failed: %w", err)
+	}
+
+	tagCondition, err := genInCondition(tagIDs)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("AdminListByTopicAndTagIDs: gen tag IN condition failed: %w", err)
+	}
+
+	stmt := `
+	SELECT * FROM blogs
+	WHERE id IN (
+			SELECT blog_id FROM ( 
+				blog_topic JOIN blog_tags ON blog_topics.blog_id = blog_tags.blog_id 
+			)
+			WEHRE topic_id IN ` + topicCondition + " AND tag_id IN " + tagCondition + `
+	);`
+
+	util.LogQuery(ctx, "AdminListBlogsByTopicAndTagIDs:", stmt)
+
+	rows, err := db.QueryContext(ctx, stmt)
+	if err != nil {
+		return []entities.Blog{}, fmt.Errorf("AdminListByTopicAndTagIDs: list blogs failed: %w", err)
+	}
+
+	result := []entities.Blog{}
+	for {
+		if !rows.Next() {
+			break
+		}
+		blog, err := scanBlogRows(rows)
+		if err != nil {
+			return []entities.Blog{}, fmt.Errorf("AdminListByTopicAndTagIDs: scan row failed: %w", err)
+		}
+		result = append(result, *blog)
+	}
+
+	return result, nil
+}
+
+// mark deleted_at with current timestamp (ISO 8061)
+func (b *Blogs) SoftDelete(ctx context.Context, tx *sql.Tx, id int) (int, error) {
+	ts := time.Now().UTC().Format("2006-01-02T15:04:05-07:00")
+	stmt := `
+	UPDATE blogs SET deleted_at = ? WHERE id = ?;
+	`
+	util.LogQuery(ctx, "SoftDeleteBlog:", stmt)
+
+	res, err := tx.ExecContext(
+		ctx,
+		stmt,
+		ts,
+		id,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("SoftDelete: mark timestamp failed: %w", err)
+	}
+
+	affectedRows, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("SoftDelete: get affected rows failed: %w", err)
+	}
+
+	return int(affectedRows), nil
+}
+
+func (b *Blogs) Delete(ctx context.Context, tx *sql.Tx, id int) (int, error) {
+	stmt := `
+	DELETE blogs WHERE id = ?;
+	`
+	util.LogQuery(ctx, "DeleteBlog:", stmt)
+
+	res, err := tx.ExecContext(
+		ctx,
+		stmt,
+		id,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("DeleteBlog: delete blog failed: %w", err)
+	}
+
+	affectedRows, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("DeleteBlog: get affected rows failed: %w", err)
+	}
+
+	return int(affectedRows), nil
+}
+
 func (b *Blogs) RestoreDeleted(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error) {
-	return &entities.Blog{}, nil
+	stmt := `
+	UPDATE blogs SET deleted_at = "" WHERE id = ?;
+	`
+	util.LogQuery(ctx, "RestoreDeletedBlog:", stmt)
+
+	row := tx.QueryRowContext(
+		ctx,
+		stmt,
+		id,
+	)
+	if err := row.Err(); err != nil {
+		return &entities.Blog{}, fmt.Errorf("RestoreDeletedBlog: restrore deleted blog failed: %w", err)
+	}
+
+	blog, err := scanBlog(row)
+	if err != nil {
+		return &entities.Blog{}, fmt.Errorf("RestoreDeletedBlog: scan blog failed: %w", err)
+	}
+
+	return blog, nil
 }
 
 // Helper for scanning blog
