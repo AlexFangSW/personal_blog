@@ -40,13 +40,21 @@ func NewBlogs(repo blogsRepository) *Blogs {
 	}
 }
 
+// CreateBlog godoc
+// @Summary      Create blog
+// @Description  blogs must have unique titles
+// @Tags         blogs
+// @Accept       json
+// @Produce      json
+// @Param        blog   body  entities.ReqInBlog	 true "new blog contents"
+// @Router       /blogs/ [post]
 func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTag")
 
 	body := &entities.ReqInBlog{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateBlog: decode failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 	blog := entities.NewBlog(
 		body.Title,
@@ -64,10 +72,10 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	outBlog, err := b.repo.Create(r.Context(), *inBlog)
 	if err != nil {
 		slog.Error("CreateBlog: repo create failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusInternalServerError)
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return writeJSON(w, nil, outBlog, http.StatusOK)
+	return entities.NewRetSuccess[entities.OutBlog](*outBlog).WriteJSON(w)
 }
 
 /*

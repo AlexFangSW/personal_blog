@@ -1,0 +1,49 @@
+basePath: /api/v1
+definitions:
+  entities.ReqInBlog:
+    properties:
+      content:
+        type: string
+      description:
+        type: string
+      pined:
+        type: boolean
+      tags:
+        items:
+          type: integer
+        type: array
+      title:
+        type: string
+      topics:
+        items:
+          type: integer
+        type: array
+      visible:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: A place to document what I've learned.
+  title: Coding Notes
+  version: "1.0"
+paths:
+  /blogs/:
+    post:
+      consumes:
+      - application/json
+      description: blogs must have unique titles
+      parameters:
+      - description: new blog contents
+        in: body
+        name: blog
+        required: true
+        schema:
+          $ref: '#/definitions/entities.ReqInBlog'
+      produces:
+      - application/json
+      responses: {}
+      summary: Create blog
+      tags:
+      - blogs
+swagger: "2.0"

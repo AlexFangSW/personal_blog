@@ -36,7 +36,7 @@ func (t *Topics) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 	body := &entities.Topic{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateTopic: decode failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 	inTopic := entities.NewTopic(
 		body.Name,
@@ -46,10 +46,10 @@ func (t *Topics) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 	outTopic, err := t.repo.Create(r.Context(), *inTopic)
 	if err != nil {
 		slog.Error("CreateTopic: repo create failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusInternalServerError)
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return writeJSON(w, nil, outTopic, http.StatusOK)
+	return entities.NewRetSuccess[entities.Topic](*outTopic).WriteJSON(w)
 }
 
 func (t *Topics) ListTopics(w http.ResponseWriter, r *http.Request) error {
@@ -58,10 +58,10 @@ func (t *Topics) ListTopics(w http.ResponseWriter, r *http.Request) error {
 	topics, err := t.repo.List(r.Context())
 	if err != nil {
 		slog.Error("ListTopics: repo list failed", "error", err)
-		return writeJSON(w, err, nil, http.StatusInternalServerError)
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return writeJSON(w, nil, topics, http.StatusOK)
+	return entities.NewRetSuccess[[]entities.Topic](topics).WriteJSON(w)
 }
 
 func (t *Topics) GetTopic(w http.ResponseWriter, r *http.Request) error {
@@ -70,7 +70,7 @@ func (t *Topics) GetTopic(w http.ResponseWriter, r *http.Request) error {
 	rawID := r.PathValue("id")
 	id, err := strconv.Atoi(rawID)
 	if err != nil {
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 
 	topic, err := t.repo.Get(r.Context(), id)
@@ -78,13 +78,13 @@ func (t *Topics) GetTopic(w http.ResponseWriter, r *http.Request) error {
 		// differentiate if it's db error or that the user supplied id dosen't exist
 		slog.Error("GetTopic: repo get failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return writeJSON(w, ErrorTargetNotFound, nil, http.StatusNotFound)
+			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 		} else {
-			return writeJSON(w, err, nil, http.StatusInternalServerError)
+			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
 	}
 
-	return writeJSON(w, nil, topic, http.StatusOK)
+	return entities.NewRetSuccess[entities.Topic](*topic).WriteJSON(w)
 }
 
 func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
@@ -94,7 +94,7 @@ func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 	body := &entities.Topic{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("UpdateTopic: decode failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 	inTopic := entities.NewTopic(
 		body.Name,
@@ -106,7 +106,7 @@ func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(rawID)
 	if err != nil {
 		slog.Error("UpdateTopic: id string to int failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 	inTopic.ID = id
 
@@ -115,13 +115,13 @@ func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 		// differentiate if it's db error or that the user supplied id dosen't exist
 		slog.Error("UpdateTopic: repo update failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return writeJSON(w, ErrorTargetNotFound, nil, http.StatusNotFound)
+			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 		} else {
-			return writeJSON(w, err, nil, http.StatusInternalServerError)
+			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
 	}
 
-	return writeJSON(w, nil, outTopic, http.StatusOK)
+	return entities.NewRetSuccess[entities.Topic](*outTopic).WriteJSON(w)
 }
 
 func (t *Topics) DeleteTopic(w http.ResponseWriter, r *http.Request) error {
@@ -132,17 +132,17 @@ func (t *Topics) DeleteTopic(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(rawID)
 	if err != nil {
 		slog.Error("DeleteTopic: id string to int failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 
 	affectedRows, err := t.repo.Delete(r.Context(), id)
 	if err != nil {
 		slog.Error("DeleteTopic: repo delete failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusInternalServerError)
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
 	if affectedRows == 0 {
-		return writeJSON(w, ErrorTargetNotFound, nil, http.StatusNotFound)
+		return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 	}
-	return writeJSON(w, nil, affectedRowsResponse(affectedRows), http.StatusOK)
+	return entities.NewRetSuccess[entities.RowsAffected](*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
 }

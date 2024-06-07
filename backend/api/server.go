@@ -3,9 +3,13 @@ package api
 import (
 	"blog/api/handlers"
 	"blog/config"
+	_ "blog/docs"
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type Server struct {
@@ -32,6 +36,12 @@ func NewServer(
 func (s *Server) Start() error {
 	// routes
 	mux := http.NewServeMux()
+
+	// api specification
+	slog.Info("API specification at: /docs/*")
+	filepath := fmt.Sprintf("http://localhost%s/docs/doc.json", s.config.Port)
+	mux.HandleFunc("GET /docs/*", withMiddleware(apiHandlerWrapper(
+		httpSwagger.Handler(httpSwagger.URL(filepath)))))
 
 	// TODO: use middleware to block 'list, get ?all=true' requests that dosen't have token
 	mux.HandleFunc(s.post("/blogs"), withMiddleware(s.blogs.CreateBlog))

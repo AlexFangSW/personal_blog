@@ -36,7 +36,7 @@ func (t *Tags) CreateTag(w http.ResponseWriter, r *http.Request) error {
 	body := &entities.Tag{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateTag: decode failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 	inTag := entities.NewTag(
 		body.Name,
@@ -46,10 +46,10 @@ func (t *Tags) CreateTag(w http.ResponseWriter, r *http.Request) error {
 	outTag, err := t.repo.Create(r.Context(), *inTag)
 	if err != nil {
 		slog.Error("CreateTag: repo create failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusInternalServerError)
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return writeJSON(w, nil, outTag, http.StatusOK)
+	return entities.NewRetSuccess[entities.Tag](*outTag).WriteJSON(w)
 }
 
 func (t *Tags) ListTags(w http.ResponseWriter, r *http.Request) error {
@@ -58,10 +58,10 @@ func (t *Tags) ListTags(w http.ResponseWriter, r *http.Request) error {
 	tags, err := t.repo.List(r.Context())
 	if err != nil {
 		slog.Error("ListTags: repo list failed", "error", err)
-		return writeJSON(w, err, nil, http.StatusInternalServerError)
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return writeJSON(w, nil, tags, http.StatusOK)
+	return entities.NewRetSuccess[[]entities.Tag](tags).WriteJSON(w)
 }
 
 func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
@@ -70,7 +70,7 @@ func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 	rawID := r.PathValue("id")
 	id, err := strconv.Atoi(rawID)
 	if err != nil {
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 
 	tag, err := t.repo.Get(r.Context(), id)
@@ -78,13 +78,13 @@ func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 		// differentiate if it's db error or that the user supplied id dosen't exist
 		slog.Error("GetTag: repo get failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return writeJSON(w, ErrorTargetNotFound, nil, http.StatusNotFound)
+			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 		} else {
-			return writeJSON(w, err, nil, http.StatusInternalServerError)
+			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
 	}
 
-	return writeJSON(w, nil, tag, http.StatusOK)
+	return entities.NewRetSuccess[entities.Tag](*tag).WriteJSON(w)
 }
 
 func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
@@ -94,7 +94,7 @@ func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 	body := &entities.Tag{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("UpdateTag: decode failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 	inTag := entities.NewTag(
 		body.Name,
@@ -106,7 +106,7 @@ func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(rawID)
 	if err != nil {
 		slog.Error("UpdateTag: id string to int failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 	inTag.ID = id
 
@@ -114,13 +114,13 @@ func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		slog.Error("UpdateTag: repo update failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return writeJSON(w, ErrorTargetNotFound, nil, http.StatusNotFound)
+			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 		} else {
-			return writeJSON(w, err, nil, http.StatusInternalServerError)
+			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
 	}
 
-	return writeJSON(w, nil, outTag, http.StatusOK)
+	return entities.NewRetSuccess[entities.Tag](*outTag).WriteJSON(w)
 }
 
 func (t *Tags) DeleteTag(w http.ResponseWriter, r *http.Request) error {
@@ -131,18 +131,18 @@ func (t *Tags) DeleteTag(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(rawID)
 	if err != nil {
 		slog.Error("DeleteTag: id string to int failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusBadRequest)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 
 	affectedRows, err := t.repo.Delete(r.Context(), id)
 	if err != nil {
 		slog.Error("DeleteTag: repo delete failed", "error", err.Error())
-		return writeJSON(w, err, nil, http.StatusInternalServerError)
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
 	if affectedRows == 0 {
-		return writeJSON(w, ErrorTargetNotFound, nil, http.StatusNotFound)
+		return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 	}
 
-	return writeJSON(w, nil, affectedRowsResponse(affectedRows), http.StatusOK)
+	return entities.NewRetSuccess[entities.RowsAffected](*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
 }

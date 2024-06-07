@@ -122,6 +122,11 @@ func run() error {
 	return server.Stop(shutdownTimeout)
 }
 
+// @title Coding Notes
+// @version 1.0
+// @description A place to document what I've learned.
+// @host localhost:8080
+// @BasePath /api/v1
 func main() {
 	if err := run(); err != nil {
 		log.Fatal(err)
