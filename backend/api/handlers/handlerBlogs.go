@@ -43,7 +43,7 @@ func NewBlogs(repo blogsRepository) *Blogs {
 func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTag")
 
-	body := &entities.InBlog{}
+	body := &entities.ReqInBlog{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateBlog: decode failed", "error", err.Error())
 		return writeJSON(w, err, nil, http.StatusBadRequest)

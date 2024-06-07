@@ -59,3 +59,13 @@ func NewOutBlog(blog Blog, tags []Tag, topics []Topic) *OutBlog {
 		Topics: topics,
 	}
 }
+
+type ReqInBlog struct {
+	Title       string `json:"title"`
+	Content     string `json:"content"`
+	Description string `json:"description"`
+	Pined       bool   `json:"pined"`
+	Visible     bool   `json:"visible"`
+	Tags        []int  `json:"tags"`
+	Topics      []int  `json:"topics"`
+}
