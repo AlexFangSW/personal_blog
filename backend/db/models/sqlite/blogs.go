@@ -118,7 +118,19 @@ func (b *Blogs) Get(ctx context.Context, db *sql.DB, id int) (*entities.Blog, er
 // only return visible and none soft deleted blogs
 func (b *Blogs) List(ctx context.Context, db *sql.DB) ([]entities.Blog, error) {
 	stmt := `
-	SELECT * FROM blogs WHERE visible = 1 AND deleted_at = "";
+	SELECT
+		id,
+		created_at,
+		updated_at,
+		deleted_at,
+		title,
+		description,
+		slug,
+		pined,
+		visible
+	FROM blogs 
+	WHERE visible = 1 AND deleted_at = ""
+	ORDER BY updated_at DESC;
 	`
 	util.LogQuery(ctx, "ListBlogs:", stmt)
 
@@ -150,12 +162,23 @@ func (b *Blogs) ListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) 
 	}
 
 	stmt := `
-	SELECT * FROM blogs
+	SELECT 
+		id,
+		created_at,
+		updated_at,
+		deleted_at,
+		title,
+		description,
+		slug,
+		pined,
+		visible
+	FROM blogs
 	WHERE id IN (
 		SELECT blog_id FROM blogTopics
 		WHERE topic_id IN ` + values + `
 	)
-	AND visible = 1 AND deleted_at = "";`
+	AND visible = 1 AND deleted_at = ""
+	ORDER BY updated_at DESC;`
 
 	util.LogQuery(ctx, "ListBlogsByTopicIDs:", stmt)
 
@@ -193,7 +216,17 @@ func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicIDs, 
 	}
 
 	stmt := `
-	SELECT * FROM blogs
+	SELECT 
+		id,
+		created_at,
+		updated_at,
+		deleted_at,
+		title,
+		description,
+		slug,
+		pined,
+		visible
+	FROM blogs
 	WHERE id IN (
 			SELECT blog_id FROM ( 
 				blog_topic JOIN blog_tags ON blog_topics.blog_id = blog_tags.blog_id 
@@ -201,7 +234,8 @@ func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicIDs, 
 			WEHRE topic_id IN ` + topicCondition + " AND tag_id IN " + tagCondition + `
 	) 
 	AND visible = 1 
-	AND deleted_at = "";`
+	AND deleted_at = ""
+	ORDER BY updated_at DESC;`
 
 	util.LogQuery(ctx, "ListBlogsByTopicAndTagIDs:", stmt)
 
@@ -248,8 +282,18 @@ func (b *Blogs) AdminGet(ctx context.Context, db *sql.DB, id int) (*entities.Blo
 // return blogs regardless of visiblility and soft delete status
 func (b *Blogs) AdminList(ctx context.Context, db *sql.DB) ([]entities.Blog, error) {
 	stmt := `
-	SELECT * FROM blogs;
-	`
+	SELECT 
+		id,
+		created_at,
+		updated_at,
+		deleted_at,
+		title,
+		description,
+		slug,
+		pined,
+		visible
+	FROM blogs ORDER BY updated_at DESC;`
+
 	util.LogQuery(ctx, "AdminListBlogs:", stmt)
 
 	rows, err := db.QueryContext(ctx, stmt)
@@ -280,11 +324,22 @@ func (b *Blogs) AdminListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []
 	}
 
 	stmt := `
-	SELECT * FROM blogs
+	SELECT 
+		id,
+		created_at,
+		updated_at,
+		deleted_at,
+		title,
+		description,
+		slug,
+		pined,
+		visible
+	FROM blogs
 	WHERE id IN (
 		SELECT blog_id FROM blogTopics
 		WHERE topic_id IN ` + values + `
-	);`
+	)
+	ORDER BY updated_at DESC;`
 
 	util.LogQuery(ctx, "AdminListBlogsByTopicIDs:", stmt)
 
@@ -321,13 +376,24 @@ func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topic
 	}
 
 	stmt := `
-	SELECT * FROM blogs
+	SELECT 
+		id,
+		created_at,
+		updated_at,
+		deleted_at,
+		title,
+		description,
+		slug,
+		pined,
+		visible
+	FROM blogs
 	WHERE id IN (
 			SELECT blog_id FROM ( 
 				blog_topic JOIN blog_tags ON blog_topics.blog_id = blog_tags.blog_id 
 			)
 			WEHRE topic_id IN ` + topicCondition + " AND tag_id IN " + tagCondition + `
-	);`
+	)
+	ORDER BY updated_at DESC;`
 
 	util.LogQuery(ctx, "AdminListBlogsByTopicAndTagIDs:", stmt)
 
@@ -452,7 +518,6 @@ func scanBlogRows(rows *sql.Rows) (*entities.Blog, error) {
 		&newBlog.Updated_at,
 		&newBlog.Deleted_at,
 		&newBlog.Title,
-		&newBlog.Content,
 		&newBlog.Description,
 		&newBlog.Slug,
 		&newBlog.Pined,

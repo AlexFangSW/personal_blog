@@ -45,3 +45,11 @@ func internalError(next apiHandler) http.HandlerFunc {
 		}
 	}
 }
+
+// Wrap handlerFunc into apiHandler
+func apiHandlerWrapper(next http.HandlerFunc) apiHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		next.ServeHTTP(w, r)
+		return nil
+	}
+}

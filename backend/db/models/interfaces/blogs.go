@@ -7,6 +7,7 @@ import (
 )
 
 // Concrete implementations are at db/models/<db name>/
+// List will not return 'content', use Get instead
 type BlogsModel interface {
 	Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*entities.Blog, error)
 	Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*entities.Blog, error)
