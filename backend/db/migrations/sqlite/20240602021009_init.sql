@@ -13,13 +13,15 @@ CREATE TABLE IF NOT EXISTS blogs(
   description TEXT DEFAULT "",
   slug TEXT NOT NULL UNIQUE,
   pined BOOLEAN DEFAULT 0,
-  visible BOOLEAN DEFAULT 0
+  visible BOOLEAN DEFAULT 0,
+
+  CHECK(LENGTH(title) > 0)
 );
 
 -- Auto update 'update_ts' on updated row
 -- Currently, sqlite trigger only supports FOR EACH ROW (fire on each effected row)
 CREATE TRIGGER IF NOT EXISTS blogs_update_ts
-AFTER UPDATE ON blogs
+BEFORE UPDATE ON blogs
 BEGIN 
   UPDATE blogs SET updated_at = (strftime('%FT%T+00:00')) WHERE id = NEW.id;
 END;
@@ -33,11 +35,13 @@ CREATE TABLE IF NOT EXISTS topics(
 
   name TEXT NOT NULL UNIQUE,
   description TEXT DEFAULT "",
-  slug TEXT NOT NULL UNIQUE
+  slug TEXT NOT NULL UNIQUE,
+
+  CHECK(LENGTH(name) > 0)
 );
 
 CREATE TRIGGER IF NOT EXISTS topics_update_ts
-AFTER UPDATE ON topics
+BEFORE UPDATE ON topics
 BEGIN 
   UPDATE topics SET updated_at = (strftime('%FT%T+00:00')) WHERE id = NEW.id;
 END;
@@ -51,11 +55,13 @@ CREATE TABLE IF NOT EXISTS tags(
 
   name TEXT NOT NULL UNIQUE,
   description TEXT DEFAULT "",
-  slug TEXT NOT NULL UNIQUE
+  slug TEXT NOT NULL UNIQUE,
+
+  CHECK(LENGTH(name) > 0)
 );
 
 CREATE TRIGGER IF NOT EXISTS tags_update_ts
-AFTER UPDATE ON tags
+BEFORE UPDATE ON tags
 BEGIN 
   UPDATE tags SET updated_at = (strftime('%FT%T+00:00')) WHERE id = NEW.id;
 END;
