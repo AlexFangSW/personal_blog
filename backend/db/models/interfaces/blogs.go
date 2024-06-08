@@ -10,7 +10,7 @@ import (
 // List will not return 'content', use Get instead
 type BlogsModel interface {
 	Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*entities.Blog, error)
-	Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*entities.Blog, error)
+	Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog, id int) (*entities.Blog, error)
 	Get(ctx context.Context, db *sql.DB, id int) (*entities.Blog, error)
 	List(ctx context.Context, db *sql.DB) ([]entities.Blog, error)
 	ListByTopicIDs(ctx context.Context, db *sql.DB, topicID []int) ([]entities.Blog, error)

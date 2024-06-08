@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -56,7 +57,7 @@ func (b *Blogs) Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 	return newBlog, nil
 }
 
-func (b *Blogs) Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*entities.Blog, error) {
+func (b *Blogs) Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog, id int) (*entities.Blog, error) {
 	stmt := `
 	UPDATE blogs 
 	SET
@@ -68,7 +69,7 @@ func (b *Blogs) Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 		visible = ?
 	WHERE 
 		id = ?
-	RETURING *;
+	RETURNING *;
 	`
 	util.LogQuery(ctx, "UpdateBlog:", stmt)
 
@@ -81,7 +82,7 @@ func (b *Blogs) Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 		blog.Slug,
 		blog.Pined,
 		blog.Visible,
-		blog.ID,
+		id,
 	)
 	if err := row.Err(); err != nil {
 		return &entities.Blog{}, fmt.Errorf("Update: update blog failed: %w", err)
@@ -158,9 +159,10 @@ func (b *Blogs) List(ctx context.Context, db *sql.DB) ([]entities.Blog, error) {
 func (b *Blogs) ListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) ([]entities.Blog, error) {
 	values, err := genInCondition(topicIDs)
 	if err != nil {
-		return []entities.Blog{}, fmt.Errorf("ListByTopicIDs: gen IN condition failed: %w", err)
+		return []entities.Blog{}, fmt.Errorf("ListByTopicIDs: gen topic IN condition failed: %w", err)
 	}
 
+	// Only return blogs that has relation with all input topics
 	stmt := `
 	SELECT 
 		id,
@@ -174,8 +176,11 @@ func (b *Blogs) ListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) 
 		visible
 	FROM blogs
 	WHERE id IN (
-		SELECT blog_id FROM blogTopics
-		WHERE topic_id IN ` + values + `
+		SELECT blog_id FROM (
+			SELECT blog_id,COUNT(blog_id) as count FROM blog_topics
+			WHERE topic_id IN ` + values + ` 
+			GROUP BY blog_id
+		) WHERE count = ` + strconv.Itoa(len(topicIDs)) + `
 	)
 	AND visible = 1 AND deleted_at = ""
 	ORDER BY updated_at DESC;`
@@ -228,10 +233,13 @@ func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicIDs, 
 		visible
 	FROM blogs
 	WHERE id IN (
-			SELECT blog_id FROM ( 
-				blog_topic JOIN blog_tags ON blog_topics.blog_id = blog_tags.blog_id 
+		SELECT blog_id FROM (
+			SELECT blog_id, COUNT(blog_id) AS count FROM ( 
+				SELECT * FROM blog_topics JOIN blog_tags ON blog_topics.blog_id = blog_tags.blog_id 
 			)
-			WEHRE topic_id IN ` + topicCondition + " AND tag_id IN " + tagCondition + `
+			WHERE topic_id IN ` + topicCondition + " AND tag_id IN" + tagCondition + `
+			GROUP BY blog_id
+		) WHERE count = ` + strconv.Itoa(len(topicIDs)*len(tagIDs)) + `
 	) 
 	AND visible = 1 
 	AND deleted_at = ""
@@ -320,9 +328,10 @@ func (b *Blogs) AdminList(ctx context.Context, db *sql.DB) ([]entities.Blog, err
 func (b *Blogs) AdminListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) ([]entities.Blog, error) {
 	values, err := genInCondition(topicIDs)
 	if err != nil {
-		return []entities.Blog{}, fmt.Errorf("AdminListByTopicIDs: gen IN condition failed: %w", err)
+		return []entities.Blog{}, fmt.Errorf("AdminListByTopicIDs: gen topic IN condition failed: %w", err)
 	}
 
+	// Only return blogs that has relation with all input topics
 	stmt := `
 	SELECT 
 		id,
@@ -336,8 +345,11 @@ func (b *Blogs) AdminListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []
 		visible
 	FROM blogs
 	WHERE id IN (
-		SELECT blog_id FROM blogTopics
-		WHERE topic_id IN ` + values + `
+		SELECT blog_id FROM (
+			SELECT blog_id,COUNT(blog_id) as count FROM blog_topics
+			WHERE topic_id IN ` + values + ` 
+			GROUP BY blog_id
+		) WHERE count = ` + strconv.Itoa(len(topicIDs)) + `
 	)
 	ORDER BY updated_at DESC;`
 
@@ -388,10 +400,13 @@ func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topic
 		visible
 	FROM blogs
 	WHERE id IN (
-			SELECT blog_id FROM ( 
-				blog_topic JOIN blog_tags ON blog_topics.blog_id = blog_tags.blog_id 
+		SELECT blog_id FROM (
+			SELECT blog_id, COUNT(blog_id) AS count FROM ( 
+				SELECT * FROM blog_topics JOIN blog_tags ON blog_topics.blog_id = blog_tags.blog_id 
 			)
-			WEHRE topic_id IN ` + topicCondition + " AND tag_id IN " + tagCondition + `
+			WHERE topic_id IN ` + topicCondition + " AND tag_id IN" + tagCondition + `
+			GROUP BY blog_id
+		) WHERE count = ` + strconv.Itoa(len(topicIDs)*len(tagIDs)) + `
 	)
 	ORDER BY updated_at DESC;`
 

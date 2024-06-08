@@ -74,6 +74,17 @@ definitions:
       status:
         type: integer
     type: object
+  entities.RetSuccess-array_entities_OutBlog:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.OutBlog'
+        type: array
+      status:
+        type: integer
+    type: object
   entities.RetSuccess-array_entities_Tag:
     properties:
       error:
@@ -174,6 +185,43 @@ info:
   version: "1.0"
 paths:
   /blogs:
+    get:
+      consumes:
+      - application/json
+      description: list blogs
+      parameters:
+      - default: false
+        description: show all blogs regardless of visibility or soft delete status
+        in: query
+        name: all
+        type: boolean
+      - description: 'filter by topic ids, can be multiple ids. ex: ?topic=1&topic=2'
+        in: query
+        name: topic
+        type: integer
+      - description: 'filter by tag ids, can be multiple ids, must be use with topic.
+          ex: ?tag=1&tag=2'
+        in: query
+        name: tag
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-array_entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: List blogs
+      tags:
+      - blogs
     post:
       consumes:
       - application/json
@@ -201,6 +249,74 @@ paths:
           schema:
             $ref: '#/definitions/entities.RetFailed'
       summary: Create blog
+      tags:
+      - blogs
+  /blogs/{id}:
+    get:
+      consumes:
+      - application/json
+      description: get blog
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: false
+        description: show all blogs regardless of visibility or soft delete status
+        in: query
+        name: all
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Get blog
+      tags:
+      - blogs
+    put:
+      consumes:
+      - application/json
+      description: update blog
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: new blog content
+        in: body
+        name: blog
+        required: true
+        schema:
+          $ref: '#/definitions/entities.ReqInBlog'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Update blogs
       tags:
       - blogs
   /tags:

@@ -45,11 +45,12 @@ func (s *Server) Start() error {
 
 	// TODO: use middleware to block 'list, get ?all=true' requests that dosen't have token
 	mux.HandleFunc(s.post("/blogs"), withMiddleware(s.blogs.CreateBlog))
-	// mux.HandleFunc(s.get("/blogs"), withMiddleware(s.ListBlogs))
-	// mux.HandleFunc(s.get("/blogs/{id}"), withMiddleware(s.GetBlog))
-	// mux.HandleFunc(s.put("/blogs/{id}"), withMiddleware(s.UpdateBlog))
-	// mux.HandleFunc(s.delete("/blogs/{id}"), withMiddleware(s.SoftDeleteBlog))
-	// mux.HandleFunc(s.delete("/blogs/deleted/{id}"), withMiddleware(s.DeleteBlog))
+	mux.HandleFunc(s.get("/blogs"), withMiddleware(s.blogs.ListBlogs))
+	mux.HandleFunc(s.get("/blogs/{id}"), withMiddleware(s.blogs.GetBlog))
+	mux.HandleFunc(s.put("/blogs/{id}"), withMiddleware(s.blogs.UpdateBlog))
+	mux.HandleFunc(s.delete("/blogs/{id}"), withMiddleware(s.blogs.SoftDeleteBlog))
+	mux.HandleFunc(s.delete("/blogs/deleted/{id}"), withMiddleware(s.blogs.DeleteBlog))
+	mux.HandleFunc(s.patch("/blogs/deleted/{id}"), withMiddleware(s.blogs.RestoreDeletedBlog))
 
 	mux.HandleFunc(s.post("/tags"), withMiddleware(s.tags.CreateTag))
 	mux.HandleFunc(s.get("/tags"), withMiddleware(s.tags.ListTags))

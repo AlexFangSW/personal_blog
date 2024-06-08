@@ -16,7 +16,7 @@ type tagsRepository interface {
 	Create(ctx context.Context, tag entities.Tag) (*entities.Tag, error)
 	List(ctx context.Context) ([]entities.Tag, error)
 	Get(ctx context.Context, id int) (*entities.Tag, error)
-	Update(ctx context.Context, tag entities.Tag) (*entities.Tag, error)
+	Update(ctx context.Context, tag entities.Tag, id int) (*entities.Tag, error)
 	Delete(ctx context.Context, id int) (int, error)
 }
 
@@ -157,9 +157,8 @@ func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 		slog.Error("UpdateTag: id string to int failed", "error", err.Error())
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
-	inTag.ID = id
 
-	outTag, err := t.repo.Update(r.Context(), *inTag)
+	outTag, err := t.repo.Update(r.Context(), *inTag, id)
 	if err != nil {
 		slog.Error("UpdateTag: repo update failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {

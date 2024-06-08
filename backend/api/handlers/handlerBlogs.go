@@ -3,15 +3,18 @@ package handlers
 import (
 	"blog/entities"
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 )
 
 // Concrete implementations are at repository/<name>
 type blogsRepository interface {
 	Create(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error)
-	Update(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error)
+	Update(ctx context.Context, blog entities.InBlog, id int) (*entities.OutBlog, error)
 
 	// This group of functions will only return rows with 'visible=true' and 'deleted_at=""'
 	Get(ctx context.Context, id int) (*entities.OutBlog, error)
@@ -82,28 +85,226 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	return entities.NewRetSuccess[entities.OutBlog](*outBlog).WriteJSON(w)
 }
 
-/*
-queries:
-
-  - all=bool
-  - topic=int
-*/
+// ListBlogs
+//
+//	@Summary		List blogs
+//	@Description	list blogs
+//	@Tags			blogs
+//	@Accept			json
+//	@Produce		json
+//	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
+//	@Param			topic	query		int	false	"filter by topic ids, can be multiple ids. ex: ?topic=1&topic=2"
+//	@Param			tag	query		int	false	"filter by tag ids, can be multiple ids, must be use with topic. ex: ?tag=1&tag=2"
+//	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlog]
+//	@Failure		400		{object}	entities.RetFailed
+//	@Failure		500		{object}	entities.RetFailed
+//	@Router			/blogs [get]
 func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	slog.Debug("ListBlogs")
+
+	// process queries
+	queries := r.URL.Query()
+	slog.Debug("got queries", "queries", queries)
+
+	rowAll := queries["all"]
+	all, err := strListToBool(rowAll)
+	if err != nil {
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+	all = removeDuplicate[bool](all)
+
+	rowTopicIDs := queries["topic"]
+	topicIDs, err := strListToInt(rowTopicIDs)
+	if err != nil {
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+	topicIDs = removeDuplicate[int](topicIDs)
+
+	rowTagIDs := queries["tag"]
+	tagIDs, err := strListToInt(rowTagIDs)
+	if err != nil {
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+	tagIDs = removeDuplicate[int](tagIDs)
+
+	// admin list
+	if len(all) > 0 && all[0] == true {
+		// admin list by topic and tag ids
+		if len(topicIDs) > 0 && len(tagIDs) > 0 {
+			blogs, err := b.repo.AdminListByTopicAndTagIDs(r.Context(), topicIDs, tagIDs)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+				}
+				return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+			}
+			return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+		}
+
+		// admin list by topic ids
+		if len(topicIDs) > 0 {
+			blogs, err := b.repo.AdminListByTopicIDs(r.Context(), topicIDs)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+				}
+				return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+			}
+			return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+		}
+
+		// admin list
+		blogs, err := b.repo.AdminList(r.Context())
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+			}
+			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+		}
+		return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+	}
+
+	// normal list blogs, only list blogs that are visible and not soft deleted
+
+	// list by topic and tag ids
+	if len(topicIDs) > 0 && len(tagIDs) > 0 {
+		blogs, err := b.repo.ListByTopicAndTagIDs(r.Context(), topicIDs, tagIDs)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+			}
+			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+		}
+		return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+	}
+
+	// list by topic ids
+	if len(topicIDs) > 0 {
+		blogs, err := b.repo.ListByTopicIDs(r.Context(), topicIDs)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+			}
+			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+		}
+		return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+	}
+
+	// list
+	blogs, err := b.repo.List(r.Context())
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+		}
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+	}
+	return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
 }
 
-/*
-queries:
-
-  - all=bool
-  - topic=int
-*/
+// GetBlog
+//
+//	@Summary		Get blog
+//	@Description	get blog
+//	@Tags			blogs
+//	@Accept			json
+//	@Produce		json
+//	@Param			id path		int	true	"target blog id"
+//	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
+//	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400		{object}	entities.RetFailed
+//	@Failure		500		{object}	entities.RetFailed
+//	@Router			/blogs/{id} [get]
 func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	slog.Debug("GetBlog")
+
+	// process path param
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+
+	// process queries
+	queries := r.URL.Query()
+	slog.Debug("got queries", "queries", queries)
+
+	rowAll := queries["all"]
+	all, err := strListToBool(rowAll)
+	if err != nil {
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+
+	// admin get
+	if len(all) > 0 && all[0] == true {
+		blog, err := b.repo.AdminGet(r.Context(), id)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
+			}
+			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+		}
+		return entities.NewRetSuccess[entities.OutBlog](*blog).WriteJSON(w)
+	}
+
+	// normal get
+	blog, err := b.repo.Get(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
+		}
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+	}
+	return entities.NewRetSuccess[entities.OutBlog](*blog).WriteJSON(w)
 }
 
+// UpdateBlog
+//
+//	@Summary		Update blogs
+//	@Description	update blog
+//	@Tags			blogs
+//	@Accept			json
+//	@Produce		json
+//	@Param			id path		int	true	"target blog id"
+//	@Param			blog body entities.ReqInBlog true	"new blog content"
+//	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400		{object}	entities.RetFailed
+//	@Failure		500		{object}	entities.RetFailed
+//	@Router			/blogs/{id} [put]
 func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	slog.Debug("UpdateBlog")
+
+	// process path param
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+
+	// process body
+	blog := &entities.ReqInBlog{}
+	if err := json.NewDecoder(r.Body).Decode(blog); err != nil {
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+	newBlog := entities.NewBlog(
+		blog.Title,
+		blog.Content,
+		blog.Description,
+		blog.Pined,
+		blog.Visible,
+	)
+	inBlog := entities.NewInBlog(
+		*newBlog,
+		blog.Tags,
+		blog.Topics,
+	)
+
+	// update
+	updatedBlog, err := b.repo.Update(r.Context(), *inBlog, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusBadRequest).WriteJSON(w)
+		}
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+	}
+	return entities.NewRetSuccess[entities.OutBlog](*updatedBlog).WriteJSON(w)
 }
 
 func (b *Blogs) SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error {

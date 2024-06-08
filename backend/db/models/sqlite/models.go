@@ -48,7 +48,7 @@ func genInCondition(inpt []int) (string, error) {
 		if _, err := condition.WriteString(strconv.Itoa(id)); err != nil {
 			return "", fmt.Errorf("genInCondition: write string 'id' failed: %w", err)
 		}
-		if i != len(inpt) {
+		if i != len(inpt)-1 {
 			if _, err := condition.WriteString(","); err != nil {
 				return "", fmt.Errorf("genInCondition: write string ',' failed: %w", err)
 			}
@@ -56,6 +56,27 @@ func genInCondition(inpt []int) (string, error) {
 	}
 	if _, err := condition.WriteString(")"); err != nil {
 		return "", fmt.Errorf("genInCondition: write string ')' failed: %w", err)
+	}
+
+	return condition.String(), nil
+}
+
+// ex: SELECT * FROM xxx WHERE bbb = xx AND bbb = yy;
+//
+// bbb = xx AND bbb = yy <-- this is what we will generate
+func genEqualCondition(name string, inpt []int) (string, error) {
+	var condition strings.Builder
+
+	for i, id := range inpt {
+		str := fmt.Sprintf("%s = %d", name, id)
+		if _, err := condition.WriteString(str); err != nil {
+			return "", fmt.Errorf("genInCondition: write string 'id' failed: %w", err)
+		}
+		if i != len(inpt)-1 {
+			if _, err := condition.WriteString(" AND "); err != nil {
+				return "", fmt.Errorf("genInCondition: write string ',' failed: %w", err)
+			}
+		}
 	}
 
 	return condition.String(), nil

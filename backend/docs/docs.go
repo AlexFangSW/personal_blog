@@ -16,6 +16,60 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/blogs": {
+            "get": {
+                "description": "list blogs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blogs"
+                ],
+                "summary": "List blogs",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "show all blogs regardless of visibility or soft delete status",
+                        "name": "all",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "filter by topic ids, can be multiple ids. ex: ?topic=1\u0026topic=2",
+                        "name": "topic",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "filter by tag ids, can be multiple ids, must be use with topic. ex: ?tag=1\u0026tag=2",
+                        "name": "tag",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetSuccess-array_entities_OutBlog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "blogs must have unique titles",
                 "consumes": [
@@ -31,6 +85,108 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "new blog contents",
+                        "name": "blog",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.ReqInBlog"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    }
+                }
+            }
+        },
+        "/blogs/{id}": {
+            "get": {
+                "description": "get blog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blogs"
+                ],
+                "summary": "Get blog",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "target blog id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "show all blogs regardless of visibility or soft delete status",
+                        "name": "all",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "update blog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blogs"
+                ],
+                "summary": "Update blogs",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "target blog id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "new blog content",
                         "name": "blog",
                         "in": "body",
                         "required": true,
@@ -628,6 +784,23 @@ const docTemplate = `{
                 },
                 "msg": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-array_entities_OutBlog": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.OutBlog"
+                    }
                 },
                 "status": {
                     "type": "integer"

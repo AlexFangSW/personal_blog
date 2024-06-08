@@ -88,7 +88,7 @@ func (t *Topics) Get(ctx context.Context, id int) (*entities.Topic, error) {
 	return topic, nil
 }
 
-func (t *Topics) Update(ctx context.Context, topic entities.Topic) (*entities.Topic, error) {
+func (t *Topics) Update(ctx context.Context, topic entities.Topic, id int) (*entities.Topic, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
 	defer cancel()
 
@@ -97,7 +97,7 @@ func (t *Topics) Update(ctx context.Context, topic entities.Topic) (*entities.To
 		return &entities.Topic{}, fmt.Errorf("Update: begin transaction failed: %w", err)
 	}
 
-	newTopic, err := t.models.topics.Update(ctxTimeout, tx, topic)
+	newTopic, err := t.models.topics.Update(ctxTimeout, tx, topic, id)
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			return &entities.Topic{}, fmt.Errorf("Update: model update topic rollback failed: %w", err)

@@ -16,7 +16,7 @@ type topicsRepository interface {
 	Create(ctx context.Context, topic entities.Topic) (*entities.Topic, error)
 	List(ctx context.Context) ([]entities.Topic, error)
 	Get(ctx context.Context, id int) (*entities.Topic, error)
-	Update(ctx context.Context, topic entities.Topic) (*entities.Topic, error)
+	Update(ctx context.Context, topic entities.Topic, id int) (*entities.Topic, error)
 	Delete(ctx context.Context, id int) (int, error)
 }
 
@@ -157,9 +157,8 @@ func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 		slog.Error("UpdateTopic: id string to int failed", "error", err.Error())
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
-	inTopic.ID = id
 
-	outTopic, err := t.repo.Update(r.Context(), *inTopic)
+	outTopic, err := t.repo.Update(r.Context(), *inTopic, id)
 	if err != nil {
 		// differentiate if it's db error or that the user supplied id dosen't exist
 		slog.Error("UpdateTopic: repo update failed", "error", err)

@@ -92,7 +92,7 @@ func (b *Blogs) Create(ctx context.Context, blog entities.InBlog) (*entities.Out
 	return outBlog, nil
 }
 
-func (b *Blogs) Update(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error) {
+func (b *Blogs) Update(ctx context.Context, blog entities.InBlog, id int) (*entities.OutBlog, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
 	defer cancel()
 
@@ -102,7 +102,7 @@ func (b *Blogs) Update(ctx context.Context, blog entities.InBlog) (*entities.Out
 	}
 
 	// Update blog
-	newBlog, err := b.models.blog.Create(ctxTimeout, tx, blog)
+	newBlog, err := b.models.blog.Update(ctxTimeout, tx, blog, id)
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			return &entities.OutBlog{}, fmt.Errorf("Update: query rollback error: %w", err)

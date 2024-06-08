@@ -88,7 +88,7 @@ func (t *Tags) Get(ctx context.Context, id int) (*entities.Tag, error) {
 	return tag, nil
 }
 
-func (t *Tags) Update(ctx context.Context, tag entities.Tag) (*entities.Tag, error) {
+func (t *Tags) Update(ctx context.Context, tag entities.Tag, id int) (*entities.Tag, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
 	defer cancel()
 
@@ -97,7 +97,7 @@ func (t *Tags) Update(ctx context.Context, tag entities.Tag) (*entities.Tag, err
 		return &entities.Tag{}, fmt.Errorf("Update: begin transaction failed: %w", err)
 	}
 
-	newTag, err := t.models.tags.Update(ctxTimeout, tx, tag)
+	newTag, err := t.models.tags.Update(ctxTimeout, tx, tag, id)
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			return &entities.Tag{}, fmt.Errorf("Update: model update tag rollback failed: %w", err)

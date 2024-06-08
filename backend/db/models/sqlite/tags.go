@@ -177,7 +177,7 @@ func (t *Tags) Get(ctx context.Context, db *sql.DB, id int) (*entities.Tag, erro
 	return &tag, nil
 }
 
-func (t *Tags) Update(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entities.Tag, error) {
+func (t *Tags) Update(ctx context.Context, tx *sql.Tx, tag entities.Tag, id int) (*entities.Tag, error) {
 	stmt := `
 	UPDATE tags
 	SET
@@ -196,7 +196,7 @@ func (t *Tags) Update(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entit
 		tag.Name,
 		tag.Description,
 		tag.Slug,
-		tag.ID,
+		id,
 	)
 	if err := row.Err(); err != nil {
 		return &entities.Tag{}, fmt.Errorf("Update: update query failed: %w", err)
