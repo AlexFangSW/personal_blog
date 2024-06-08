@@ -93,8 +93,8 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
-//	@Param			topic	query		int	false	"filter by topic ids, can be multiple ids. ex: ?topic=1&topic=2"
-//	@Param			tag	query		int	false	"filter by tag ids, can be multiple ids, must be use with topic. ex: ?tag=1&tag=2"
+//	@Param			topic	query		int		false	"filter by topic ids, can be multiple ids. ex: ?topic=1&topic=2"
+//	@Param			tag		query		int		false	"filter by tag ids, can be multiple ids, must be use with topic. ex: ?tag=1&tag=2"
 //	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlog]
 //	@Failure		400		{object}	entities.RetFailed
 //	@Failure		500		{object}	entities.RetFailed
@@ -208,11 +208,11 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			id path		int	true	"target blog id"
-//	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
-//	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
-//	@Failure		400		{object}	entities.RetFailed
-//	@Failure		500		{object}	entities.RetFailed
+//	@Param			id	path		int		true	"target blog id"
+//	@Param			all	query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
+//	@Success		200	{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400	{object}	entities.RetFailed
+//	@Failure		500	{object}	entities.RetFailed
 //	@Router			/blogs/{id} [get]
 func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("GetBlog")
@@ -263,8 +263,8 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			id path		int	true	"target blog id"
-//	@Param			blog body entities.ReqInBlog true	"new blog content"
+//	@Param			id		path		int					true	"target blog id"
+//	@Param			blog	body		entities.ReqInBlog	true	"new blog content"
 //	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400		{object}	entities.RetFailed
 //	@Failure		500		{object}	entities.RetFailed
