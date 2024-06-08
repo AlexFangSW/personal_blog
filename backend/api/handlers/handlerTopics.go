@@ -38,9 +38,9 @@ func NewTopics(repo topicsRepository) *Topics {
 //	@Accept			json
 //	@Produce		json
 //	@Param			topic	body		entities.InTopic	true	"new topic contents"
-//	@Success		200	{object}	entities.RetSuccess[entities.Topic]
-//	@Failure		400	{object}	entities.RetFailed
-//	@Failure		500	{object}	entities.RetFailed
+//	@Success		200		{object}	entities.RetSuccess[entities.Topic]
+//	@Failure		400		{object}	entities.RetFailed
+//	@Failure		500		{object}	entities.RetFailed
 //	@Router			/topics [post]
 func (t *Topics) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTopic")
@@ -129,12 +129,12 @@ func (t *Topics) GetTopic(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			topics
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int				true	"target tag id"
-//	@Param			topic	body		entities.InTopic true	"new topic content"
-//	@Success		200	{object}	entities.RetSuccess[entities.Topic]
-//	@Failure		400	{object}	entities.RetFailed
-//	@Failure		404	{object}	entities.RetFailed
-//	@Failure		500	{object}	entities.RetFailed
+//	@Param			id		path		int					true	"target tag id"
+//	@Param			topic	body		entities.InTopic	true	"new topic content"
+//	@Success		200		{object}	entities.RetSuccess[entities.Topic]
+//	@Failure		400		{object}	entities.RetFailed
+//	@Failure		404		{object}	entities.RetFailed
+//	@Failure		500		{object}	entities.RetFailed
 //	@Router			/topics/{id} [put]
 func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("UpdateTopic")
