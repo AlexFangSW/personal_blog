@@ -30,10 +30,22 @@ func NewTags(repo tagsRepository) *Tags {
 	}
 }
 
+// CreateTag
+//
+//	@Summary		Create tag
+//	@Description	tags must have unique names
+//	@Tags			tags
+//	@Accept			json
+//	@Produce		json
+//	@Param			tag	body		entities.InTag	true	"new tag contents"
+//	@Success		200	{object}	entities.RetSuccess[entities.Tag]
+//	@Failure		400	{object}	entities.RetFailed
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/tags [post]
 func (t *Tags) CreateTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTag")
 
-	body := &entities.Tag{}
+	body := &entities.InTag{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateTag: decode failed", "error", err.Error())
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
@@ -52,6 +64,16 @@ func (t *Tags) CreateTag(w http.ResponseWriter, r *http.Request) error {
 	return entities.NewRetSuccess[entities.Tag](*outTag).WriteJSON(w)
 }
 
+// ListTags
+//
+//	@Summary		List tags
+//	@Description	list all tags
+//	@Tags			tags
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	entities.RetSuccess[[]entities.Tag]
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/tags [get]
 func (t *Tags) ListTags(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("ListTags")
 
@@ -64,6 +86,19 @@ func (t *Tags) ListTags(w http.ResponseWriter, r *http.Request) error {
 	return entities.NewRetSuccess[[]entities.Tag](tags).WriteJSON(w)
 }
 
+// GetTag
+//
+//	@Summary		Get tags
+//	@Description	get tag by id
+//	@Tags			tags
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"target tag id"
+//	@Success		200	{object}	entities.RetSuccess[entities.Tag]
+//	@Failure		400	{object}	entities.RetFailed
+//	@Failure		404	{object}	entities.RetFailed
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/tags/{id} [get]
 func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("GetTag")
 
@@ -87,11 +122,25 @@ func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 	return entities.NewRetSuccess[entities.Tag](*tag).WriteJSON(w)
 }
 
+// UpdateTag
+//
+//	@Summary		Update tag
+//	@Description	update tag
+//	@Tags			tags
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int				true	"target tag id"
+//	@Param			tag	body		entities.InTag	true	"new tag content"
+//	@Success		200	{object}	entities.RetSuccess[entities.Tag]
+//	@Failure		400	{object}	entities.RetFailed
+//	@Failure		404	{object}	entities.RetFailed
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/tags/{id} [put]
 func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("UpdateTag")
 
 	// load body
-	body := &entities.Tag{}
+	body := &entities.InTag{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("UpdateTag: decode failed", "error", err.Error())
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
@@ -123,6 +172,19 @@ func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 	return entities.NewRetSuccess[entities.Tag](*outTag).WriteJSON(w)
 }
 
+// DeleteTag
+//
+//	@Summary		Delete tag
+//	@Description	delete tag
+//	@Tags			tags
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"target tag id"
+//	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
+//	@Failure		400	{object}	entities.RetFailed
+//	@Failure		404	{object}	entities.RetFailed
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/tags/{id} [delete]
 func (t *Tags) DeleteTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Info("DeleteTag")
 

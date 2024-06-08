@@ -5,6 +5,7 @@ import (
 	"blog/api/handlers"
 	"blog/config"
 	"blog/db/models/sqlite"
+	"blog/docs"
 	"blog/repositories"
 	"blog/util"
 	"context"
@@ -42,6 +43,10 @@ func run() error {
 
 	// init logger
 	util.InitLogger(config.Logger.Level)
+
+	// init swagger info
+	docs.SwaggerInfo.Host = "localhost" + config.Server.Port
+	docs.SwaggerInfo.BasePath = config.Server.Prefix
 
 	// db connection
 	db, err := sql.Open("sqlite3", config.DB.DSNURL)
@@ -122,11 +127,9 @@ func run() error {
 	return server.Stop(shutdownTimeout)
 }
 
-// @title Coding Notes
-// @version 1.0
-// @description A place to document what I've learned.
-// @host localhost:8080
-// @BasePath /api/v1
+// @title			Coding Notes
+// @version		1.0
+// @description	A place to document what I've learned.
 func main() {
 	if err := run(); err != nil {
 		log.Fatal(err)

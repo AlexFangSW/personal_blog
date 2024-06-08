@@ -47,13 +47,9 @@ TODO
 
 
 ## TODO
-- Implement sqlite models
-    - blogs [ok]
-    - blogTopics [ok]
-    - blogTags [ok]
+### High
 - Implement handlers
     - blogs
-- Log request after response (with status code)
 - Auth 
     - handler
         - login
@@ -64,4 +60,11 @@ TODO
         - user
     - utility to create user
 - Intergration tests on CRUD operations
-- API documentation
+- API documentation [done by swaggo]
+
+### Mid
+- Custom error returns
+    - checks input and group them in one response
+
+### Low
+- Log request after response (with status code)

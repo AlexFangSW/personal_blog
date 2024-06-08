@@ -24,3 +24,8 @@ func NewTopic(name, description string) *Topic {
 	topic.GenSlug()
 	return topic
 }
+
+type InTopic struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}

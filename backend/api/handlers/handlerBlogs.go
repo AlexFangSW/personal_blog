@@ -40,14 +40,18 @@ func NewBlogs(repo blogsRepository) *Blogs {
 	}
 }
 
-// CreateBlog godoc
-// @Summary      Create blog
-// @Description  blogs must have unique titles
-// @Tags         blogs
-// @Accept       json
-// @Produce      json
-// @Param        blog   body  entities.ReqInBlog	 true "new blog contents"
-// @Router       /blogs/ [post]
+// CreateBlog
+//
+//	@Summary		Create blog
+//	@Description	blogs must have unique titles
+//	@Tags			blogs
+//	@Accept			json
+//	@Produce		json
+//	@Param			blog	body		entities.ReqInBlog	true	"new blog contents"
+//	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400		{object}	entities.RetFailed
+//	@Failure		500		{object}	entities.RetFailed
+//	@Router			/blogs [post]
 func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTag")
 

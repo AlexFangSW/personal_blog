@@ -30,10 +30,22 @@ func NewTopics(repo topicsRepository) *Topics {
 	}
 }
 
+// CreateTopic
+//
+//	@Summary		Create topic
+//	@Description	topics must have unique names
+//	@Tags			topics
+//	@Accept			json
+//	@Produce		json
+//	@Param			topic	body		entities.InTopic	true	"new topic contents"
+//	@Success		200	{object}	entities.RetSuccess[entities.Topic]
+//	@Failure		400	{object}	entities.RetFailed
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/topics [post]
 func (t *Topics) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTopic")
 
-	body := &entities.Topic{}
+	body := &entities.InTopic{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateTopic: decode failed", "error", err.Error())
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
@@ -52,6 +64,16 @@ func (t *Topics) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 	return entities.NewRetSuccess[entities.Topic](*outTopic).WriteJSON(w)
 }
 
+// ListTopics
+//
+//	@Summary		List topics
+//	@Description	list all topics
+//	@Tags			topics
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	entities.RetSuccess[[]entities.Topic]
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/topics [get]
 func (t *Topics) ListTopics(w http.ResponseWriter, r *http.Request) error {
 	slog.Info("ListTopics")
 
@@ -64,6 +86,19 @@ func (t *Topics) ListTopics(w http.ResponseWriter, r *http.Request) error {
 	return entities.NewRetSuccess[[]entities.Topic](topics).WriteJSON(w)
 }
 
+// GetTopic
+//
+//	@Summary		Get topic
+//	@Description	get topic by id
+//	@Tags			topics
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"target topic id"
+//	@Success		200	{object}	entities.RetSuccess[entities.Topic]
+//	@Failure		400	{object}	entities.RetFailed
+//	@Failure		404	{object}	entities.RetFailed
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/topics/{id} [get]
 func (t *Topics) GetTopic(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("GetTopic")
 
@@ -87,11 +122,25 @@ func (t *Topics) GetTopic(w http.ResponseWriter, r *http.Request) error {
 	return entities.NewRetSuccess[entities.Topic](*topic).WriteJSON(w)
 }
 
+// UpdateTopic
+//
+//	@Summary		Update topic
+//	@Description	update topic
+//	@Tags			topics
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int				true	"target tag id"
+//	@Param			topic	body		entities.InTopic true	"new topic content"
+//	@Success		200	{object}	entities.RetSuccess[entities.Topic]
+//	@Failure		400	{object}	entities.RetFailed
+//	@Failure		404	{object}	entities.RetFailed
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/topics/{id} [put]
 func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("UpdateTopic")
 
 	// load body
-	body := &entities.Topic{}
+	body := &entities.InTopic{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("UpdateTopic: decode failed", "error", err.Error())
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
@@ -124,6 +173,19 @@ func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 	return entities.NewRetSuccess[entities.Topic](*outTopic).WriteJSON(w)
 }
 
+// DeleteTopic
+//
+//	@Summary		Delete topic
+//	@Description	delete topic
+//	@Tags			topics
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"target topic id"
+//	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
+//	@Failure		400	{object}	entities.RetFailed
+//	@Failure		404	{object}	entities.RetFailed
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/topics/{id} [delete]
 func (t *Topics) DeleteTopic(w http.ResponseWriter, r *http.Request) error {
 	slog.Info("DeleteTopic")
 

@@ -1,5 +1,49 @@
-basePath: /api/v1
 definitions:
+  entities.InTag:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  entities.InTopic:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  entities.OutBlog:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      pined:
+        type: boolean
+      slug:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/entities.Tag'
+        type: array
+      title:
+        type: string
+      topics:
+        items:
+          $ref: '#/definitions/entities.Topic'
+        type: array
+      updated_at:
+        type: string
+      visible:
+        type: boolean
+    type: object
   entities.ReqInBlog:
     properties:
       content:
@@ -21,14 +65,115 @@ definitions:
       visible:
         type: boolean
     type: object
-host: localhost:8080
+  entities.RetFailed:
+    properties:
+      error:
+        type: string
+      msg:
+        type: string
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-array_entities_Tag:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.Tag'
+        type: array
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-array_entities_Topic:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.Topic'
+        type: array
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-entities_OutBlog:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.OutBlog'
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-entities_RowsAffected:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.RowsAffected'
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-entities_Tag:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.Tag'
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-entities_Topic:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.Topic'
+      status:
+        type: integer
+    type: object
+  entities.RowsAffected:
+    properties:
+      affectedRows:
+        type: integer
+    type: object
+  entities.Tag:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  entities.Topic:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        type: string
+    type: object
 info:
   contact: {}
   description: A place to document what I've learned.
   title: Coding Notes
   version: "1.0"
 paths:
-  /blogs/:
+  /blogs:
     post:
       consumes:
       - application/json
@@ -42,8 +187,322 @@ paths:
           $ref: '#/definitions/entities.ReqInBlog'
       produces:
       - application/json
-      responses: {}
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
       summary: Create blog
       tags:
       - blogs
+  /tags:
+    get:
+      consumes:
+      - application/json
+      description: list all tags
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-array_entities_Tag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: List tags
+      tags:
+      - tags
+    post:
+      consumes:
+      - application/json
+      description: tags must have unique names
+      parameters:
+      - description: new tag contents
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/entities.InTag'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Create tag
+      tags:
+      - tags
+  /tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete tag
+      parameters:
+      - description: target tag id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_RowsAffected'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Delete tag
+      tags:
+      - tags
+    get:
+      consumes:
+      - application/json
+      description: get tag by id
+      parameters:
+      - description: target tag id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Get tags
+      tags:
+      - tags
+    put:
+      consumes:
+      - application/json
+      description: update tag
+      parameters:
+      - description: target tag id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: new tag content
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/entities.InTag'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Update tag
+      tags:
+      - tags
+  /topics:
+    get:
+      consumes:
+      - application/json
+      description: list all topics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-array_entities_Topic'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: List topics
+      tags:
+      - topics
+    post:
+      consumes:
+      - application/json
+      description: topics must have unique names
+      parameters:
+      - description: new topic contents
+        in: body
+        name: topic
+        required: true
+        schema:
+          $ref: '#/definitions/entities.InTopic'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_Topic'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Create topic
+      tags:
+      - topics
+  /topics/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete topic
+      parameters:
+      - description: target topic id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_RowsAffected'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Delete topic
+      tags:
+      - topics
+    get:
+      consumes:
+      - application/json
+      description: get topic by id
+      parameters:
+      - description: target topic id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_Topic'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Get topic
+      tags:
+      - topics
+    put:
+      consumes:
+      - application/json
+      description: update topic
+      parameters:
+      - description: target tag id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: new topic content
+        in: body
+        name: topic
+        required: true
+        schema:
+          $ref: '#/definitions/entities.InTopic'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_Topic'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Update topic
+      tags:
+      - topics
 swagger: "2.0"

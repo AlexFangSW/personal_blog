@@ -24,3 +24,8 @@ func NewTag(name, description string) *Tag {
 	tag.GenSlug()
 	return tag
 }
+
+type InTag struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
