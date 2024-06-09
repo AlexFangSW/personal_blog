@@ -364,10 +364,14 @@ func (b *Blogs) SoftDelete(ctx context.Context, id int) (int, error) {
 		return 0, fmt.Errorf("SoftDelete: blog soft delete failed: %w", err)
 	}
 
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("SoftDelete: commit failed: %w", err)
+	}
+
 	return affectedRows, nil
 }
 
-func (b *Blogs) Delele(ctx context.Context, id int) (int, error) {
+func (b *Blogs) Delete(ctx context.Context, id int) (int, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
 	defer cancel()
 
@@ -376,6 +380,22 @@ func (b *Blogs) Delele(ctx context.Context, id int) (int, error) {
 		return 0, fmt.Errorf("Delete: begin transaction failed: %w", err)
 	}
 
+	// delete relations
+	if err := b.models.blogTags.Delete(ctxTimeout, tx, id); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("Delete: model delete blog_tags rollback error: %w", err)
+		}
+		return 0, fmt.Errorf("Delete: model delete blog_tags error: %w", err)
+	}
+
+	if err := b.models.blogTopics.Delete(ctxTimeout, tx, id); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("Delete: model delete blog_topics rollback error: %w", err)
+		}
+		return 0, fmt.Errorf("Delete: model delete blog_topics error: %w", err)
+	}
+
+	// delete blog
 	affectedRows, err := b.models.blog.Delete(ctxTimeout, tx, id)
 	if err != nil {
 		if err := tx.Rollback(); err != nil {

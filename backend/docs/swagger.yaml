@@ -252,6 +252,34 @@ paths:
       tags:
       - blogs
   /blogs/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: update blog
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_RowsAffected'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Soft delete blog
+      tags:
+      - blogs
     get:
       consumes:
       - application/json
@@ -316,7 +344,64 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/entities.RetFailed'
-      summary: Update blogs
+      summary: Update blog
+      tags:
+      - blogs
+  /blogs/deleted/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete blog
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Delete blog
+      tags:
+      - blogs
+    patch:
+      consumes:
+      - application/json
+      description: restore delete blog
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Restore delete blog
       tags:
       - blogs
   /tags:

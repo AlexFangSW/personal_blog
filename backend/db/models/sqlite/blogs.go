@@ -436,7 +436,7 @@ func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topic
 func (b *Blogs) SoftDelete(ctx context.Context, tx *sql.Tx, id int) (int, error) {
 	ts := time.Now().UTC().Format("2006-01-02T15:04:05-07:00")
 	stmt := `
-	UPDATE blogs SET deleted_at = ? WHERE id = ?;
+	UPDATE blogs SET deleted_at = ? WHERE id = ? AND deleted_at = '';
 	`
 	util.LogQuery(ctx, "SoftDeleteBlog:", stmt)
 
@@ -460,7 +460,7 @@ func (b *Blogs) SoftDelete(ctx context.Context, tx *sql.Tx, id int) (int, error)
 
 func (b *Blogs) Delete(ctx context.Context, tx *sql.Tx, id int) (int, error) {
 	stmt := `
-	DELETE blogs WHERE id = ?;
+	DELETE FROM blogs WHERE id = ? AND deleted_at <> '';
 	`
 	util.LogQuery(ctx, "DeleteBlog:", stmt)
 
@@ -483,7 +483,7 @@ func (b *Blogs) Delete(ctx context.Context, tx *sql.Tx, id int) (int, error) {
 
 func (b *Blogs) RestoreDeleted(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error) {
 	stmt := `
-	UPDATE blogs SET deleted_at = "" WHERE id = ?;
+	UPDATE blogs SET deleted_at = "" WHERE id = ? RETURNING *;
 	`
 	util.LogQuery(ctx, "RestoreDeletedBlog:", stmt)
 

@@ -107,6 +107,92 @@
                 }
             }
         },
+        "/blogs/deleted/{id}": {
+            "delete": {
+                "description": "delete blog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blogs"
+                ],
+                "summary": "Delete blog",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "target blog id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "restore delete blog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blogs"
+                ],
+                "summary": "Restore delete blog",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "target blog id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    }
+                }
+            }
+        },
         "/blogs/{id}": {
             "get": {
                 "description": "get blog",
@@ -168,7 +254,7 @@
                 "tags": [
                     "blogs"
                 ],
-                "summary": "Update blogs",
+                "summary": "Update blog",
                 "parameters": [
                     {
                         "type": "integer",
@@ -192,6 +278,48 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "update blog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blogs"
+                ],
+                "summary": "Soft delete blog",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "target blog id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetSuccess-entities_RowsAffected"
                         }
                     },
                     "400": {

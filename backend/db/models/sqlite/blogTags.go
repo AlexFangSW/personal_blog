@@ -50,29 +50,9 @@ func (b *BlogTags) Upsert(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []
 	return nil
 }
 
-func (b *BlogTags) Delete(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []int) error {
-	stmt := `DELETE FROM blog_tags WHERE blog_id = ? `
+func (b *BlogTags) Delete(ctx context.Context, tx *sql.Tx, blogID int) error {
+	stmt := `DELETE FROM blog_tags WHERE blog_id = ?;`
 
-	if len(tagIDs) == 0 {
-		// DELETE FROM blog_tags WHERE blog_id = ? ;
-		stmt += ";"
-
-	} else {
-		var inIDs strings.Builder
-
-		// DELETE FROM blog_tags WHERE blog_id = ? AND tag_id IN (x,x,x,x,x);
-		inIDs.WriteString("AND tag_id IN ")
-
-		values, err := genInCondition(tagIDs)
-		if err != nil {
-			return fmt.Errorf("Delete: gen IN condition failed: %w", err)
-		}
-		inIDs.WriteString(values)
-
-		inIDs.WriteString(";")
-
-		stmt += inIDs.String()
-	}
 	util.LogQuery(ctx, "DeleteBlogTags:", stmt)
 
 	res, err := tx.ExecContext(ctx, stmt, blogID)
