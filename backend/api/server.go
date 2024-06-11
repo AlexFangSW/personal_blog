@@ -49,6 +49,7 @@ func (s *Server) Start() error {
 	// authentication
 	mux.HandleFunc(s.post("/login"), withMiddleware(s.users.Login))
 	mux.HandleFunc(s.post("/logout"), withMiddleware(s.users.Logout))
+	mux.HandleFunc(s.post("/auth-check"), withMiddleware(s.users.AuthorizeCheck))
 
 	// TODO: block 'list, get ?all=true' requests that dosen't have token
 	mux.HandleFunc(s.post("/blogs"), withMiddleware(s.blogs.CreateBlog))

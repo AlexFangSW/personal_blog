@@ -132,10 +132,8 @@ func (u *Users) Logout(w http.ResponseWriter, r *http.Request) error {
 //	@Produce		json
 //	@Param			Authorization	header		string	true	"jwt token"
 //	@Success		200				{object}	entities.RetSuccess[string]
-//	@Failure		412				{object}	entities.RetFailed
 //	@Failure		403				{object}	entities.RetFailed
-//	@Failure		500				{object}	entities.RetFailed
-//	@Router			/logout [post]
+//	@Router			/auth-check [post]
 func (u *Users) AuthorizeCheck(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("AuthorizeCheck")
 
