@@ -22,11 +22,13 @@ type topicsRepository interface {
 
 type Topics struct {
 	repo topicsRepository
+	auth authHelper
 }
 
-func NewTopics(repo topicsRepository) *Topics {
+func NewTopics(repo topicsRepository, auth authHelper) *Topics {
 	return &Topics{
 		repo: repo,
+		auth: auth,
 	}
 }
 
@@ -45,6 +47,13 @@ func NewTopics(repo topicsRepository) *Topics {
 func (t *Topics) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTopic")
 
+	// authorization
+	authorized, err := t.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("CreateTopic: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
+
 	body := &entities.InTopic{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateTopic: decode failed", "error", err.Error())
@@ -61,7 +70,7 @@ func (t *Topics) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return entities.NewRetSuccess[entities.Topic](*outTopic).WriteJSON(w)
+	return entities.NewRetSuccess(*outTopic).WriteJSON(w)
 }
 
 // ListTopics
@@ -83,7 +92,7 @@ func (t *Topics) ListTopics(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return entities.NewRetSuccess[[]entities.Topic](topics).WriteJSON(w)
+	return entities.NewRetSuccess(topics).WriteJSON(w)
 }
 
 // GetTopic
@@ -119,7 +128,7 @@ func (t *Topics) GetTopic(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	return entities.NewRetSuccess[entities.Topic](*topic).WriteJSON(w)
+	return entities.NewRetSuccess(*topic).WriteJSON(w)
 }
 
 // UpdateTopic
@@ -138,6 +147,13 @@ func (t *Topics) GetTopic(w http.ResponseWriter, r *http.Request) error {
 //	@Router			/topics/{id} [put]
 func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("UpdateTopic")
+
+	// authorization
+	authorized, err := t.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("UpdateTopic: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
 
 	// load body
 	body := &entities.InTopic{}
@@ -169,7 +185,7 @@ func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	return entities.NewRetSuccess[entities.Topic](*outTopic).WriteJSON(w)
+	return entities.NewRetSuccess(*outTopic).WriteJSON(w)
 }
 
 // DeleteTopic
@@ -188,6 +204,13 @@ func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 func (t *Topics) DeleteTopic(w http.ResponseWriter, r *http.Request) error {
 	slog.Info("DeleteTopic")
 
+	// authorization
+	authorized, err := t.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("DeleteTopic: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
+
 	// get target id
 	rawID := r.PathValue("id")
 	id, err := strconv.Atoi(rawID)
@@ -205,5 +228,5 @@ func (t *Topics) DeleteTopic(w http.ResponseWriter, r *http.Request) error {
 	if affectedRows == 0 {
 		return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 	}
-	return entities.NewRetSuccess[entities.RowsAffected](*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
+	return entities.NewRetSuccess(*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
 }

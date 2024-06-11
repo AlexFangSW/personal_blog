@@ -22,11 +22,13 @@ type tagsRepository interface {
 
 type Tags struct {
 	repo tagsRepository
+	auth authHelper
 }
 
-func NewTags(repo tagsRepository) *Tags {
+func NewTags(repo tagsRepository, auth authHelper) *Tags {
 	return &Tags{
 		repo: repo,
+		auth: auth,
 	}
 }
 
@@ -45,6 +47,13 @@ func NewTags(repo tagsRepository) *Tags {
 func (t *Tags) CreateTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTag")
 
+	// authorization
+	authorized, err := t.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("CreateTag: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
+
 	body := &entities.InTag{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
 		slog.Error("CreateTag: decode failed", "error", err.Error())
@@ -61,7 +70,7 @@ func (t *Tags) CreateTag(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return entities.NewRetSuccess[entities.Tag](*outTag).WriteJSON(w)
+	return entities.NewRetSuccess(*outTag).WriteJSON(w)
 }
 
 // ListTags
@@ -83,7 +92,7 @@ func (t *Tags) ListTags(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return entities.NewRetSuccess[[]entities.Tag](tags).WriteJSON(w)
+	return entities.NewRetSuccess(tags).WriteJSON(w)
 }
 
 // GetTag
@@ -119,7 +128,7 @@ func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	return entities.NewRetSuccess[entities.Tag](*tag).WriteJSON(w)
+	return entities.NewRetSuccess(*tag).WriteJSON(w)
 }
 
 // UpdateTag
@@ -138,6 +147,13 @@ func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 //	@Router			/tags/{id} [put]
 func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("UpdateTag")
+
+	// authorization
+	authorized, err := t.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("UpdateTag: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
 
 	// load body
 	body := &entities.InTag{}
@@ -168,7 +184,7 @@ func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	return entities.NewRetSuccess[entities.Tag](*outTag).WriteJSON(w)
+	return entities.NewRetSuccess(*outTag).WriteJSON(w)
 }
 
 // DeleteTag
@@ -186,6 +202,13 @@ func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 //	@Router			/tags/{id} [delete]
 func (t *Tags) DeleteTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Info("DeleteTag")
+
+	// authorization
+	authorized, err := t.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("DeleteTag: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
 
 	// get target id
 	rawID := r.PathValue("id")
@@ -205,5 +228,5 @@ func (t *Tags) DeleteTag(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 	}
 
-	return entities.NewRetSuccess[entities.RowsAffected](*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
+	return entities.NewRetSuccess(*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
 }

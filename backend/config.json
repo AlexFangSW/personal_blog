@@ -4,5 +4,8 @@
   },
   "db": {
     "dsnURL": "./blog.db"
+  },
+  "jwt": {
+    "secret": "sl1qFhD2vp"
   }
 }

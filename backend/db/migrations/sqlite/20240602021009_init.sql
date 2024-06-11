@@ -91,7 +91,8 @@ CREATE TABLE IF NOT EXISTS users(
   id INTEGER NOT NULL UNIQUE PRIMARY KEY CHECK (id = 0),
   name TEXT NOT NULL UNIQUE,
   -- encoded password
-  pwd TEXT NOT NULL
+  password TEXT NOT NULL,
+  jwt TEXT DEFAULT ""
 );
 -- +goose StatementEnd
 

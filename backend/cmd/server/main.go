@@ -67,35 +67,46 @@ func run() error {
 	blogsModel := sqlite.NewBlogs()
 	blogTagsModel := sqlite.NewBlogTags()
 	blogTopicsModel := sqlite.NewBlogTopics()
-	TagsModel := sqlite.NewTags()
-	TopicsModel := sqlite.NewTopics()
+	tagsModel := sqlite.NewTags()
+	topicsModel := sqlite.NewTopics()
+	usersModel := sqlite.NewUsers()
 
 	// repositories
 	blogsRepoModels := repositories.NewBlogsRepoModels(
 		blogsModel,
 		blogTagsModel,
 		blogTopicsModel,
-		TagsModel,
-		TopicsModel,
+		tagsModel,
+		topicsModel,
 	)
 	blogsRepo := repositories.NewBlogs(db, config.DB, *blogsRepoModels)
 
 	tagsRepoModels := repositories.NewTagsRepoModels(
 		blogTagsModel,
-		TagsModel,
+		tagsModel,
 	)
 	tagsRepo := repositories.NewTags(db, config.DB, *tagsRepoModels)
 
 	topicsRepoModels := repositories.NewTopicsRepoModels(
 		blogTopicsModel,
-		TopicsModel,
+		topicsModel,
 	)
 	topicsRepo := repositories.NewTopics(db, config.DB, *topicsRepoModels)
 
+	usersRepoModels := repositories.NewUsersRepoModels(
+		usersModel,
+	)
+	usersRepo := repositories.NewUsers(db, config.DB, *usersRepoModels)
+
+	// helpers
+	jwtHelper := handlers.NewJWTHelper(config.JWT)
+	authHelper := handlers.NewAuthHelper(usersRepo, jwtHelper)
+
 	// handlers
-	blogsHandler := handlers.NewBlogs(blogsRepo)
-	tagsHandler := handlers.NewTags(tagsRepo)
-	topicsHandler := handlers.NewTopics(topicsRepo)
+	blogsHandler := handlers.NewBlogs(blogsRepo, authHelper)
+	tagsHandler := handlers.NewTags(tagsRepo, authHelper)
+	topicsHandler := handlers.NewTopics(topicsRepo, authHelper)
+	usersHandler := handlers.NewUsers(usersRepo, jwtHelper, authHelper)
 
 	// setup server
 	server := api.NewServer(
@@ -103,6 +114,7 @@ func run() error {
 		*blogsHandler,
 		*tagsHandler,
 		*topicsHandler,
+		*usersHandler,
 	)
 
 	// start server

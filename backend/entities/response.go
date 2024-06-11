@@ -7,6 +7,16 @@ import (
 	"net/http"
 )
 
+type JWT struct {
+	JWT string `json:"jwt"`
+}
+
+func NewJWT(jwt string) *JWT {
+	return &JWT{
+		JWT: jwt,
+	}
+}
+
 type RowsAffected struct {
 	AffectedRows int `json:"affectedRows"`
 }
@@ -17,13 +27,19 @@ func NewRowsAffected(affectedRows int) *RowsAffected {
 	}
 }
 
-type RetSuccess[T RowsAffected | OutBlog | []OutBlog | Tag | []Tag | Topic | []Topic] struct {
+type MsgType interface {
+	RowsAffected | OutBlog | []OutBlog |
+		Tag | []Tag | Topic | []Topic |
+		~string | JWT
+}
+
+type RetSuccess[T MsgType] struct {
 	Error  string `json:"error"`
 	Status int    `json:"status"`
 	Msg    T      `json:"msg"`
 }
 
-func NewRetSuccess[T RowsAffected | OutBlog | []OutBlog | Tag | []Tag | Topic | []Topic](msg T) *RetSuccess[T] {
+func NewRetSuccess[T MsgType](msg T) *RetSuccess[T] {
 	return &RetSuccess[T]{
 		Status: http.StatusOK,
 		Msg:    msg,

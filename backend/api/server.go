@@ -18,18 +18,21 @@ type Server struct {
 	blogs  handlers.Blogs
 	topics handlers.Topics
 	tags   handlers.Tags
+	users  handlers.Users
 }
 
 func NewServer(
 	config config.ServerSetting,
 	blogs handlers.Blogs,
 	tags handlers.Tags,
-	topics handlers.Topics) *Server {
+	topics handlers.Topics,
+	users handlers.Users) *Server {
 	return &Server{
 		config: config,
 		blogs:  blogs,
 		tags:   tags,
 		topics: topics,
+		users:  users,
 	}
 }
 
@@ -43,7 +46,11 @@ func (s *Server) Start() error {
 	mux.HandleFunc("GET /docs/*", withMiddleware(apiHandlerWrapper(
 		httpSwagger.Handler(httpSwagger.URL(filepath)))))
 
-	// TODO: use middleware to block 'list, get ?all=true' requests that dosen't have token
+	// authentication
+	mux.HandleFunc(s.post("/login"), withMiddleware(s.users.Login))
+	mux.HandleFunc(s.post("/logout"), withMiddleware(s.users.Logout))
+
+	// TODO: block 'list, get ?all=true' requests that dosen't have token
 	mux.HandleFunc(s.post("/blogs"), withMiddleware(s.blogs.CreateBlog))
 	mux.HandleFunc(s.get("/blogs"), withMiddleware(s.blogs.ListBlogs))
 	mux.HandleFunc(s.get("/blogs/{id}"), withMiddleware(s.blogs.GetBlog))

@@ -36,11 +36,13 @@ type blogsRepository interface {
 
 type Blogs struct {
 	repo blogsRepository
+	auth authHelper
 }
 
-func NewBlogs(repo blogsRepository) *Blogs {
+func NewBlogs(repo blogsRepository, auth authHelper) *Blogs {
 	return &Blogs{
 		repo: repo,
+		auth: auth,
 	}
 }
 
@@ -54,10 +56,18 @@ func NewBlogs(repo blogsRepository) *Blogs {
 //	@Param			blog	body		entities.ReqInBlog	true	"new blog contents"
 //	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400		{object}	entities.RetFailed
+//	@Failure		403		{object}	entities.RetFailed
 //	@Failure		500		{object}	entities.RetFailed
 //	@Router			/blogs [post]
 func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTag")
+
+	// authorization
+	authorized, err := b.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("CreateBlog: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
 
 	body := &entities.ReqInBlog{}
 	if err := json.NewDecoder(r.Body).Decode(body); err != nil {
@@ -83,7 +93,7 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return entities.NewRetSuccess[entities.OutBlog](*outBlog).WriteJSON(w)
+	return entities.NewRetSuccess(*outBlog).WriteJSON(w)
 }
 
 // ListBlogs
@@ -98,6 +108,7 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Param			tag		query		int		false	"filter by tag ids, can be multiple ids, must be use with topic. ex: ?tag=1&tag=2"
 //	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlog]
 //	@Failure		400		{object}	entities.RetFailed
+//	@Failure		403		{object}	entities.RetFailed
 //	@Failure		500		{object}	entities.RetFailed
 //	@Router			/blogs [get]
 func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
@@ -113,7 +124,7 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 		slog.Error("ListBlogs: 'all' string list to bool failed", "error", err)
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
-	all = removeDuplicate[bool](all)
+	all = removeDuplicate(all)
 
 	rowTopicIDs := queries["topic"]
 	topicIDs, err := strListToInt(rowTopicIDs)
@@ -121,7 +132,7 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 		slog.Error("ListBlogs: 'topic' string list to int failed", "error", err)
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
-	topicIDs = removeDuplicate[int](topicIDs)
+	topicIDs = removeDuplicate(topicIDs)
 
 	rowTagIDs := queries["tag"]
 	tagIDs, err := strListToInt(rowTagIDs)
@@ -129,21 +140,29 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 		slog.Error("ListBlogs: 'tag' string list to int failed", "error", err)
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
-	tagIDs = removeDuplicate[int](tagIDs)
+	tagIDs = removeDuplicate(tagIDs)
 
 	// admin list
-	if len(all) > 0 && all[0] == true {
+	if len(all) > 0 && all[0] {
+
+		// authorization
+		authorized, err := b.auth.Verify(r)
+		if err != nil || !authorized {
+			slog.Warn("ListBlogs: authorization failed", "error", err.Error())
+			return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+		}
+
 		// admin list by topic and tag ids
 		if len(topicIDs) > 0 && len(tagIDs) > 0 {
 			blogs, err := b.repo.AdminListByTopicAndTagIDs(r.Context(), topicIDs, tagIDs)
 			if err != nil {
 				slog.Error("ListBlogs: admin list by topic and tag ids failed", "error", err)
 				if errors.Is(err, sql.ErrNoRows) {
-					return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+					return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 				}
 				return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 			}
-			return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+			return entities.NewRetSuccess(blogs).WriteJSON(w)
 		}
 
 		// admin list by topic ids
@@ -152,11 +171,11 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 			if err != nil {
 				slog.Error("ListBlogs: admin list by topic ids failed", "error", err)
 				if errors.Is(err, sql.ErrNoRows) {
-					return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+					return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 				}
 				return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 			}
-			return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+			return entities.NewRetSuccess(blogs).WriteJSON(w)
 		}
 
 		// admin list
@@ -164,11 +183,11 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			slog.Error("ListBlogs: admin list failed", "error", err)
 			if errors.Is(err, sql.ErrNoRows) {
-				return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+				return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 			}
 			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
-		return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+		return entities.NewRetSuccess(blogs).WriteJSON(w)
 	}
 
 	// normal list blogs, only list blogs that are visible and not soft deleted
@@ -179,11 +198,11 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			slog.Error("ListBlogs: list by topic and tag ids failed", "error", err)
 			if errors.Is(err, sql.ErrNoRows) {
-				return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+				return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 			}
 			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
-		return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+		return entities.NewRetSuccess(blogs).WriteJSON(w)
 	}
 
 	// list by topic ids
@@ -192,11 +211,11 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			slog.Error("ListBlogs: list by topic ids failed", "error", err)
 			if errors.Is(err, sql.ErrNoRows) {
-				return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+				return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 			}
 			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
-		return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+		return entities.NewRetSuccess(blogs).WriteJSON(w)
 	}
 
 	// list
@@ -204,11 +223,11 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		slog.Error("ListBlogs: list failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
-			return entities.NewRetSuccess[[]entities.OutBlog]([]entities.OutBlog{}).WriteJSON(w)
+			return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 		}
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
-	return entities.NewRetSuccess[[]entities.OutBlog](blogs).WriteJSON(w)
+	return entities.NewRetSuccess(blogs).WriteJSON(w)
 }
 
 // GetBlog
@@ -222,6 +241,7 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 //	@Param			all	query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
 //	@Success		200	{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400	{object}	entities.RetFailed
+//	@Failure		403	{object}	entities.RetFailed
 //	@Failure		500	{object}	entities.RetFailed
 //	@Router			/blogs/{id} [get]
 func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
@@ -246,7 +266,15 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// admin get
-	if len(all) > 0 && all[0] == true {
+	if len(all) > 0 && all[0] {
+
+		// authorization
+		authorized, err := b.auth.Verify(r)
+		if err != nil || !authorized {
+			slog.Warn("GetBlog: authorization failed", "error", err.Error())
+			return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+		}
+
 		blog, err := b.repo.AdminGet(r.Context(), id)
 		if err != nil {
 			slog.Error("GetBlog: admin get failed", "error", err)
@@ -255,7 +283,7 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 			}
 			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
-		return entities.NewRetSuccess[entities.OutBlog](*blog).WriteJSON(w)
+		return entities.NewRetSuccess(*blog).WriteJSON(w)
 	}
 
 	// normal get
@@ -267,7 +295,7 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 		}
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
-	return entities.NewRetSuccess[entities.OutBlog](*blog).WriteJSON(w)
+	return entities.NewRetSuccess(*blog).WriteJSON(w)
 }
 
 // UpdateBlog
@@ -281,10 +309,18 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Param			blog	body		entities.ReqInBlog	true	"new blog content"
 //	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400		{object}	entities.RetFailed
+//	@Failure		403		{object}	entities.RetFailed
 //	@Failure		500		{object}	entities.RetFailed
 //	@Router			/blogs/{id} [put]
 func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("UpdateBlog")
+
+	// authorization
+	authorized, err := b.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("UpdateBlog: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
 
 	// process path param
 	id, err := strconv.Atoi(r.PathValue("id"))
@@ -321,7 +357,7 @@ func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
 		}
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
-	return entities.NewRetSuccess[entities.OutBlog](*updatedBlog).WriteJSON(w)
+	return entities.NewRetSuccess(*updatedBlog).WriteJSON(w)
 }
 
 // SoftDeleteBlog
@@ -334,10 +370,18 @@ func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Param			id	path		int	true	"target blog id"
 //	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
 //	@Failure		400	{object}	entities.RetFailed
+//	@Failure		403	{object}	entities.RetFailed
 //	@Failure		500	{object}	entities.RetFailed
 //	@Router			/blogs/{id} [delete]
 func (b *Blogs) SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("SoftDeleteBlog")
+
+	// authorization
+	authorized, err := b.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("SoftDeleteBlog: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
 
 	// parse path param
 	id, err := strconv.Atoi(r.PathValue("id"))
@@ -357,7 +401,7 @@ func (b *Blogs) SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 	}
 
-	return entities.NewRetSuccess[entities.RowsAffected](*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
+	return entities.NewRetSuccess(*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
 }
 
 // RestoreDeletedBlog
@@ -370,10 +414,18 @@ func (b *Blogs) SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Param			id	path		int	true	"target blog id"
 //	@Success		200	{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400	{object}	entities.RetFailed
+//	@Failure		403	{object}	entities.RetFailed
 //	@Failure		500	{object}	entities.RetFailed
 //	@Router			/blogs/deleted/{id} [patch]
 func (b *Blogs) RestoreDeletedBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("RestoreDeletedBlog")
+
+	// authorization
+	authorized, err := b.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("RestoreDeletedBlog: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
 
 	// parse path param
 	id, err := strconv.Atoi(r.PathValue("id"))
@@ -392,7 +444,7 @@ func (b *Blogs) RestoreDeletedBlog(w http.ResponseWriter, r *http.Request) error
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
-	return entities.NewRetSuccess[entities.OutBlog](*blog).WriteJSON(w)
+	return entities.NewRetSuccess(*blog).WriteJSON(w)
 }
 
 // DeleteBlog
@@ -405,10 +457,18 @@ func (b *Blogs) RestoreDeletedBlog(w http.ResponseWriter, r *http.Request) error
 //	@Param			id	path		int	true	"target blog id"
 //	@Success		200	{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400	{object}	entities.RetFailed
+//	@Failure		403	{object}	entities.RetFailed
 //	@Failure		500	{object}	entities.RetFailed
 //	@Router			/blogs/deleted/{id} [delete]
 func (b *Blogs) DeleteBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("DeleteBlog")
+
+	// authorization
+	authorized, err := b.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("DeleteBlog: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
 
 	// parse path param
 	id, err := strconv.Atoi(r.PathValue("id"))
@@ -428,5 +488,5 @@ func (b *Blogs) DeleteBlog(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 	}
 
-	return entities.NewRetSuccess[entities.RowsAffected](*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
+	return entities.NewRetSuccess(*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
 }

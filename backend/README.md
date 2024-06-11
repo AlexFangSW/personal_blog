@@ -48,19 +48,7 @@ TODO
 
 ## TODO
 ### High
-- Implement handlers
-    - blogs
-- Auth 
-    - handler
-        - login
-        - middleware
-    - repo:
-        - user
-    - model:
-        - user
-    - utility to create user
 - Intergration tests on CRUD operations
-- API documentation [done by swaggo]
 
 ### Mid
 - Custom error returns

@@ -13,6 +13,11 @@ definitions:
       name:
         type: string
     type: object
+  entities.JWT:
+    properties:
+      jwt:
+        type: string
+    type: object
   entities.OutBlog:
     properties:
       content:
@@ -107,6 +112,15 @@ definitions:
       status:
         type: integer
     type: object
+  entities.RetSuccess-entities_JWT:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.JWT'
+      status:
+        type: integer
+    type: object
   entities.RetSuccess-entities_OutBlog:
     properties:
       error:
@@ -140,6 +154,15 @@ definitions:
         type: string
       msg:
         $ref: '#/definitions/entities.Topic'
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-string:
+    properties:
+      error:
+        type: string
+      msg:
+        type: string
       status:
         type: integer
     type: object
@@ -215,6 +238,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
         "500":
           description: Internal Server Error
           schema:
@@ -244,6 +271,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
         "500":
           description: Internal Server Error
           schema:
@@ -271,6 +302,10 @@ paths:
             $ref: '#/definitions/entities.RetSuccess-entities_RowsAffected'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/entities.RetFailed'
         "500":
@@ -304,6 +339,10 @@ paths:
             $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/entities.RetFailed'
         "500":
@@ -340,6 +379,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
         "500":
           description: Internal Server Error
           schema:
@@ -367,6 +410,10 @@ paths:
             $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/entities.RetFailed'
         "500":
@@ -397,6 +444,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
         "500":
           description: Internal Server Error
           schema:
@@ -404,6 +455,76 @@ paths:
       summary: Restore delete blog
       tags:
       - blogs
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: login to get jwt token
+      parameters:
+      - description: user credentials
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_JWT'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "412":
+          description: Precondition Failed
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Login
+      tags:
+      - users
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: Checks if jwt is valid
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-string'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "412":
+          description: Precondition Failed
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: AuthorizeCheck
+      tags:
+      - users
   /tags:
     get:
       consumes:

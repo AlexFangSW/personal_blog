@@ -16,10 +16,18 @@ type DBSetting struct {
 	Connections int    `json:"connections"`
 }
 
+type JWTSetting struct {
+	Issuer string `json:"issuer"`
+	// hour
+	Expire int    `json:"expire"`
+	Secret string `json:"secret"`
+}
+
 type Config struct {
 	Server ServerSetting `json:"server"`
 	Logger LoggerSetting `json:"logger"`
 	DB     DBSetting     `json:"db"`
+	JWT    JWTSetting    `json:"jwt"`
 }
 
 func NewConfig() *Config {
@@ -36,6 +44,10 @@ func NewConfig() *Config {
 			DSNURL:      "./example.db",
 			Timeout:     30,
 			Connections: 10,
+		},
+		JWT: JWTSetting{
+			Issuer: "alexfangsw",
+			Expire: 6,
 		},
 	}
 }

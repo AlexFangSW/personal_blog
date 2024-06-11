@@ -1,14 +1,23 @@
 package handlers
 
 import (
+	"blog/entities"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-	ErrorTargetNotFound = errors.New("Target not found")
-	boolMap             = map[string]bool{
+	ErrorTargetNotFound           = errors.New("target not found")
+	ErrorAuthorizationFailed      = errors.New("authorization failed")
+	ErrorAuthorizationHeaderEmpty = errors.New("authorization header empty")
+)
+
+var (
+	boolMap = map[string]bool{
 		"true":  true,
 		"1":     true,
 		"false": false,
@@ -62,4 +71,22 @@ func removeDuplicate[T comparable](inpt []T) []T {
 		}
 	}
 	return list
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+func verifyUser(inUser entities.InUser, user entities.User) bool {
+	slog.Debug("verifyUser")
+	if inUser.Name == user.Name {
+		return checkPasswordHash(inUser.Password, user.Password)
+	}
+	return false
 }
