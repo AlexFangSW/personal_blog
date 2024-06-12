@@ -17,7 +17,7 @@ Mostily uses golang's builtin librariy
 - **goose** for database migrations
 - Supported Databases: 
     - SQLite
-    - PostgreSQL
+    - PostgreSQL [TODO]
 
 ### Frontend [TODO]
 - htmx
@@ -48,7 +48,10 @@ TODO
 
 ## TODO
 ### High
-- Intergration tests on CRUD operations
+- tests:
+    - repository intergration tests [doing]
+    - auth related unit tests 
+    - handler unit tests
 
 ### Mid
 - Custom error returns
