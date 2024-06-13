@@ -899,7 +899,6 @@ func TestBlogsSoftDeleteSqlite(t *testing.T) {
 	)
 	blogsRepo.Create(ctxTimeout, *newInBlog1)
 
-	// list
 	affectedRows, err := blogsRepo.SoftDelete(ctxTimeout, 1)
 	if err != nil {
 		t.Fatalf("TestBlogsSoftDeleteSqlite: soft delete failed: %s", err)
@@ -927,5 +926,136 @@ func TestBlogsSoftDeleteSqlite(t *testing.T) {
 	listByTopicAndTagIDsResult, _ := blogsRepo.ListByTopicAndTagIDs(ctxTimeout, []int{1}, []int{1})
 	if len(listByTopicAndTagIDsResult) != 0 {
 		t.Fatalf("TestBlogsSoftDeleteSqlite: list topic and tag ids shouldn't see this")
+	}
+}
+
+func TestBlogsDeleteSqlite(t *testing.T) {
+	// connect
+	dbConn, err := sql.Open("sqlite3", "file:test.db?mode=memory&_foreign_keys=on")
+	if err != nil {
+		t.Fatalf("TestBlogsDeleteSqlite: open db connection failed: %s", err)
+	}
+	defer dbConn.Close()
+
+	// migrate db
+	downDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite")
+	if err := upDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
+		t.Fatalf("TestBlogsDeleteSqlite: migrate up failed: %s", err)
+	}
+
+	// setup repo
+	blogsRepo, tagsRepo, topicsRepo := prepareRepos(dbConn)
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	// lets just assume they work
+	// prepare topic and tags
+	topicsRepo.Create(ctxTimeout, *entities.NewTopic("topic1", "topic1"))
+	tagsRepo.Create(ctxTimeout, *entities.NewTag("tag1", "tag1"))
+
+	// prepare blog
+	visibleBlog := entities.NewBlog(
+		"title1",
+		"content1",
+		"description1",
+		false,
+		true,
+	)
+	newInBlog1 := entities.NewInBlog(
+		*visibleBlog,
+		[]int{1},
+		[]int{1},
+	)
+	blogsRepo.Create(ctxTimeout, *newInBlog1)
+
+	// delete (needs to be soft deleted first)
+	affectedRows, err := blogsRepo.Delete(ctxTimeout, 1)
+	if err != nil {
+		t.Fatalf("TestBlogsDeleteSqlite: delete failed: %s", err)
+	}
+	if affectedRows == 1 {
+		t.Fatalf("TestBlogsDeleteSqlite: affected rows should be zero")
+	}
+
+	// soft delete
+	affectedRows2, err2 := blogsRepo.SoftDelete(ctxTimeout, 1)
+	if err2 != nil {
+		t.Fatalf("TestBlogsDeleteSqlite: soft delete failed: %s", err)
+	}
+	if affectedRows2 != 1 {
+		t.Fatalf("TestBlogsDeleteSqlite: affectedRows should be 1")
+	}
+
+	// this time it will be deleted
+	affectedRows3, err3 := blogsRepo.Delete(ctxTimeout, 1)
+	if err3 != nil {
+		t.Fatalf("TestBlogsDeleteSqlite: delete failed: %s", err)
+	}
+	if affectedRows3 != 1 {
+		t.Fatalf("TestBlogsDeleteSqlite: affectedRows should be 1")
+	}
+
+	// try to get
+	_, err5 := blogsRepo.AdminGet(ctxTimeout, 1)
+	if err5 == nil {
+		t.Fatalf("TestBlogsDeleteSqlite: should not be able to get this blog")
+	}
+}
+
+func TestBlogsRestoreDeletedSqlite(t *testing.T) {
+	// connect
+	dbConn, err := sql.Open("sqlite3", "file:test.db?mode=memory&_foreign_keys=on")
+	if err != nil {
+		t.Fatalf("TestBlogsRestoreDeletedSqlite: open db connection failed: %s", err)
+	}
+	defer dbConn.Close()
+
+	// migrate db
+	downDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite")
+	if err := upDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
+		t.Fatalf("TestBlogsRestoreDeletedSqlite: migrate up failed: %s", err)
+	}
+
+	// setup repo
+	blogsRepo, tagsRepo, topicsRepo := prepareRepos(dbConn)
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	// lets just assume they work
+	// prepare topic and tags
+	topicsRepo.Create(ctxTimeout, *entities.NewTopic("topic1", "topic1"))
+	tagsRepo.Create(ctxTimeout, *entities.NewTag("tag1", "tag1"))
+
+	// prepare blog
+	visibleBlog := entities.NewBlog(
+		"title1",
+		"content1",
+		"description1",
+		false,
+		true,
+	)
+	newInBlog1 := entities.NewInBlog(
+		*visibleBlog,
+		[]int{1},
+		[]int{1},
+	)
+	blogsRepo.Create(ctxTimeout, *newInBlog1)
+
+	// soft delete
+	affectedRows, err := blogsRepo.SoftDelete(ctxTimeout, 1)
+	if err != nil {
+		t.Fatalf("TestBlogsRestoreDeletedSqlite: soft delete failed: %s", err)
+	}
+	if affectedRows != 1 {
+		t.Fatalf("TestBlogsRestoreDeletedSqlite: affectedRows should be 1")
+	}
+
+	// restore soft delete
+	blog, err := blogsRepo.RestoreDeleted(ctxTimeout, 1)
+	if err != nil {
+		t.Fatalf("TestBlogsRestoreDeletedSqlite: restore delete failed: %s", err)
+	}
+	if !cmp.Equal(visibleBlog, &blog.Blog, cmpopts.IgnoreFields(entities.Blog{}, "ID", "Created_at", "Updated_at", "Deleted_at")) {
+		t.Fatalf("TestBlogsRestoreDeletedSqlite: restored blog cmp failed")
 	}
 }
