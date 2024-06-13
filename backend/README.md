@@ -15,12 +15,8 @@ Mostily uses golang's builtin librariy
 - **http.ServeMux** for routing
 - **database/sql** for querying databases
 - **goose** for database migrations
-- Supported Databases: 
-    - SQLite
-    - PostgreSQL [TODO]
 
 ### Frontend [TODO]
-- htmx
 
 ## Code Architecture.
 - **Entities**
@@ -45,17 +41,3 @@ TODO
 ### Database relations
 TODO
 
-
-## TODO
-### High
-- tests:
-    - repository intergration tests [doing]
-    - auth related unit tests 
-    - handler unit tests
-
-### Mid
-- Custom error returns
-    - checks input and group them in one response
-
-### Low
-- Log request after response (with status code)
