@@ -11,7 +11,7 @@ type apiHandler func(w http.ResponseWriter, r *http.Request) error
 // Default middlewares:
 // - error handling
 // - logging
-func withMiddleware(
+func WithMiddleware(
 	base apiHandler,
 	handlers ...func(http.HandlerFunc) http.HandlerFunc,
 ) http.HandlerFunc {

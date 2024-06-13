@@ -43,34 +43,34 @@ func (s *Server) Start() error {
 	// api specification
 	slog.Info("API specification at: /docs/*")
 	filepath := fmt.Sprintf("http://localhost%s/docs/doc.json", s.config.Port)
-	mux.HandleFunc("GET /docs/*", withMiddleware(apiHandlerWrapper(
+	mux.HandleFunc("GET /docs/*", WithMiddleware(apiHandlerWrapper(
 		httpSwagger.Handler(httpSwagger.URL(filepath)))))
 
 	// authentication
-	mux.HandleFunc(s.post("/login"), withMiddleware(s.users.Login))
-	mux.HandleFunc(s.post("/logout"), withMiddleware(s.users.Logout))
-	mux.HandleFunc(s.post("/auth-check"), withMiddleware(s.users.AuthorizeCheck))
+	mux.HandleFunc(s.post("/login"), WithMiddleware(s.users.Login))
+	mux.HandleFunc(s.post("/logout"), WithMiddleware(s.users.Logout))
+	mux.HandleFunc(s.post("/auth-check"), WithMiddleware(s.users.AuthorizeCheck))
 
 	// TODO: block 'list, get ?all=true' requests that dosen't have token
-	mux.HandleFunc(s.post("/blogs"), withMiddleware(s.blogs.CreateBlog))
-	mux.HandleFunc(s.get("/blogs"), withMiddleware(s.blogs.ListBlogs))
-	mux.HandleFunc(s.get("/blogs/{id}"), withMiddleware(s.blogs.GetBlog))
-	mux.HandleFunc(s.put("/blogs/{id}"), withMiddleware(s.blogs.UpdateBlog))
-	mux.HandleFunc(s.delete("/blogs/{id}"), withMiddleware(s.blogs.SoftDeleteBlog))
-	mux.HandleFunc(s.delete("/blogs/deleted/{id}"), withMiddleware(s.blogs.DeleteBlog))
-	mux.HandleFunc(s.patch("/blogs/deleted/{id}"), withMiddleware(s.blogs.RestoreDeletedBlog))
+	mux.HandleFunc(s.post("/blogs"), WithMiddleware(s.blogs.CreateBlog))
+	mux.HandleFunc(s.get("/blogs"), WithMiddleware(s.blogs.ListBlogs))
+	mux.HandleFunc(s.get("/blogs/{id}"), WithMiddleware(s.blogs.GetBlog))
+	mux.HandleFunc(s.put("/blogs/{id}"), WithMiddleware(s.blogs.UpdateBlog))
+	mux.HandleFunc(s.delete("/blogs/{id}"), WithMiddleware(s.blogs.SoftDeleteBlog))
+	mux.HandleFunc(s.delete("/blogs/deleted/{id}"), WithMiddleware(s.blogs.DeleteBlog))
+	mux.HandleFunc(s.patch("/blogs/deleted/{id}"), WithMiddleware(s.blogs.RestoreDeletedBlog))
 
-	mux.HandleFunc(s.post("/tags"), withMiddleware(s.tags.CreateTag))
-	mux.HandleFunc(s.get("/tags"), withMiddleware(s.tags.ListTags))
-	mux.HandleFunc(s.get("/tags/{id}"), withMiddleware(s.tags.GetTag))
-	mux.HandleFunc(s.put("/tags/{id}"), withMiddleware(s.tags.UpdateTag))
-	mux.HandleFunc(s.delete("/tags/{id}"), withMiddleware(s.tags.DeleteTag))
+	mux.HandleFunc(s.post("/tags"), WithMiddleware(s.tags.CreateTag))
+	mux.HandleFunc(s.get("/tags"), WithMiddleware(s.tags.ListTags))
+	mux.HandleFunc(s.get("/tags/{id}"), WithMiddleware(s.tags.GetTag))
+	mux.HandleFunc(s.put("/tags/{id}"), WithMiddleware(s.tags.UpdateTag))
+	mux.HandleFunc(s.delete("/tags/{id}"), WithMiddleware(s.tags.DeleteTag))
 
-	mux.HandleFunc(s.post("/topics"), withMiddleware(s.topics.CreateTopic))
-	mux.HandleFunc(s.get("/topics"), withMiddleware(s.topics.ListTopics))
-	mux.HandleFunc(s.get("/topics/{id}"), withMiddleware(s.topics.GetTopic))
-	mux.HandleFunc(s.put("/topics/{id}"), withMiddleware(s.topics.UpdateTopic))
-	mux.HandleFunc(s.delete("/topics/{id}"), withMiddleware(s.topics.DeleteTopic))
+	mux.HandleFunc(s.post("/topics"), WithMiddleware(s.topics.CreateTopic))
+	mux.HandleFunc(s.get("/topics"), WithMiddleware(s.topics.ListTopics))
+	mux.HandleFunc(s.get("/topics/{id}"), WithMiddleware(s.topics.GetTopic))
+	mux.HandleFunc(s.put("/topics/{id}"), WithMiddleware(s.topics.UpdateTopic))
+	mux.HandleFunc(s.delete("/topics/{id}"), WithMiddleware(s.topics.DeleteTopic))
 
 	s.server = &http.Server{
 		Addr:    s.config.Port,
