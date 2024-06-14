@@ -114,6 +114,7 @@ func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 	rawID := r.PathValue("id")
 	id, err := strconv.Atoi(rawID)
 	if err != nil {
+		slog.Error("GetTag: string to int failed", "error", err)
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 
