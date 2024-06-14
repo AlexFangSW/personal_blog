@@ -29,3 +29,10 @@ type InTag struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
+
+func NewInTag(name, description string) *InTag {
+	return &InTag{
+		Name:        name,
+		Description: description,
+	}
+}
