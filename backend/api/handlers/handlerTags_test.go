@@ -33,6 +33,10 @@ func (d *DummyTagsRepo) List(ctx context.Context) ([]entities.Tag, error) {
 	newTag := []entities.Tag{{Name: "list"}}
 	return newTag, nil
 }
+func (d *DummyTagsRepo) ListByTopicID(ctx context.Context, topicID int) ([]entities.Tag, error) {
+	newTag := []entities.Tag{{Name: "list by topic ID", Description: strconv.Itoa(topicID)}}
+	return newTag, nil
+}
 func (d *DummyTagsRepo) Get(ctx context.Context, id int) (*entities.Tag, error) {
 	newTag := &entities.Tag{Name: "get", Description: strconv.Itoa(id)}
 	return newTag, nil
@@ -189,6 +193,42 @@ func TestHandlerTagsList(t *testing.T) {
 	}
 	if resData.Msg[0].Name != "list" {
 		t.Fatalf("TestHandlerTagsList: didn't call the correct repo method")
+	}
+}
+
+func TestHandlerTagsListByTopicID(t *testing.T) {
+	tags := initTags()
+
+	// prepare request
+	r := httptest.NewRequest(http.MethodGet, "/tags?topic=1", nil)
+	r.URL.Query().Set("topic", "1")
+
+	// prepare response recorder
+	w := httptest.NewRecorder()
+
+	// call api
+	if err := tags.ListTags(w, r); err != nil {
+		t.Fatalf("TestHandlerTagsListByTopicID: list tags failed: %s", err)
+	}
+
+	// read result
+	res := w.Result()
+	defer res.Body.Close()
+
+	resData := entities.RetSuccess[[]entities.Tag]{}
+	if err := json.NewDecoder(res.Body).Decode(&resData); err != nil {
+		t.Fatalf("TestHandlerTagsListByTopicID: read response body failed: %s", err)
+	}
+
+	// check response
+	if resData.Status != http.StatusOK {
+		t.Fatalf("TestHandlerTagsListByTopicID: status incorrect")
+	}
+	if resData.Msg[0].Name != "list by topic ID" {
+		t.Fatalf("TestHandlerTagsListByTopicID: didn't call the correct repo method")
+	}
+	if resData.Msg[0].Description != "1" {
+		t.Fatalf("TestHandlerTagsListByTopicID: topic id isn't passed down")
 	}
 }
 

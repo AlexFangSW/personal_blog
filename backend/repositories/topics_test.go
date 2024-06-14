@@ -25,8 +25,7 @@ func TestTopicsCreateSqlite(t *testing.T) {
 	defer dbConn.Close()
 
 	// migrate db
-	downDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite")
-	if err := upDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
+	if err := db.Up(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
 		t.Fatalf("TestTopicsCreateSqlite: migrate up failed: %s", err)
 	}
 
@@ -67,8 +66,7 @@ func TestTopicsUpdateSqlite(t *testing.T) {
 	defer dbConn.Close()
 
 	// migrate db
-	downDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite")
-	if err := upDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
+	if err := db.Up(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
 		t.Fatalf("TestTopicsUpdateSqlite: migrate up failed: %s", err)
 	}
 
@@ -115,8 +113,7 @@ func TestTopicsDeleteSqlite(t *testing.T) {
 	defer dbConn.Close()
 
 	// migrate db
-	downDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite")
-	if err := upDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
+	if err := db.Up(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
 		t.Fatalf("TestTopicsDeleteSqlite: migrate up failed: %s", err)
 	}
 

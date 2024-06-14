@@ -39,7 +39,7 @@ func getUserRepo(configPath string) (*repositories.Users, *sql.DB, error) {
 	// db prepare
 	model := sqlite.New(db, config.DB)
 	ctx := context.Background()
-	if err := model.Prepare(ctx); err != nil {
+	if err := model.Prepare(ctx, false); err != nil {
 		return &repositories.Users{}, &sql.DB{}, fmt.Errorf("getUserRepo: model prepare failed: %w", err)
 	}
 
@@ -56,7 +56,7 @@ func getUserRepo(configPath string) (*repositories.Users, *sql.DB, error) {
 func genBasicAuth(username, password string) {
 	cred := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
 	fmt.Println("Use this in header to get jwt token on login")
-	fmt.Printf("Authorization: Basic %s\n", cred)
+	fmt.Printf("curl -XPOST localhost:8080/api/v1/login -H 'Authorization: Basic %s'\n", cred)
 }
 
 func run() error {

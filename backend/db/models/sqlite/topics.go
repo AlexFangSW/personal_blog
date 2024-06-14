@@ -57,7 +57,7 @@ func (t *Topics) Create(ctx context.Context, tx *sql.Tx, topic entities.Topic) (
 	return &newTopic, nil
 }
 
-func (t *Topics) GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]entities.Topic, error) {
+func (t *Topics) ListByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]entities.Topic, error) {
 
 	stmt := `
 	SELECT 

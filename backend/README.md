@@ -1,6 +1,10 @@
-# Coding Blog
+# Coding Blog Backend
 
 A place for me to document things I have learned.
+
+And as a opportunity to test out go 1.22's new "net/http" update.
+
+Which adds support of limiting request method in ServieMux routing pattern.
 
 ## Development
 ### Run locally
@@ -9,14 +13,11 @@ A place for me to document things I have learned.
 ```
 
 ## Tech stack
-### Backend
 Mostily uses golang's builtin librariy
 - **net/http** for server
 - **http.ServeMux** for routing
 - **database/sql** for querying databases
 - **goose** for database migrations
-
-### Frontend [TODO]
 
 ## Code Architecture.
 - **Entities**
@@ -41,3 +42,39 @@ TODO
 ### Database relations
 TODO
 
+### API Documentation
+Will need JWT token to use some of the APIs, such as create, update, delete and listing unvisible resources.
+
+- Swagger Doc: [swagger.json](./docs/swagger.json)
+- Blogs
+    - [x] Basic CRUD operations
+    - List filters
+        - [x] By topic ids
+        - [x] By topic and tag ids
+- Tags
+    - [x] Basic CRUD operations
+    - List filters
+        - [x] By topic id ( in relation to blogs under a specific topic )
+- Topics
+    - [x] Basic CRUD operations
+
+### Tests
+- repository integration test
+    - blogs
+        - [x] Basic CRUD
+        - List filters
+            - [x] By topic ids
+            - [x] By topic and tag ids
+    - tags
+        - [x] Basic CRUD
+        - List filters
+            - [ ] list tags by topic id
+    - topics
+        - [x] Basic CRUD
+- Auth util unit test
+    - [x] jwt helper
+    - [x] auth helper
+- handler unit test
+    - [ ] blogs
+    - [x] tags
+    - [ ] topics

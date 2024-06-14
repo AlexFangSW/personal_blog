@@ -15,6 +15,7 @@ import (
 type tagsRepository interface {
 	Create(ctx context.Context, tag entities.Tag) (*entities.Tag, error)
 	List(ctx context.Context) ([]entities.Tag, error)
+	ListByTopicID(ctx context.Context, topicID int) ([]entities.Tag, error)
 	Get(ctx context.Context, id int) (*entities.Tag, error)
 	Update(ctx context.Context, tag entities.Tag, id int) (*entities.Tag, error)
 	Delete(ctx context.Context, id int) (int, error)
@@ -80,11 +81,34 @@ func (t *Tags) CreateTag(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			tags
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	entities.RetSuccess[[]entities.Tag]
-//	@Failure		500	{object}	entities.RetFailed
+//	@Param			topic	query		int	false	"topic id"
+//	@Success		200		{object}	entities.RetSuccess[[]entities.Tag]
+//	@Failure		500		{object}	entities.RetFailed
 //	@Router			/tags [get]
 func (t *Tags) ListTags(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("ListTags")
+
+	// parse query params
+	queries := r.URL.Query()
+	slog.Debug("got queries", "queries", queries)
+
+	rawTopicIDs := queries["topic"]
+	topicIDs, err := strListToInt(rawTopicIDs)
+	if err != nil {
+		slog.Error("ListTags: 'topic' string list to int failed", "error", err)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+	topicIDs = removeDuplicate(topicIDs)
+
+	// filter by topic (first one)
+	if len(topicIDs) > 0 {
+		tags, err := t.repo.ListByTopicID(r.Context(), topicIDs[0])
+		if err != nil {
+			slog.Error("ListTags: repo list failed", "error", err)
+			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+		}
+		return entities.NewRetSuccess(tags).WriteJSON(w)
+	}
 
 	tags, err := t.repo.List(r.Context())
 	if err != nil {

@@ -30,6 +30,7 @@ func run() error {
 
 	// flags
 	configPath := flag.String("config", "./config.json", "Config filepath")
+	migrate := flag.Bool("migrate", false, "Migrate db")
 	flag.Parse()
 	slog.Info("load config", "path:", *configPath)
 
@@ -59,7 +60,7 @@ func run() error {
 	// db prepare
 	model := sqlite.New(db, config.DB)
 	ctx := context.Background()
-	if err := model.Prepare(ctx); err != nil {
+	if err := model.Prepare(ctx, *migrate); err != nil {
 		return fmt.Errorf("run: model prepare failed: %w", err)
 	}
 

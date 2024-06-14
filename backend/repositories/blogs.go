@@ -442,12 +442,12 @@ func (b *Blogs) RestoreDeleted(ctx context.Context, id int) (*entities.OutBlog, 
 
 // Helper function to fill out OutBlog with tags and topics
 func (b *Blogs) fillOutBlog(ctx context.Context, blog entities.Blog) (*entities.OutBlog, error) {
-	tags, err := b.models.tags.GetByBlogID(ctx, b.db, blog.ID)
+	tags, err := b.models.tags.ListByBlogID(ctx, b.db, blog.ID)
 	if err != nil {
 		return &entities.OutBlog{}, fmt.Errorf("fillOutBlog: model get tags failed: %w", err)
 	}
 
-	topics, err := b.models.topics.GetByBlogID(ctx, b.db, blog.ID)
+	topics, err := b.models.topics.ListByBlogID(ctx, b.db, blog.ID)
 	if err != nil {
 		return &entities.OutBlog{}, fmt.Errorf("fillOutBlog: model get topics failed: %w", err)
 	}
