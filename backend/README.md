@@ -43,6 +43,8 @@ TODO
 TODO
 
 ### API Documentation
+Will need JWT token to use some of the APIs, such as create, update, delete and listing unvisible resources.
+
 - Swagger Doc: [swagger.json](./docs/swagger.json)
 - Blogs
     - [x] Basic CRUD operations
