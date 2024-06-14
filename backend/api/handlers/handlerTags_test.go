@@ -33,6 +33,10 @@ func (d *DummyTagsRepo) List(ctx context.Context) ([]entities.Tag, error) {
 	newTag := []entities.Tag{{Name: "list"}}
 	return newTag, nil
 }
+func (d *DummyTagsRepo) ListByTopicID(ctx context.Context, topicID int) ([]entities.Tag, error) {
+	newTag := []entities.Tag{{Name: "list by topic ID", Description: strconv.Itoa(topicID)}}
+	return newTag, nil
+}
 func (d *DummyTagsRepo) Get(ctx context.Context, id int) (*entities.Tag, error) {
 	newTag := &entities.Tag{Name: "get", Description: strconv.Itoa(id)}
 	return newTag, nil

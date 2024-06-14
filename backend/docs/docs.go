@@ -15,6 +15,44 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth-check": {
+            "post": {
+                "description": "Checks if jwt is valid",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "AuthorizeCheck",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/blog_entities.RetSuccess-string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    }
+                }
+            }
+        },
         "/blogs": {
             "get": {
                 "description": "list blogs",
@@ -53,7 +91,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-array_entities_OutBlog"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-array_entities_OutBlog"
                         }
                     },
                     "400": {
@@ -103,7 +141,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_OutBlog"
                         }
                     },
                     "400": {
@@ -153,7 +191,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_OutBlog"
                         }
                     },
                     "400": {
@@ -201,7 +239,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_OutBlog"
                         }
                     },
                     "400": {
@@ -258,7 +296,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_OutBlog"
                         }
                     },
                     "400": {
@@ -315,7 +353,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_OutBlog"
                         }
                     },
                     "400": {
@@ -363,7 +401,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_RowsAffected"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_RowsAffected"
                         }
                     },
                     "400": {
@@ -413,7 +451,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_JWT"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_JWT"
                         }
                     },
                     "400": {
@@ -445,7 +483,7 @@ const docTemplate = `{
         },
         "/logout": {
             "post": {
-                "description": "Checks if jwt is valid",
+                "description": "logout, deletes jwt token, needs to have valid token in the first place",
                 "consumes": [
                     "application/json"
                 ],
@@ -455,7 +493,7 @@ const docTemplate = `{
                 "tags": [
                     "users"
                 ],
-                "summary": "AuthorizeCheck",
+                "summary": "Logout",
                 "parameters": [
                     {
                         "type": "string",
@@ -469,7 +507,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-string"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-string"
                         }
                     },
                     "403": {
@@ -506,11 +544,19 @@ const docTemplate = `{
                     "tags"
                 ],
                 "summary": "List tags",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "topic id",
+                        "name": "topic",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-array_entities_Tag"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-array_entities_Tag"
                         }
                     },
                     "500": {
@@ -548,7 +594,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_Tag"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Tag"
                         }
                     },
                     "400": {
@@ -592,7 +638,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_Tag"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Tag"
                         }
                     },
                     "400": {
@@ -649,7 +695,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_Tag"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Tag"
                         }
                     },
                     "400": {
@@ -697,7 +743,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_RowsAffected"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_RowsAffected"
                         }
                     },
                     "400": {
@@ -738,7 +784,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-array_entities_Topic"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-array_entities_Topic"
                         }
                     },
                     "500": {
@@ -776,7 +822,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_Topic"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Topic"
                         }
                     },
                     "400": {
@@ -820,7 +866,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_Topic"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Topic"
                         }
                     },
                     "400": {
@@ -877,7 +923,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_Topic"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Topic"
                         }
                     },
                     "400": {
@@ -925,7 +971,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_RowsAffected"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_RowsAffected"
                         }
                     },
                     "400": {
@@ -951,6 +997,141 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "blog_entities.RetSuccess-array_entities_OutBlog": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.OutBlog"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "blog_entities.RetSuccess-array_entities_Tag": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Tag"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "blog_entities.RetSuccess-array_entities_Topic": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Topic"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "blog_entities.RetSuccess-entities_JWT": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/entities.JWT"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "blog_entities.RetSuccess-entities_OutBlog": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/entities.OutBlog"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "blog_entities.RetSuccess-entities_RowsAffected": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/entities.RowsAffected"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "blog_entities.RetSuccess-entities_Tag": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/entities.Tag"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "blog_entities.RetSuccess-entities_Topic": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/entities.Topic"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "blog_entities.RetSuccess-string": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
         "entities.InTag": {
             "type": "object",
             "properties": {
@@ -1061,141 +1242,6 @@ const docTemplate = `{
             }
         },
         "entities.RetFailed": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.RetSuccess-array_entities_OutBlog": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.OutBlog"
-                    }
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.RetSuccess-array_entities_Tag": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.Tag"
-                    }
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.RetSuccess-array_entities_Topic": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.Topic"
-                    }
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.RetSuccess-entities_JWT": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "$ref": "#/definitions/entities.JWT"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.RetSuccess-entities_OutBlog": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "$ref": "#/definitions/entities.OutBlog"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.RetSuccess-entities_RowsAffected": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "$ref": "#/definitions/entities.RowsAffected"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.RetSuccess-entities_Tag": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "$ref": "#/definitions/entities.Tag"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.RetSuccess-entities_Topic": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "$ref": "#/definitions/entities.Topic"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.RetSuccess-string": {
             "type": "object",
             "properties": {
                 "error": {

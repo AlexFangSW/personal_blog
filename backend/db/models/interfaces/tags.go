@@ -9,8 +9,9 @@ import (
 // Concrete implementations are at db/models/<db name>/
 type TagsModel interface {
 	Create(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entities.Tag, error)
-	GetByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]entities.Tag, error)
+	ListByBlogID(ctx context.Context, db *sql.DB, blogID int) ([]entities.Tag, error)
 	List(ctx context.Context, db *sql.DB) ([]entities.Tag, error)
+	ListByTopicID(ctx context.Context, db *sql.DB, topicID int) ([]entities.Tag, error)
 	Get(ctx context.Context, db *sql.DB, id int) (*entities.Tag, error)
 	Update(ctx context.Context, tx *sql.Tx, tag entities.Tag, id int) (*entities.Tag, error)
 	Delete(ctx context.Context, tx *sql.Tx, id int) (int, error)

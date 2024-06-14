@@ -76,6 +76,18 @@ func (t *Tags) List(ctx context.Context) ([]entities.Tag, error) {
 	return tags, nil
 }
 
+func (t *Tags) ListByTopicID(ctx context.Context, topicID int) ([]entities.Tag, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
+	defer cancel()
+
+	tags, err := t.models.tags.ListByTopicID(ctxTimeout, t.db, topicID)
+	if err != nil {
+		return []entities.Tag{}, fmt.Errorf("List: model list tags failed: %w", err)
+	}
+
+	return tags, nil
+}
+
 func (t *Tags) Get(ctx context.Context, id int) (*entities.Tag, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(t.config.Timeout)*time.Second)
 	defer cancel()

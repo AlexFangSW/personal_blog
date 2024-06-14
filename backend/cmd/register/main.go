@@ -56,7 +56,7 @@ func getUserRepo(configPath string) (*repositories.Users, *sql.DB, error) {
 func genBasicAuth(username, password string) {
 	cred := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
 	fmt.Println("Use this in header to get jwt token on login")
-	fmt.Printf("Authorization: Basic %s\n", cred)
+	fmt.Printf("curl -XPOST localhost:8080/api/v1/login -H 'Authorization: Basic %s'\n", cred)
 }
 
 func run() error {

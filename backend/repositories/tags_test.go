@@ -182,6 +182,6 @@ func TestTagsDeleteSqlite(t *testing.T) {
 	if affectedRows2 != 0 {
 		t.Fatalf("TestTagsDeleteSqlite: affected rows should BE zero")
 	}
-
-	// TODO: should fail with foreign key constraint
 }
+
+// TODO: should fail with foreign key constraint

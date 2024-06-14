@@ -118,24 +118,24 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 	queries := r.URL.Query()
 	slog.Debug("got queries", "queries", queries)
 
-	rowAll := queries["all"]
-	all, err := strListToBool(rowAll)
+	rawAll := queries["all"]
+	all, err := strListToBool(rawAll)
 	if err != nil {
 		slog.Error("ListBlogs: 'all' string list to bool failed", "error", err)
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 	all = removeDuplicate(all)
 
-	rowTopicIDs := queries["topic"]
-	topicIDs, err := strListToInt(rowTopicIDs)
+	rawTopicIDs := queries["topic"]
+	topicIDs, err := strListToInt(rawTopicIDs)
 	if err != nil {
 		slog.Error("ListBlogs: 'topic' string list to int failed", "error", err)
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 	topicIDs = removeDuplicate(topicIDs)
 
-	rowTagIDs := queries["tag"]
-	tagIDs, err := strListToInt(rowTagIDs)
+	rawTagIDs := queries["tag"]
+	tagIDs, err := strListToInt(rawTagIDs)
 	if err != nil {
 		slog.Error("ListBlogs: 'tag' string list to int failed", "error", err)
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
