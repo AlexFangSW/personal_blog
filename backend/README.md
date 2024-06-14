@@ -11,6 +11,13 @@ Which adds support of limiting request method in ServieMux routing pattern.
 ```bash
 ./scripts/run.sh
 ```
+### Docker
+```bash
+./scripts/docker_build.sh
+```
+```bash
+./scripts/docker_run.sh
+```
 
 ## Tech stack
 Mostily uses golang's builtin librariy
