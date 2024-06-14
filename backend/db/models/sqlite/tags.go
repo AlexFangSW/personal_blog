@@ -156,11 +156,9 @@ func (t *Tags) ListByTopicID(ctx context.Context, db *sql.DB, topicID int) ([]en
 	stmt := `
 	SELECT * FROM tags
 	WHERE id IN (
-		SELECT blog_tags.tag_id FROM (
-			SELECT blog_tags.tag_id, blog_tags.blog_id, blog_topics.topic_id FROM 
-			blog_tags JOIN blog_topics ON blog_tags.blog_id = blog_topics.blog_id
-			WHERE blog_topics.topic_id = ?
-		) GROUP BY blog_tags.tag_id
+		SELECT blog_tags.tag_id FROM blog_tags JOIN blog_topics 
+		WHERE blog_tags.blog_id = blog_topics.blog_id AND blog_topics.topic_id = ?
+		GROUP BY blog_tags.tag_id
 	);`
 	util.LogQuery(ctx, "ListByTopicID:", stmt)
 

@@ -8,45 +8,13 @@ import (
 	"blog/repositories"
 	"context"
 	"database/sql"
-	"fmt"
-	"io/fs"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/pressly/goose/v3"
 )
-
-func upDB(dbConn *sql.DB, migrations fs.FS, dialect string, path string) error {
-	goose.SetLogger(goose.NopLogger())
-	goose.SetBaseFS(migrations)
-
-	if err := goose.SetDialect(dialect); err != nil {
-		return fmt.Errorf("upDB: set dialect failed: %w", err)
-	}
-
-	if err := goose.Up(dbConn, path); err != nil {
-		return fmt.Errorf("upDB: up failed: %w", err)
-	}
-
-	return nil
-}
-
-func downDB(dbConn *sql.DB, migrations fs.FS, dialect string, path string) error {
-	goose.SetBaseFS(migrations)
-
-	if err := goose.SetDialect(dialect); err != nil {
-		return fmt.Errorf("downDB: set dialect failed: %w", err)
-	}
-
-	if err := goose.Down(dbConn, path); err != nil {
-		return fmt.Errorf("downDB: down failed: %w", err)
-	}
-
-	return nil
-}
 
 func TestTagsCreateSqlite(t *testing.T) {
 	// connect
@@ -57,8 +25,7 @@ func TestTagsCreateSqlite(t *testing.T) {
 	defer dbConn.Close()
 
 	// migrate db
-	downDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite")
-	if err := upDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
+	if err := db.Up(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
 		t.Fatalf("TestTagsCreateSqlite: migrate up failed: %s", err)
 	}
 
@@ -99,8 +66,7 @@ func TestTagsUpdateSqlite(t *testing.T) {
 	defer dbConn.Close()
 
 	// migrate db
-	downDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite")
-	if err := upDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
+	if err := db.Up(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
 		t.Fatalf("TestTagsUpdateSqlite: migrate up failed: %s", err)
 	}
 
@@ -147,8 +113,7 @@ func TestTagsDeleteSqlite(t *testing.T) {
 	defer dbConn.Close()
 
 	// migrate db
-	downDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite")
-	if err := upDB(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
+	if err := db.Up(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
 		t.Fatalf("TestTagsDeleteSqlite: migrate up failed: %s", err)
 	}
 

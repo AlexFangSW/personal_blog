@@ -2,6 +2,10 @@
 
 A place for me to document things I have learned.
 
+And as a opportunity to test out go 1.22's new "net/http" update.
+
+Which adds support of limiting request method in ServieMux routing pattern.
+
 ## Development
 ### Run locally
 ```bash
@@ -48,7 +52,7 @@ TODO
 - Tags
     - [x] Basic CRUD operations
     - List filters
-        - [ ] By topic id
+        - [x] By topic id ( in relation to blogs under a specific topic )
 - Topics
     - [x] Basic CRUD operations
 

@@ -39,7 +39,7 @@ func getUserRepo(configPath string) (*repositories.Users, *sql.DB, error) {
 	// db prepare
 	model := sqlite.New(db, config.DB)
 	ctx := context.Background()
-	if err := model.Prepare(ctx); err != nil {
+	if err := model.Prepare(ctx, false); err != nil {
 		return &repositories.Users{}, &sql.DB{}, fmt.Errorf("getUserRepo: model prepare failed: %w", err)
 	}
 

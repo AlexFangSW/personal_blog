@@ -82,8 +82,8 @@ func (t *Tags) CreateTag(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			topic	query		int	false	"topic id"
-//	@Success		200	{object}	entities.RetSuccess[[]entities.Tag]
-//	@Failure		500	{object}	entities.RetFailed
+//	@Success		200		{object}	entities.RetSuccess[[]entities.Tag]
+//	@Failure		500		{object}	entities.RetFailed
 //	@Router			/tags [get]
 func (t *Tags) ListTags(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("ListTags")

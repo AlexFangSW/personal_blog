@@ -196,6 +196,42 @@ func TestHandlerTagsList(t *testing.T) {
 	}
 }
 
+func TestHandlerTagsListByTopicID(t *testing.T) {
+	tags := initTags()
+
+	// prepare request
+	r := httptest.NewRequest(http.MethodGet, "/tags?topic=1", nil)
+	r.URL.Query().Set("topic", "1")
+
+	// prepare response recorder
+	w := httptest.NewRecorder()
+
+	// call api
+	if err := tags.ListTags(w, r); err != nil {
+		t.Fatalf("TestHandlerTagsListByTopicID: list tags failed: %s", err)
+	}
+
+	// read result
+	res := w.Result()
+	defer res.Body.Close()
+
+	resData := entities.RetSuccess[[]entities.Tag]{}
+	if err := json.NewDecoder(res.Body).Decode(&resData); err != nil {
+		t.Fatalf("TestHandlerTagsListByTopicID: read response body failed: %s", err)
+	}
+
+	// check response
+	if resData.Status != http.StatusOK {
+		t.Fatalf("TestHandlerTagsListByTopicID: status incorrect")
+	}
+	if resData.Msg[0].Name != "list by topic ID" {
+		t.Fatalf("TestHandlerTagsListByTopicID: didn't call the correct repo method")
+	}
+	if resData.Msg[0].Description != "1" {
+		t.Fatalf("TestHandlerTagsListByTopicID: topic id isn't passed down")
+	}
+}
+
 /* ============ Get ============== */
 
 func TestHandlerTagsGet(t *testing.T) {
