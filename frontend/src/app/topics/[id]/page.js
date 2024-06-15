@@ -2,6 +2,7 @@ import { merianda } from "@/app/fonts";
 import Link from "next/link";
 import Image from "next/image";
 import pinIcon from "../../../../public/pin.svg";
+import { LinkCard } from "@/app/components/linkCard";
 
 async function Tags({ selected, topicID }) {
   // selected tag id current topic
@@ -36,10 +37,7 @@ async function Blogs({ topic, tags }) {
   const blogs = [];
   for (let index = 0; index < 10; index++) {
     blogs.push(
-      <Link
-        className="card w-96 bg-neutral text-neutral-content"
-        href={`/blogs/${index}`}
-      >
+      <LinkCard href={`/blogs/${index}`}>
         <div className="card-body">
           <div className="flex flex-row flex-wrap justify-left gap-2">
             <Image priority className="h-5 w-5" src={pinIcon} alt="Pined" />
@@ -55,7 +53,7 @@ async function Blogs({ topic, tags }) {
             <BlogTags tags={["aaa", "bbb", "aaa", "bbb"]} />
           </div>
         </div>
-      </Link>,
+      </LinkCard>,
     );
   }
   return blogs;
