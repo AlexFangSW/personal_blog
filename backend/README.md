@@ -85,3 +85,6 @@ Will need JWT token to use some of the APIs, such as create, update, delete and 
     - [ ] blogs
     - [x] tags
     - [ ] topics
+
+## TODO
+- Rate Limit (login)
