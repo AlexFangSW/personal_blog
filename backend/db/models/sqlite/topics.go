@@ -113,6 +113,52 @@ func (t *Topics) ListByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]e
 	return result, nil
 }
 
+func (t *Topics) ListSlugByBlogID(ctx context.Context, db *sql.DB, blog_id int) ([]string, error) {
+
+	stmt := `
+	SELECT 
+		topics.slug 
+	FROM topics INNER JOIN blog_topics
+	WHERE 
+		(blog_topics.blog_id = ?) AND (blog_topics.topic_id = topics.id);
+	`
+
+	util.LogQuery(ctx, "ListSlugByBlogID:", stmt)
+
+	rows, err := db.QueryContext(
+		ctx,
+		stmt,
+		blog_id,
+	)
+	if err != nil {
+		return []string{}, fmt.Errorf("ListSlugByBlogID: query context failed: %w", err)
+	}
+
+	result := []string{}
+	for {
+		slug := ""
+		if !rows.Next() {
+			break
+		}
+		err := rows.Scan(
+			&slug,
+		)
+		if err != nil {
+			if err := rows.Close(); err != nil {
+				return []string{}, fmt.Errorf("ListSlugByBlogID: close rows error: %w", err)
+			}
+			return []string{}, fmt.Errorf("ListSlugByBlogID: scan error: %w", err)
+		}
+		result = append(result, slug)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []string{}, fmt.Errorf("ListSlugByBlogID: rows iteration error: %w", err)
+	}
+
+	return result, nil
+}
+
 func (t *Topics) List(ctx context.Context, db *sql.DB) ([]entities.Topic, error) {
 	stmt := `SELECT * FROM topics;`
 	util.LogQuery(ctx, "ListTopics:", stmt)

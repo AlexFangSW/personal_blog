@@ -1,6 +1,11 @@
 package entities
 
-import "github.com/gosimple/slug"
+import (
+	"crypto/md5"
+	"fmt"
+
+	"github.com/gosimple/slug"
+)
 
 // xxx_at are all in ISO 8601.
 type Blog struct {
@@ -10,6 +15,7 @@ type Blog struct {
 	Deleted_at  string `json:"deleted_at"`
 	Title       string `json:"title"`
 	Content     string `json:"content"`
+	ContentMD5  string `json:"contentMD5"`
 	Description string `json:"description"`
 	Slug        string `json:"slug"`
 	Pined       bool   `json:"pined"`
@@ -18,6 +24,9 @@ type Blog struct {
 
 func (b *Blog) GenSlug() {
 	b.Slug = slug.Make(b.Title)
+}
+func (b *Blog) GenMD5() {
+	b.ContentMD5 = fmt.Sprintf("%x", md5.Sum([]byte(b.Content)))
 }
 
 func NewBlog(title, content, description string, pined, visible bool) *Blog {
@@ -29,6 +38,7 @@ func NewBlog(title, content, description string, pined, visible bool) *Blog {
 		Visible:     visible,
 	}
 	blog.GenSlug()
+	blog.GenMD5()
 	return blog
 }
 
@@ -54,6 +64,21 @@ type OutBlog struct {
 
 func NewOutBlog(blog Blog, tags []Tag, topics []Topic) *OutBlog {
 	return &OutBlog{
+		Blog:   blog,
+		Tags:   tags,
+		Topics: topics,
+	}
+}
+
+// tags an topics as slugs
+type OutBlogSimple struct {
+	Blog
+	Tags   []string `json:"tags"`
+	Topics []string `json:"topics"`
+}
+
+func NewOutBlogSimple(blog Blog, tags []string, topics []string) OutBlogSimple {
+	return OutBlogSimple{
 		Blog:   blog,
 		Tags:   tags,
 		Topics: topics,

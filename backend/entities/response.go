@@ -28,7 +28,7 @@ func NewRowsAffected(affectedRows int) *RowsAffected {
 }
 
 type MsgType interface {
-	RowsAffected | OutBlog | []OutBlog |
+	RowsAffected | OutBlog | []OutBlog | []OutBlogSimple |
 		Tag | []Tag | Topic | []Topic |
 		~string | JWT
 }

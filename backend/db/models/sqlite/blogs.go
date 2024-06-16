@@ -23,13 +23,14 @@ func (b *Blogs) Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 	(
 		title,
 		content,
+		content_md5,
 		description,
 		slug,
 		pined,
 		visible
 	)
 	VALUES
-	( ?, ?, ?, ?, ?, ? )
+	( ?, ?, ?, ?, ?, ?, ?)
 	RETURNING *;
 	`
 
@@ -40,6 +41,7 @@ func (b *Blogs) Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 		stmt,
 		blog.Title,
 		blog.Content,
+		blog.ContentMD5,
 		blog.Description,
 		blog.Slug,
 		blog.Pined,
@@ -63,6 +65,7 @@ func (b *Blogs) Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog, id
 	SET
 		title = ?,
 		content = ?,
+		content_md5 = ?,
 		description = ?,
 		slug = ?,
 		pined = ?,
@@ -78,6 +81,7 @@ func (b *Blogs) Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog, id
 		stmt,
 		blog.Title,
 		blog.Content,
+		blog.ContentMD5,
 		blog.Description,
 		blog.Slug,
 		blog.Pined,
@@ -125,6 +129,7 @@ func (b *Blogs) List(ctx context.Context, db *sql.DB) ([]entities.Blog, error) {
 		updated_at,
 		deleted_at,
 		title,
+		content_md5,
 		description,
 		slug,
 		pined,
@@ -170,6 +175,7 @@ func (b *Blogs) ListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) 
 		updated_at,
 		deleted_at,
 		title,
+		content_md5,
 		description,
 		slug,
 		pined,
@@ -227,6 +233,7 @@ func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicIDs, 
 		updated_at,
 		deleted_at,
 		title,
+		content_md5,
 		description,
 		slug,
 		pined,
@@ -296,6 +303,7 @@ func (b *Blogs) AdminList(ctx context.Context, db *sql.DB) ([]entities.Blog, err
 		updated_at,
 		deleted_at,
 		title,
+		content_md5,
 		description,
 		slug,
 		pined,
@@ -339,6 +347,7 @@ func (b *Blogs) AdminListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []
 		updated_at,
 		deleted_at,
 		title,
+		content_md5,
 		description,
 		slug,
 		pined,
@@ -394,6 +403,7 @@ func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topic
 		updated_at,
 		deleted_at,
 		title,
+		content_md5,
 		description,
 		slug,
 		pined,
@@ -514,6 +524,7 @@ func scanBlog(row *sql.Row) (*entities.Blog, error) {
 		&newBlog.Deleted_at,
 		&newBlog.Title,
 		&newBlog.Content,
+		&newBlog.ContentMD5,
 		&newBlog.Description,
 		&newBlog.Slug,
 		&newBlog.Pined,
@@ -533,6 +544,7 @@ func scanBlogRows(rows *sql.Rows) (*entities.Blog, error) {
 		&newBlog.Updated_at,
 		&newBlog.Deleted_at,
 		&newBlog.Title,
+		&newBlog.ContentMD5,
 		&newBlog.Description,
 		&newBlog.Slug,
 		&newBlog.Pined,

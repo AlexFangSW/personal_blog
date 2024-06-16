@@ -10,6 +10,7 @@ import (
 type TagsModel interface {
 	Create(ctx context.Context, tx *sql.Tx, tag entities.Tag) (*entities.Tag, error)
 	ListByBlogID(ctx context.Context, db *sql.DB, blogID int) ([]entities.Tag, error)
+	ListSlugByBlogID(ctx context.Context, db *sql.DB, blogID int) ([]string, error)
 	List(ctx context.Context, db *sql.DB) ([]entities.Tag, error)
 	ListByTopicID(ctx context.Context, db *sql.DB, topicID int) ([]entities.Tag, error)
 	Get(ctx context.Context, db *sql.DB, id int) (*entities.Tag, error)

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS blogs(
 
   title TEXT NOT NULL UNIQUE,
   content TEXT DEFAULT "",
+  content_md5 TEXT DEFAULT "",
   description TEXT DEFAULT "",
   slug TEXT NOT NULL UNIQUE,
   pined BOOLEAN DEFAULT 0,

@@ -75,6 +75,13 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "output blog with tags and topics as slugs, not as a full struct",
+                        "name": "simple",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "filter by topic ids, can be multiple ids. ex: ?topic=1\u0026topic=2",
                         "name": "topic",
@@ -91,7 +98,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-array_entities_OutBlog"
+                            "$ref": "#/definitions/blog_entities.RetSuccess-array_entities_OutBlogSimple"
                         }
                     },
                     "400": {
@@ -1014,6 +1021,23 @@ const docTemplate = `{
                 }
             }
         },
+        "blog_entities.RetSuccess-array_entities_OutBlogSimple": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.OutBlogSimple"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
         "blog_entities.RetSuccess-array_entities_Tag": {
             "type": "object",
             "properties": {
@@ -1168,6 +1192,9 @@ const docTemplate = `{
                 "content": {
                     "type": "string"
                 },
+                "contentMD5": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -1199,6 +1226,56 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/entities.Topic"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "visible": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "entities.OutBlogSimple": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "contentMD5": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "pined": {
+                    "type": "boolean"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 },
                 "updated_at": {

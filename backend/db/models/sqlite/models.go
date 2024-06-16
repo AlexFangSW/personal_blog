@@ -43,6 +43,8 @@ func (m *Models) Prepare(ctx context.Context, migrate bool) error {
 		}
 	}
 
+	// start vacume
+
 	return nil
 }
 

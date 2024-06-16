@@ -665,6 +665,82 @@ func TestBlogsAdminListSqlite(t *testing.T) {
 	}
 }
 
+func TestBlogsAdminListSimpleSqlite(t *testing.T) {
+	// connect
+	dbConn, err := sql.Open("sqlite3", "file:test.db?mode=memory&_foreign_keys=on")
+	if err != nil {
+		t.Fatalf("TestBlogsAdminListSimpleSqlite: open db connection failed: %s", err)
+	}
+	defer dbConn.Close()
+
+	// migrate db
+	if err := db.Up(dbConn, db.EmbedMigrationsSQLite, "sqlite3", "migrations/sqlite"); err != nil {
+		t.Fatalf("TestBlogsAdminListSimpleSqlite: migrate up failed: %s", err)
+	}
+
+	// setup repo
+	blogsRepo, tagsRepo, topicsRepo := prepareRepos(dbConn)
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	// lets just assume they work
+	// prepare topic and tags
+	topic1, _ := topicsRepo.Create(ctxTimeout, *entities.NewTopic("topic1", "topic1"))
+	tag1, _ := tagsRepo.Create(ctxTimeout, *entities.NewTag("tag1", "tag1"))
+
+	// prepare blog
+	visibleBlog := entities.NewBlog(
+		"title1",
+		"content1",
+		"description1",
+		false,
+		true,
+	)
+	newInBlog1 := entities.NewInBlog(
+		*visibleBlog,
+		[]int{1},
+		[]int{1},
+	)
+	blogsRepo.Create(ctxTimeout, *newInBlog1)
+
+	<-time.After(time.Second * 1)
+
+	notVisibleBlog := entities.NewBlog(
+		"title2",
+		"content2",
+		"description2",
+		false,
+		false,
+	)
+	newInBlog2 := entities.NewInBlog(
+		*notVisibleBlog,
+		[]int{1},
+		[]int{1},
+	)
+	blogsRepo.Create(ctxTimeout, *newInBlog2)
+
+	// list visible
+	blogs, err := blogsRepo.AdminListSimple(ctxTimeout)
+	if err != nil {
+		t.Fatalf("TestBlogsAdminListSqlite: list failed: %s", err)
+	}
+	if len(blogs) != 2 {
+		t.Fatalf("TestBlogsAdminListSqlite: should return two")
+	}
+
+	// List will not return content (too large)
+	err2 := compareListBlogSimple(
+		blogs,
+		*visibleBlog,
+		*notVisibleBlog,
+		topic1.Slug,
+		tag1.Slug,
+	)
+	if err2 != nil {
+		t.Fatalf("TestBlogsAdminListSqlite: compare list blog failed: %s", err2)
+	}
+}
+
 func TestBlogsAdminListByTopicIDsSqlite(t *testing.T) {
 	// connect
 	dbConn, err := sql.Open("sqlite3", "file:test.db?mode=memory&_foreign_keys=on")
@@ -845,6 +921,38 @@ func compareListBlog(
 	}
 	if !cmp.Equal(tag1, blogs[1].Tags[0]) {
 		return fmt.Errorf("compareListBlog: list cmp blogs[1].Tags[0] failed")
+	}
+
+	return nil
+}
+
+func compareListBlogSimple(
+	blogs []entities.OutBlogSimple,
+	visibleBlog,
+	notVisibleBlog entities.Blog,
+	topic1 string,
+	tag1 string,
+) error {
+	// first blog
+	if !cmp.Equal(notVisibleBlog, blogs[0].Blog, cmpopts.IgnoreFields(entities.Blog{}, "ID", "Created_at", "Updated_at", "Content")) {
+		return fmt.Errorf("compareListBlogSimple: list cmp blogs[0].Blog failed")
+	}
+	if !cmp.Equal(topic1, blogs[0].Topics[0]) {
+		return fmt.Errorf("compareListBlogSimple: list cmp blogs[0].Topics[0] failed")
+	}
+	if !cmp.Equal(tag1, blogs[0].Tags[0]) {
+		return fmt.Errorf("compareListBlogSimple: list cmp blogs[0].Tags[0] failed")
+	}
+
+	// second blog
+	if !cmp.Equal(visibleBlog, blogs[1].Blog, cmpopts.IgnoreFields(entities.Blog{}, "ID", "Created_at", "Updated_at", "Content")) {
+		return fmt.Errorf("compareListBlogSimple: list cmp blogs[1].Blog failed")
+	}
+	if !cmp.Equal(topic1, blogs[1].Topics[0]) {
+		return fmt.Errorf("compareListBlogSimple: list cmp blogs[1].Topics[0] failed")
+	}
+	if !cmp.Equal(tag1, blogs[1].Tags[0]) {
+		return fmt.Errorf("compareListBlogSimple: list cmp blogs[1].Tags[0] failed")
 	}
 
 	return nil

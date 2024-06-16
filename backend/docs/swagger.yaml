@@ -10,6 +10,17 @@ definitions:
       status:
         type: integer
     type: object
+  blog_entities.RetSuccess-array_entities_OutBlogSimple:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.OutBlogSimple'
+        type: array
+      status:
+        type: integer
+    type: object
   blog_entities.RetSuccess-array_entities_Tag:
     properties:
       error:
@@ -109,6 +120,8 @@ definitions:
     properties:
       content:
         type: string
+      contentMD5:
+        type: string
       created_at:
         type: string
       deleted_at:
@@ -130,6 +143,39 @@ definitions:
       topics:
         items:
           $ref: '#/definitions/entities.Topic'
+        type: array
+      updated_at:
+        type: string
+      visible:
+        type: boolean
+    type: object
+  entities.OutBlogSimple:
+    properties:
+      content:
+        type: string
+      contentMD5:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      pined:
+        type: boolean
+      slug:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      topics:
+        items:
+          type: string
         type: array
       updated_at:
         type: string
@@ -243,6 +289,11 @@ paths:
         in: query
         name: all
         type: boolean
+      - default: false
+        description: output blog with tags and topics as slugs, not as a full struct
+        in: query
+        name: simple
+        type: boolean
       - description: 'filter by topic ids, can be multiple ids. ex: ?topic=1&topic=2'
         in: query
         name: topic
@@ -258,7 +309,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-array_entities_OutBlog'
+            $ref: '#/definitions/blog_entities.RetSuccess-array_entities_OutBlogSimple'
         "400":
           description: Bad Request
           schema:

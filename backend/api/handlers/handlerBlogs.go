@@ -25,6 +25,7 @@ type blogsRepository interface {
 	// Returns all rows regardless of visiblility and soft delete status
 	AdminGet(ctx context.Context, id int) (*entities.OutBlog, error)
 	AdminList(ctx context.Context) ([]entities.OutBlog, error)
+	AdminListSimple(ctx context.Context) ([]entities.OutBlogSimple, error)
 	AdminListByTopicIDs(ctx context.Context, topicID []int) ([]entities.OutBlog, error)
 	AdminListByTopicAndTagIDs(ctx context.Context, topicID, tagID []int) ([]entities.OutBlog, error)
 
@@ -104,9 +105,11 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
+//	@Param			simple query		bool	false	"output blog with tags and topics as slugs, not as a full struct"	default(false)
 //	@Param			topic	query		int		false	"filter by topic ids, can be multiple ids. ex: ?topic=1&topic=2"
 //	@Param			tag		query		int		false	"filter by tag ids, can be multiple ids, must be use with topic. ex: ?tag=1&tag=2"
 //	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlog]
+//	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlogSimple]
 //	@Failure		400		{object}	entities.RetFailed
 //	@Failure		403		{object}	entities.RetFailed
 //	@Failure		500		{object}	entities.RetFailed
@@ -125,6 +128,20 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 	all = removeDuplicate(all)
+	if len(all) == 0 {
+		all = append(all, false)
+	}
+
+	rawSimple := queries["simple"]
+	simple, err := strListToBool(rawSimple)
+	if err != nil {
+		slog.Error("ListBlogs: 'simple' string list to bool failed", "error", err)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+	simple = removeDuplicate(simple)
+	if len(simple) == 0 {
+		simple = append(simple, false)
+	}
 
 	rawTopicIDs := queries["topic"]
 	topicIDs, err := strListToInt(rawTopicIDs)
@@ -143,8 +160,7 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 	tagIDs = removeDuplicate(tagIDs)
 
 	// admin list
-	if len(all) > 0 && all[0] {
-
+	if all[0] {
 		// authorization
 		authorized, err := b.auth.Verify(r)
 		if err != nil || !authorized {
@@ -179,6 +195,18 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 		}
 
 		// admin list
+		if simple[0] {
+			blogs, err := b.repo.AdminListSimple(r.Context())
+			if err != nil {
+				slog.Error("ListBlogs: admin list failed", "error", err)
+				if errors.Is(err, sql.ErrNoRows) {
+					return entities.NewRetSuccess([]entities.OutBlogSimple{}).WriteJSON(w)
+				}
+				return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+			}
+			return entities.NewRetSuccess(blogs).WriteJSON(w)
+		}
+
 		blogs, err := b.repo.AdminList(r.Context())
 		if err != nil {
 			slog.Error("ListBlogs: admin list failed", "error", err)
@@ -218,16 +246,18 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetSuccess(blogs).WriteJSON(w)
 	}
 
-	// list
-	blogs, err := b.repo.List(r.Context())
-	if err != nil {
-		slog.Error("ListBlogs: list failed", "error", err)
-		if errors.Is(err, sql.ErrNoRows) {
-			return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
-		}
-		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
-	}
-	return entities.NewRetSuccess(blogs).WriteJSON(w)
+	// list normal viewer shouldn't need to list all blogs
+	// blogs, err := b.repo.List(r.Context())
+	// if err != nil {
+	// 	slog.Error("ListBlogs: list failed", "error", err)
+	// 	if errors.Is(err, sql.ErrNoRows) {
+	// 		return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
+	// 	}
+	// 	return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+	// }
+	// return entities.NewRetSuccess(blogs).WriteJSON(w)
+
+	return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 }
 
 // GetBlog

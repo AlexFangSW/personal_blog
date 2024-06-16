@@ -112,6 +112,51 @@ func (t *Tags) ListByBlogID(ctx context.Context, db *sql.DB, blogID int) ([]enti
 	return result, nil
 }
 
+func (t *Tags) ListSlugByBlogID(ctx context.Context, db *sql.DB, blogID int) ([]string, error) {
+	stmt := `
+	SELECT 
+		tags.slug 
+	FROM tags INNER JOIN blog_tags
+	WHERE 
+		(blog_tags.blog_id = ?) AND (blog_tags.tag_id = tags.id);
+	`
+
+	util.LogQuery(ctx, "ListSlugByBlogID:", stmt)
+
+	rows, err := db.QueryContext(
+		ctx,
+		stmt,
+		blogID,
+	)
+	if err != nil {
+		return []string{}, fmt.Errorf("ListSlugByBlogID: query context failed: %w", err)
+	}
+
+	result := []string{}
+	for {
+		slug := ""
+		if !rows.Next() {
+			break
+		}
+		err := rows.Scan(
+			&slug,
+		)
+		if err != nil {
+			if err := rows.Close(); err != nil {
+				return []string{}, fmt.Errorf("ListSlugByBlogID: close rows failed: %w", err)
+			}
+			return []string{}, fmt.Errorf("ListSlugByBlogID: scan failed: %w", err)
+		}
+		result = append(result, slug)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []string{}, fmt.Errorf("ListSlugByBlogID: rows iteration error: %w", err)
+	}
+
+	return result, nil
+}
+
 func (t *Tags) List(ctx context.Context, db *sql.DB) ([]entities.Tag, error) {
 
 	stmt := `SELECT * FROM tags;`

@@ -304,6 +304,29 @@ func (b *Blogs) AdminList(ctx context.Context) ([]entities.OutBlog, error) {
 	return result, nil
 }
 
+// return tags and topics as slugs
+func (b *Blogs) AdminListSimple(ctx context.Context) ([]entities.OutBlogSimple, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	blogs, err := b.models.blog.AdminList(ctxTimeout, b.db)
+	if err != nil {
+		return []entities.OutBlogSimple{}, fmt.Errorf("AdminListSimple: model list blogs failed: %w", err)
+	}
+
+	result := []entities.OutBlogSimple{}
+
+	for _, blog := range blogs {
+		outBlog, err := b.fillOutBlogSimple(ctxTimeout, blog)
+		if err != nil {
+			return []entities.OutBlogSimple{}, fmt.Errorf("AdminListSimple: fill OutBlogSimple failed: %w", err)
+		}
+		result = append(result, outBlog)
+	}
+
+	return result, nil
+}
+
 // Returns all matched blogs
 func (b *Blogs) AdminListByTopicIDs(ctx context.Context, topicID []int) ([]entities.OutBlog, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
@@ -453,5 +476,21 @@ func (b *Blogs) fillOutBlog(ctx context.Context, blog entities.Blog) (*entities.
 	}
 
 	outBlog := entities.NewOutBlog(blog, tags, topics)
+	return outBlog, nil
+}
+
+// Helper function to fill out OutBlog with tags and topics
+func (b *Blogs) fillOutBlogSimple(ctx context.Context, blog entities.Blog) (entities.OutBlogSimple, error) {
+	tags, err := b.models.tags.ListSlugByBlogID(ctx, b.db, blog.ID)
+	if err != nil {
+		return entities.OutBlogSimple{}, fmt.Errorf("fillOutBlogSimple: model get tags failed: %w", err)
+	}
+
+	topics, err := b.models.topics.ListSlugByBlogID(ctx, b.db, blog.ID)
+	if err != nil {
+		return entities.OutBlogSimple{}, fmt.Errorf("fillOutBlogSimple: model get topics failed: %w", err)
+	}
+
+	outBlog := entities.NewOutBlogSimple(blog, tags, topics)
 	return outBlog, nil
 }
