@@ -15,7 +15,8 @@ import (
 	"golang.org/x/term"
 )
 
-func getJWT(baseURL, username, password string) (string, error) {
+func getJWT(baseURL, username, password string, client *http.Client) (oStr string, oErr error) {
+
 	// setup api url
 	url := fmt.Sprintf("%s/login", baseURL)
 
@@ -29,33 +30,42 @@ func getJWT(baseURL, username, password string) (string, error) {
 	req.Header.Set("Content-type", "application/json")
 
 	// send request
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("getJWT: request failed: %w", err)
 	}
+
+	// cleanup
+	defer func() {
+		// drain request body and close
+		r := io.LimitReader(res.Body, LimitReaderSize)
+		if n, err := io.Copy(io.Discard, r); err != nil {
+			oErr = errors.Join(oErr, fmt.Errorf("getJWT: failed reading response body after %d bytes: %w", n, err))
+		}
+		oErr = errors.Join(oErr, res.Body.Close())
+	}()
 
 	// read request
 	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", fmt.Errorf("getJWT: read body failed: %w", err)
 	}
-	defer res.Body.Close()
-
-	// success
-	if res.StatusCode == 200 {
-		msg := entities.RetSuccess[entities.JWT]{}
-		if err := json.Unmarshal(resBody, &msg); err != nil {
-			return "", fmt.Errorf("getJWT: decode success response failed: %w", err)
-		}
-		return msg.Msg.JWT, nil
-	}
 
 	// fail
-	return "", errors.New(string(resBody))
+	if res.StatusCode >= 400 {
+		return "", errors.New(string(resBody))
+	}
+
+	// success
+	msg := entities.RetSuccess[entities.JWT]{}
+	if err := json.Unmarshal(resBody, &msg); err != nil {
+		return "", fmt.Errorf("getJWT: decode success response failed: %w", err)
+	}
+	return msg.Msg.JWT, nil
 }
 
 // reads username and password and get jwt token
-func login(baseURL string) (string, error) {
+func login(baseURL string, client *http.Client) (str string, err error) {
 	// read username
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Username: ")
@@ -74,7 +84,7 @@ func login(baseURL string) (string, error) {
 	password := string(bytepw)
 
 	// get jwt
-	jwt, err := getJWT(baseURL, username, password)
+	jwt, err := getJWT(baseURL, username, password, client)
 	if err != nil {
 		return "", fmt.Errorf("Get jwt token error: %w", err)
 	}

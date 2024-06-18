@@ -2,22 +2,27 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
+	"net/http"
 )
 
-func syncAll(baseURL, metaFile, blogsDir string) error {
+func syncAll(baseURL, metaFile, blogsDir string, client *http.Client) error {
 	// login
-	jwt, err := login(baseURL)
+	jwt, err := login(baseURL, client)
 	if err != nil {
 		return fmt.Errorf("syncAll: login failed: %w", err)
 	}
+	slog.Info("got jwt", "token", jwt)
 
-	syncHelper := NewSyncHelper(baseURL, jwt)
+	syncHelper := NewSyncHelper(baseURL, jwt, client)
 
 	// get data from server
 	tags, err := syncHelper.GetAllTags()
 	if err != nil {
 		return fmt.Errorf("syncAll: failed to get tags from server: %w", err)
 	}
+	slog.Info("got tags", "tags", tags)
+
 	topics, err := syncHelper.GetAllTopics()
 	if err != nil {
 		return fmt.Errorf("syncAll: failed to get topics from server: %w", err)

@@ -3,27 +3,64 @@ package main
 import (
 	"blog/entities"
 	"crypto/md5"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 
 	"gopkg.in/yaml.v3"
 )
 
+var LimitReaderSize int64 = 10 * 1024 * 1024
+
 type SyncHelper struct {
 	baseURL string
 	token   string
+	client  *http.Client
 }
 
-func NewSyncHelper(baseURL, token string) SyncHelper {
+func NewSyncHelper(baseURL, token string, client *http.Client) SyncHelper {
 	return SyncHelper{
 		baseURL: baseURL,
 		token:   token,
+		client:  client,
 	}
 }
 
 // ================ tags  ================
-func (s SyncHelper) GetAllTags() ([]entities.Tag, error) {
-	return []entities.Tag{}, nil
+func (s SyncHelper) GetAllTags() (oTag []entities.Tag, oErr error) {
+	res, err := s.client.Get(fmt.Sprintf("%s/tags", s.baseURL))
+	if err != nil {
+		return []entities.Tag{}, fmt.Errorf("GetAllTags: get all tags failed: %w", err)
+	}
+
+	// cleanup
+	defer func() {
+		reader := io.LimitReader(res.Body, LimitReaderSize)
+		_, err := io.Copy(io.Discard, reader)
+		if err != nil {
+			oErr = errors.Join(oErr, fmt.Errorf("GetAllTags: drain response body failed: %w", err))
+		}
+		oErr = errors.Join(oErr, res.Body.Close())
+	}()
+
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return []entities.Tag{}, fmt.Errorf("GetAllTags: read body failed: %w", err)
+	}
+
+	if res.StatusCode >= 400 {
+		return []entities.Tag{}, errors.New(string(resBody))
+	}
+
+	data := entities.RetSuccess[[]entities.Tag]{}
+	if err := json.Unmarshal(resBody, &data); err != nil {
+		return []entities.Tag{}, fmt.Errorf("GetAllTags: decode body failed: %w", err)
+	}
+
+	return data.Msg, nil
 }
 func (s SyncHelper) CreateTags(tags []entities.Tag) error {
 	return nil
