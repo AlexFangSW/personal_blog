@@ -7,7 +7,7 @@ import (
 )
 
 func syncAll(ctx context.Context, baseURL, metaFile, blogsDir string) error {
-	slog.Debug("syncAll")
+	slog.Info("syncAll")
 
 	loginDone := make(chan bool, 1)
 	processDone := make(chan bool, 1)
