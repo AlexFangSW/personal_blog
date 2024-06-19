@@ -6,13 +6,8 @@ import (
 	"log/slog"
 )
 
-func syncProcess() {
-}
-
-func syncAll(ctx context.Context, done chan<- bool, baseURL, metaFile, blogsDir string) error {
-	defer func() {
-		done <- true
-	}()
+func syncAll(ctx context.Context, baseURL, metaFile, blogsDir string) error {
+	slog.Debug("syncAll")
 
 	loginDone := make(chan bool, 1)
 	processDone := make(chan bool, 1)
@@ -50,6 +45,7 @@ func syncAll(ctx context.Context, done chan<- bool, baseURL, metaFile, blogsDir 
 			processErr <- fmt.Errorf("syncAll: failed to get blogs from server: %w", err)
 			return
 		}
+		slog.Debug("got blogs", "blogs", blogs)
 
 		// load meta file
 		metafile, err := loadMetaFile(metaFile)
@@ -57,20 +53,23 @@ func syncAll(ctx context.Context, done chan<- bool, baseURL, metaFile, blogsDir 
 			processErr <- fmt.Errorf("syncAll: load meta file failed: %w", err)
 			return
 		}
+		slog.Debug("load meta file", "content", metafile)
+
 		// load blogs
 		localblogs, err := loadBlogs(blogsDir)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: load blogs failed: %w", err)
 			return
 		}
+		slog.Debug("local blogs loaded", "blog count", len(localblogs))
 
 		// seperate into groups (CRUD + noop)
-		groupedTags, err := groupTags(metafile.tags, tags)
+		groupedTags, err := groupTags(metafile.Tags, tags)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: group tags failed: %w", err)
 			return
 		}
-		groupedTopics, err := groupTopics(metafile.topics, topics)
+		groupedTopics, err := groupTopics(metafile.Topics, topics)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: group topics failed: %w", err)
 			return

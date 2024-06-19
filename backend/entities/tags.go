@@ -26,8 +26,8 @@ func NewTag(name, description string) *Tag {
 }
 
 type InTag struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name" yaml:"name"`
+	Description string `json:"description" yaml:"description"`
 }
 
 func NewInTag(name, description string) *InTag {

@@ -17,6 +17,7 @@ import (
 )
 
 func getJWT(baseURL, username, password string) (oStr string, oErr error) {
+	slog.Debug("getJWT")
 
 	// setup api url
 	// build request
@@ -59,6 +60,8 @@ func getJWT(baseURL, username, password string) (oStr string, oErr error) {
 
 // reads username and password and get jwt token
 func login(ctx context.Context, done chan<- bool, baseURL string) (oStr string, oErr error) {
+	slog.Debug("login")
+
 	defer func() {
 		done <- true
 	}()
@@ -113,7 +116,7 @@ func login(ctx context.Context, done chan<- bool, baseURL string) (oStr string, 
 		return "", errors.New("login: canceled")
 	case err := <-processErr:
 		return "", err
-	case res := <-result:
-		return res, nil
+	case jwt := <-result:
+		return jwt, nil
 	}
 }

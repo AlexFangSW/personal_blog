@@ -65,8 +65,7 @@ func main() {
 				Usage:                  "Sync everything",
 				UseShortOptionHandling: true,
 				Action: func(cCtx *cli.Context) error {
-					// Sync everything
-					return syncAll(ctxCancel, notifyDone, url, metaFile, blogsDir)
+					return syncAll(ctxCancel, url, metaFile, blogsDir)
 				},
 				Flags: commonFlags,
 				Before: func(ctx *cli.Context) error {
@@ -84,6 +83,7 @@ func main() {
 		if err := app.Run(os.Args); err != nil {
 			log.Fatal(err)
 		}
+		notifyDone <- true
 	}()
 
 	notifyClose := make(chan os.Signal, 1)
@@ -96,6 +96,5 @@ func main() {
 		<-notifyDone
 		slog.Warn("Stoped")
 	case <-notifyDone:
-		slog.Info("Finish")
 	}
 }
