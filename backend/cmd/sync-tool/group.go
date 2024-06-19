@@ -19,7 +19,6 @@ type Groups[T GroupTypes] struct {
 func groupTags(localTags []entities.InTag, tags []entities.Tag) (Groups[entities.Tag], error) {
 	slog.Debug("groupTags")
 
-	// log info
 	tagMap := map[string]entities.Tag{}
 	for _, tag := range tags {
 		tagMap[tag.Name] = tag
@@ -31,9 +30,7 @@ func groupTags(localTags []entities.InTag, tags []entities.Tag) (Groups[entities
 
 		if !ok {
 			newTag := entities.NewTag(localTag.Name, localTag.Description)
-			newTag.ID = remoteTag.ID
 			result.create = append(result.create, *newTag)
-			delete(tagMap, localTag.Name)
 			continue
 		}
 
@@ -59,13 +56,11 @@ func groupTags(localTags []entities.InTag, tags []entities.Tag) (Groups[entities
 }
 
 func groupTopics(localTopics []entities.InTopic, topics []entities.Topic) (Groups[entities.Topic], error) {
-	// log info
 	return Groups[entities.Topic]{}, nil
 }
 
 // this InBlog will have their id filled
 func groupBlogs(localBlogs []BlogInfo, blogs []entities.OutBlogSimple) (Groups[BlogInfo], error) {
-	// log info
 	return Groups[BlogInfo]{}, nil
 }
 
