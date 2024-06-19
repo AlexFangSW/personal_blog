@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -25,7 +26,7 @@ func drainAndClose(body io.ReadCloser) error {
 
 type SyncHelper struct {
 	baseURL string
-	token   string
+	token   string // jwt token
 }
 
 func NewSyncHelper(baseURL, token string) SyncHelper {
@@ -37,9 +38,9 @@ func NewSyncHelper(baseURL, token string) SyncHelper {
 
 // ================ tags  ================
 func (s SyncHelper) GetAllTags() (oTag []entities.Tag, oErr error) {
-	res, err := httpClient.Get(fmt.Sprintf("%s/tags", s.baseURL))
+	res, err := httpClient.Get(s.baseURL + "/tags")
 	if err != nil {
-		return []entities.Tag{}, fmt.Errorf("GetAllTags: get all tags failed: %w", err)
+		return []entities.Tag{}, fmt.Errorf("GetAllTags: get failed: %w", err)
 	}
 
 	// cleanup
@@ -53,7 +54,7 @@ func (s SyncHelper) GetAllTags() (oTag []entities.Tag, oErr error) {
 	}
 
 	if res.StatusCode >= 400 {
-		return []entities.Tag{}, errors.New(string(resBody))
+		return []entities.Tag{}, fmt.Errorf("GetAllTags: status code %d, msg: %s", res.StatusCode, string(resBody))
 	}
 
 	data := entities.RetSuccess[[]entities.Tag]{}
@@ -75,9 +76,9 @@ func (s SyncHelper) DeleteTags(tags []entities.Tag) error {
 
 // ================ topics ================
 func (s SyncHelper) GetAllTopics() (oTag []entities.Topic, oErr error) {
-	res, err := httpClient.Get(fmt.Sprintf("%s/topics", s.baseURL))
+	res, err := httpClient.Get(s.baseURL + "/topics")
 	if err != nil {
-		return []entities.Topic{}, fmt.Errorf("GetAllTopics: get all tags failed: %w", err)
+		return []entities.Topic{}, fmt.Errorf("GetAllTopics: get failed: %w", err)
 	}
 
 	// cleanup
@@ -91,7 +92,7 @@ func (s SyncHelper) GetAllTopics() (oTag []entities.Topic, oErr error) {
 	}
 
 	if res.StatusCode >= 400 {
-		return []entities.Topic{}, errors.New(string(resBody))
+		return []entities.Topic{}, fmt.Errorf("GetAllTopics: status code %d, msg: %s", res.StatusCode, string(resBody))
 	}
 
 	data := entities.RetSuccess[[]entities.Topic]{}
@@ -112,8 +113,38 @@ func (s SyncHelper) DeleteTopics(topics []entities.Topic) error {
 }
 
 // ================ blogs ================
-func (s SyncHelper) GetAllBlogs() ([]entities.OutBlogSimple, error) {
-	return []entities.OutBlogSimple{}, nil
+func (s SyncHelper) GetAllBlogs() (oBlog []entities.OutBlogSimple, oErr error) {
+	req, err := http.NewRequest(http.MethodGet, s.baseURL+"/blogs", nil)
+	if err != nil {
+		return []entities.OutBlogSimple{}, fmt.Errorf("GetAllBlogs: create new request failed: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+s.token)
+	req.URL.Query().Set("all", "true")
+
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return []entities.OutBlogSimple{}, fmt.Errorf("GetAllBlogs: req failed: %w", err)
+	}
+
+	defer func() {
+		oErr = errors.Join(oErr, drainAndClose(res.Body))
+	}()
+
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return []entities.OutBlogSimple{}, fmt.Errorf("GetAllBlogs: read body failed: %w", err)
+	}
+
+	if res.StatusCode >= 400 {
+		return []entities.OutBlogSimple{}, fmt.Errorf("GetAllBlogs: status code %d, msg: %s", res.StatusCode, string(resBody))
+	}
+
+	data := entities.RetSuccess[[]entities.OutBlogSimple]{}
+	if err := json.Unmarshal(resBody, &data); err != nil {
+		return []entities.OutBlogSimple{}, fmt.Errorf("GetAllBlogs: unmarshal failed: %w", err)
+	}
+
+	return data.Msg, nil
 }
 func (s SyncHelper) CreateBlogs(blogs []entities.InBlog) error {
 	// load blog content by batch
