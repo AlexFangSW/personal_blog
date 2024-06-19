@@ -15,7 +15,7 @@ import (
 	"golang.org/x/term"
 )
 
-func getJWT(baseURL, username, password string, client *http.Client) (oStr string, oErr error) {
+func getJWT(baseURL, username, password string) (oStr string, oErr error) {
 
 	// setup api url
 	url := fmt.Sprintf("%s/login", baseURL)
@@ -30,19 +30,14 @@ func getJWT(baseURL, username, password string, client *http.Client) (oStr strin
 	req.Header.Set("Content-type", "application/json")
 
 	// send request
-	res, err := client.Do(req)
+	res, err := httpClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("getJWT: request failed: %w", err)
 	}
 
 	// cleanup
 	defer func() {
-		// drain request body and close
-		r := io.LimitReader(res.Body, LimitReaderSize)
-		if n, err := io.Copy(io.Discard, r); err != nil {
-			oErr = errors.Join(oErr, fmt.Errorf("getJWT: failed reading response body after %d bytes: %w", n, err))
-		}
-		oErr = errors.Join(oErr, res.Body.Close())
+		oErr = errors.Join(oErr, drainAndClose(res.Body))
 	}()
 
 	// read request
@@ -65,7 +60,7 @@ func getJWT(baseURL, username, password string, client *http.Client) (oStr strin
 }
 
 // reads username and password and get jwt token
-func login(baseURL string, client *http.Client) (str string, err error) {
+func login(baseURL string) (str string, err error) {
 	// read username
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Username: ")
@@ -84,7 +79,7 @@ func login(baseURL string, client *http.Client) (str string, err error) {
 	password := string(bytepw)
 
 	// get jwt
-	jwt, err := getJWT(baseURL, username, password, client)
+	jwt, err := getJWT(baseURL, username, password)
 	if err != nil {
 		return "", fmt.Errorf("Get jwt token error: %w", err)
 	}

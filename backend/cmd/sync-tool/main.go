@@ -10,16 +10,16 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var httpClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
+
 func main() {
 	var url string
 	var metaFile string
 	var blogsDir string
 
 	// use custom client to set timeout
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
 	commonFlags := []cli.Flag{
 		&cli.StringFlag{
 			Name:        "url",
@@ -50,7 +50,7 @@ func main() {
 				Usage: "Sync everything",
 				Action: func(cCtx *cli.Context) error {
 					// Sync everything
-					return syncAll(url, metaFile, blogsDir, client)
+					return syncAll(url, metaFile, blogsDir)
 				},
 				Flags: commonFlags,
 				Subcommands: []*cli.Command{

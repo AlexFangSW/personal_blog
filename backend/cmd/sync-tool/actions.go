@@ -3,18 +3,17 @@ package main
 import (
 	"fmt"
 	"log/slog"
-	"net/http"
 )
 
-func syncAll(baseURL, metaFile, blogsDir string, client *http.Client) error {
+func syncAll(baseURL, metaFile, blogsDir string) error {
 	// login
-	jwt, err := login(baseURL, client)
+	jwt, err := login(baseURL)
 	if err != nil {
 		return fmt.Errorf("syncAll: login failed: %w", err)
 	}
 	slog.Info("got jwt", "token", jwt)
 
-	syncHelper := NewSyncHelper(baseURL, jwt, client)
+	syncHelper := NewSyncHelper(baseURL, jwt)
 
 	// get data from server
 	tags, err := syncHelper.GetAllTags()

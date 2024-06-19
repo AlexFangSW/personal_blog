@@ -7,43 +7,44 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 
 	"gopkg.in/yaml.v3"
 )
 
-var LimitReaderSize int64 = 10 * 1024 * 1024
+var LimitReaderSize int64 = 10 * 1024 * 1024 // 10MB
+
+func drainAndClose(body io.ReadCloser) error {
+	reader := io.LimitReader(body, LimitReaderSize)
+	_, drainErr := io.Copy(io.Discard, reader)
+	if drainErr != nil {
+		return fmt.Errorf("drainAndClose: drain failed: %w", drainErr)
+	}
+	return body.Close()
+}
 
 type SyncHelper struct {
 	baseURL string
 	token   string
-	client  *http.Client
 }
 
-func NewSyncHelper(baseURL, token string, client *http.Client) SyncHelper {
+func NewSyncHelper(baseURL, token string) SyncHelper {
 	return SyncHelper{
 		baseURL: baseURL,
 		token:   token,
-		client:  client,
 	}
 }
 
 // ================ tags  ================
 func (s SyncHelper) GetAllTags() (oTag []entities.Tag, oErr error) {
-	res, err := s.client.Get(fmt.Sprintf("%s/tags", s.baseURL))
+	res, err := httpClient.Get(fmt.Sprintf("%s/tags", s.baseURL))
 	if err != nil {
 		return []entities.Tag{}, fmt.Errorf("GetAllTags: get all tags failed: %w", err)
 	}
 
 	// cleanup
 	defer func() {
-		reader := io.LimitReader(res.Body, LimitReaderSize)
-		_, err := io.Copy(io.Discard, reader)
-		if err != nil {
-			oErr = errors.Join(oErr, fmt.Errorf("GetAllTags: drain response body failed: %w", err))
-		}
-		oErr = errors.Join(oErr, res.Body.Close())
+		oErr = errors.Join(oErr, drainAndClose(res.Body))
 	}()
 
 	resBody, err := io.ReadAll(res.Body)
