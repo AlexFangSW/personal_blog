@@ -74,8 +74,32 @@ func (s SyncHelper) DeleteTags(tags []entities.Tag) error {
 }
 
 // ================ topics ================
-func (s SyncHelper) GetAllTopics() ([]entities.Topic, error) {
-	return []entities.Topic{}, nil
+func (s SyncHelper) GetAllTopics() (oTag []entities.Topic, oErr error) {
+	res, err := httpClient.Get(fmt.Sprintf("%s/topics", s.baseURL))
+	if err != nil {
+		return []entities.Topic{}, fmt.Errorf("GetAllTopics: get all tags failed: %w", err)
+	}
+
+	// cleanup
+	defer func() {
+		oErr = errors.Join(oErr, drainAndClose(res.Body))
+	}()
+
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return []entities.Topic{}, fmt.Errorf("GetAllTopics: read body failed: %w", err)
+	}
+
+	if res.StatusCode >= 400 {
+		return []entities.Topic{}, errors.New(string(resBody))
+	}
+
+	data := entities.RetSuccess[[]entities.Topic]{}
+	if err := json.Unmarshal(resBody, &data); err != nil {
+		return []entities.Topic{}, fmt.Errorf("GetAllTopics: decode body failed: %w", err)
+	}
+
+	return data.Msg, nil
 }
 func (s SyncHelper) CreateTopics(topics []entities.Topic) error {
 	return nil
