@@ -4,10 +4,10 @@ description: Use some key words here to help users find this post
 pined: false
 visible: true
 tags:
-- tag-1
-- tag-2
+- Tag1
+- Tag2
 topics:
-- topic-1
+- Topic1
 ---
 
 ## Some background

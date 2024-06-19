@@ -4,9 +4,9 @@ description: Use some key words here to help users find this post
 pined: false
 visible: true
 tags:
-- tag-1
+- Tag1
 topics:
-- topic-1
+- Topic1
 ---
 
 ## Some background

@@ -69,6 +69,14 @@ func syncAll(ctx context.Context, baseURL, metaFile, blogsDir string) error {
 			processErr <- fmt.Errorf("syncAll: group tags failed: %w", err)
 			return
 		}
+		slog.Debug(
+			"grouped tags",
+			"create", len(groupedTags.create),
+			"update", len(groupedTags.update),
+			"delete", len(groupedTags.delete),
+			"noop", len(groupedTags.noop),
+		)
+
 		groupedTopics, err := groupTopics(metafile.Topics, topics)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: group topics failed: %w", err)
