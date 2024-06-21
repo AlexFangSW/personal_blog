@@ -25,6 +25,7 @@ Mostily uses golang's builtin librariy
 - **http.ServeMux** for routing
 - **database/sql** for querying databases
 - **goose** for database migrations
+- **SQLite** as the database
 
 ## Code Architecture.
 - **Entities**
@@ -100,10 +101,15 @@ Will need JWT token to use some of the APIs, such as create, update, delete and 
 I want to use my own editor to write notes.
 
 This is a tool that can sync my notes to the server.
-#### Functions
-- Sync all
-- Sync topics and tags
-- Sync blogs
+
+The notes should be organized like `dummyData` folder
+- A **meta.yaml** containing tags and topics
+- **blogs** folder containing blogs with frontmatter
+
+### Referential integrity
+If some blog's frontmetter has a tag or topic that doesn't exist,
+it will be recorded, logged out and written to a file, after which the sync process will be terminated.
+Only after passing the validation process will the data be synced to the server.
 
 ### [User register](./cmd/register/main.go)
 
@@ -117,5 +123,5 @@ Only someone with direct access to the database can register.
 - CRUD for user table, directly operates on the database.
 
 ## TODO
-- Rate Limit (login): with istio
+- Rate Limit (login)
 - Remove unecessary pointer return
