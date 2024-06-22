@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"path/filepath"
 )
 
-func syncAll(ctx context.Context, baseURL, metaFile, blogsDir string) error {
+func syncAll(ctx context.Context, baseURL, sourcePath string) error {
 	slog.Info("syncAll")
 
 	loginDone := make(chan bool, 1)
@@ -31,37 +32,38 @@ func syncAll(ctx context.Context, baseURL, metaFile, blogsDir string) error {
 			processErr <- fmt.Errorf("syncAll: failed to get tags from server: %w", err)
 			return
 		}
-		slog.Debug("got tags", "tags", tags)
 
 		topics, err := syncHelper.GetAllTopics()
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: failed to get topics from server: %w", err)
 			return
 		}
-		slog.Debug("got topics", "topics", topics)
 
 		blogs, err := syncHelper.GetAllBlogs()
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: failed to get blogs from server: %w", err)
 			return
 		}
-		slog.Debug("got blogs", "blogs", blogs)
 
 		// load meta file
-		metafile, err := loadMetaFile(metaFile)
+		metafile, err := loadMetaFile(filepath.Join(sourcePath, "meta.yaml"))
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: load meta file failed: %w", err)
 			return
 		}
-		slog.Debug("load meta file", "content", metafile)
 
 		// load blogs
-		localblogs, err := loadBlogs(blogsDir)
+		idMap, err := loadIDMap(filepath.Join(sourcePath, "ids.json"))
+		if err != nil {
+			processErr <- fmt.Errorf("syncAll: load id map failed: %w", err)
+			return
+		}
+
+		localblogs, err := loadBlogs(filepath.Join(sourcePath, "blogs"), idMap)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: load blogs failed: %w", err)
 			return
 		}
-		slog.Debug("local blogs loaded", "blog count", len(localblogs))
 
 		// seperate into groups (CRUD + noop)
 		groupedTags, err := groupTags(metafile.Tags, tags)
@@ -69,35 +71,21 @@ func syncAll(ctx context.Context, baseURL, metaFile, blogsDir string) error {
 			processErr <- fmt.Errorf("syncAll: group tags failed: %w", err)
 			return
 		}
-		slog.Debug(
-			"grouped tags",
-			"create", len(groupedTags.create),
-			"update", len(groupedTags.update),
-			"delete", len(groupedTags.delete),
-			"noop", len(groupedTags.noop),
-		)
 
 		groupedTopics, err := groupTopics(metafile.Topics, topics)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: group topics failed: %w", err)
 			return
 		}
+
 		groupedBlogs, err := groupBlogs(localblogs, blogs)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: group blogs failed: %w", err)
 			return
 		}
 
-		// after this state blogs only lack content
-		groupedInBlogs, err := transformBlogs(groupedTags, groupedTopics, groupedBlogs)
-		if err != nil {
-			processErr <- fmt.Errorf("syncAll: transform blogs failed: %w", err)
-			return
-		}
-
 		// sync
-
-		// create tags and topics
+		// create tags and topics, also fills in their ids for later use
 		if err := syncHelper.CreateTopics(groupedTopics.create); err != nil {
 			processErr <- fmt.Errorf("syncAll: create topics failed: %w", err)
 			return
@@ -118,6 +106,13 @@ func syncAll(ctx context.Context, baseURL, metaFile, blogsDir string) error {
 		}
 
 		// blogs
+		// prepare blogs for CRUD operations
+		groupedInBlogs, err := transformBlogs(groupedTags, groupedTopics, groupedBlogs)
+		if err != nil {
+			processErr <- fmt.Errorf("syncAll: transform blogs failed: %w", err)
+			return
+		}
+
 		if err := syncHelper.CreateBlogs(groupedInBlogs.create); err != nil {
 			processErr <- fmt.Errorf("syncAll: create blogs failed: %w", err)
 			return

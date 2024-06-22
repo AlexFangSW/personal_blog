@@ -36,6 +36,7 @@ func (s SyncHelper) GetAllTopics() (oTag []entities.Topic, oErr error) {
 		return []entities.Topic{}, fmt.Errorf("GetAllTopics: decode body failed: %w", err)
 	}
 
+	slog.Debug("got topics", "topics", data.Msg)
 	return data.Msg, nil
 }
 func (s SyncHelper) CreateTopics(topics []entities.Topic) error {

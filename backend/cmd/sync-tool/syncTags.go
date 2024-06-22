@@ -36,6 +36,8 @@ func (s SyncHelper) GetAllTags() (oTag []entities.Tag, oErr error) {
 		return []entities.Tag{}, fmt.Errorf("GetAllTags: decode body failed: %w", err)
 	}
 
+	slog.Debug("got tags", "tags", data.Msg)
+
 	return data.Msg, nil
 }
 func (s SyncHelper) CreateTags(tags []entities.Tag) error {

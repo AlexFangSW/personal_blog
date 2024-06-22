@@ -46,6 +46,7 @@ func (s SyncHelper) GetAllBlogs() (oBlog []entities.OutBlogSimple, oErr error) {
 		return []entities.OutBlogSimple{}, fmt.Errorf("GetAllBlogs: unmarshal failed: %w", err)
 	}
 
+	slog.Debug("got blogs", "blogs", data.Msg)
 	return data.Msg, nil
 }
 func (s SyncHelper) CreateBlogs(blogs []entities.InBlog) error {
@@ -56,6 +57,6 @@ func (s SyncHelper) UpdateBlogs(blogs []entities.InBlog) error {
 	// load blog content by batch
 	return nil
 }
-func (s SyncHelper) DeleteBlogs(blogs []entities.InBlog) error {
+func (s SyncHelper) DeleteBlogs(blogs []entities.OutBlogSimple) error {
 	return nil
 }

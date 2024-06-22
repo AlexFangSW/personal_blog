@@ -25,6 +25,16 @@ func NewTopic(name, description string) *Topic {
 	return topic
 }
 
+func NewTopicWithID(id int, name, description string) *Topic {
+	topic := &Topic{
+		ID:          id,
+		Name:        name,
+		Description: description,
+	}
+	topic.GenSlug()
+	return topic
+}
+
 type InTopic struct {
 	Name        string `json:"name" yaml:"name"`
 	Description string `json:"description" yaml:"description"`

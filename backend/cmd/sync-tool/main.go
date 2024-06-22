@@ -19,10 +19,9 @@ var httpClient = &http.Client{
 
 func main() {
 	var (
-		url      string
-		metaFile string
-		blogsDir string
-		verbose  int
+		url        string
+		sourcePath string
+		verbose    int
 	)
 
 	// use custom client to set timeout
@@ -34,16 +33,10 @@ func main() {
 			Destination: &url,
 		},
 		&cli.StringFlag{
-			Name:        "meta",
-			Value:       "./meta.yaml",
-			Usage:       "`PATH` to yaml file containing topic and tags",
-			Destination: &metaFile,
-		},
-		&cli.StringFlag{
-			Name:        "blogs",
-			Value:       "./blogs",
-			Usage:       "`PATH` to directory containing blogs",
-			Destination: &blogsDir,
+			Name:        "source",
+			Value:       "./",
+			Usage:       "`PATH` to folder containing meta.yaml, blogs/ and ids.json",
+			Destination: &sourcePath,
 		},
 		&cli.BoolFlag{
 			Name:  "v",
@@ -65,7 +58,7 @@ func main() {
 				Usage:                  "Sync everything",
 				UseShortOptionHandling: true,
 				Action: func(cCtx *cli.Context) error {
-					return syncAll(ctxCancel, url, metaFile, blogsDir)
+					return syncAll(ctxCancel, url, sourcePath)
 				},
 				Flags: commonFlags,
 				Before: func(ctx *cli.Context) error {

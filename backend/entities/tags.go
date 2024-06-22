@@ -25,6 +25,16 @@ func NewTag(name, description string) *Tag {
 	return tag
 }
 
+func NewTagWithID(id int, name, description string) *Tag {
+	tag := &Tag{
+		ID:          id,
+		Name:        name,
+		Description: description,
+	}
+	tag.GenSlug()
+	return tag
+}
+
 type InTag struct {
 	Name        string `json:"name" yaml:"name"`
 	Description string `json:"description" yaml:"description"`

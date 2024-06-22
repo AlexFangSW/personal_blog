@@ -1,16 +1,18 @@
 // In this project, the local copy of blogs, tags and topics are the source of truth.
-// The server, frontend and database are all just a way to organize the data and show our content.
-// The only thing we need to persist is a folder (such as the 'dummyData' folder),
-// which stores markdown and yaml files that can easily be persisted by pushing to GitHub
 package main
 
 import (
 	"blog/entities"
 	"log/slog"
+	"slices"
 )
 
 type GroupTypes interface {
-	entities.Tag | entities.Topic | BlogInfo | entities.InBlog
+	entities.Tag | entities.Topic
+}
+
+type BlogGroupTypes interface {
+	BlogInfo | entities.InBlog
 }
 
 type Groups[T GroupTypes] struct {
@@ -18,6 +20,13 @@ type Groups[T GroupTypes] struct {
 	update []T // exists locally and on server, but the name or description is different
 	delete []T // doesn't exist in local, but exists on server
 	noop   []T // exactly the same
+}
+
+type BlogGroup[T BlogGroupTypes] struct {
+	create []T                      // exists locally but not on server
+	update []T                      // exists locally and on server, but the name or description is different
+	delete []entities.OutBlogSimple // doesn't exist in local, but exists on server
+	noop   []T                      // exactly the same
 }
 
 func groupTags(localTags []entities.InTag, tags []entities.Tag) (Groups[entities.Tag], error) {
@@ -34,20 +43,22 @@ func groupTags(localTags []entities.InTag, tags []entities.Tag) (Groups[entities
 	for _, localTag := range localTags {
 		remoteTag, ok := tagMap[localTag.Name]
 
+		// the record dosen't exist on remote, we should create it
 		if !ok {
 			newTag := entities.NewTag(localTag.Name, localTag.Description)
 			result.create = append(result.create, *newTag)
 			continue
 		}
 
+		// the record is identical, do nothing
 		if localTag.Description == remoteTag.Description {
 			result.noop = append(result.noop, remoteTag)
 			delete(tagMap, localTag.Name)
 			continue
 
 		} else {
-			newTag := entities.NewTag(localTag.Name, localTag.Description)
-			newTag.ID = remoteTag.ID
+			// the content is differrnt, we should update it
+			newTag := entities.NewTagWithID(remoteTag.ID, localTag.Name, localTag.Description)
 			result.update = append(result.noop, *newTag)
 			delete(tagMap, localTag.Name)
 			continue
@@ -59,6 +70,13 @@ func groupTags(localTags []entities.InTag, tags []entities.Tag) (Groups[entities
 		result.delete = append(result.delete, remoteTag)
 	}
 
+	slog.Debug(
+		"grouped tags",
+		"create", len(result.create),
+		"update", len(result.update),
+		"delete", len(result.delete),
+		"noop", len(result.noop),
+	)
 	return result, nil
 }
 
@@ -72,19 +90,127 @@ func groupTopics(localTopics []entities.InTopic, topics []entities.Topic) (Group
 
 	result := Groups[entities.Topic]{}
 	for _, localTopic := range localTopics {
+		remoteTopic, ok := topicMap[localTopic.Name]
 
+		// the record dosen't exist on remote, we should create it
+		if !ok {
+			newTopic := entities.NewTopic(localTopic.Name, localTopic.Description)
+			result.create = append(result.create, *newTopic)
+			continue
+		}
+
+		// the record is identical, do nothing
+		if localTopic.Description == remoteTopic.Description {
+			result.noop = append(result.noop, remoteTopic)
+			delete(topicMap, localTopic.Name)
+			continue
+
+		} else {
+			// the content is differrnt, we should update it
+			newTopic := entities.NewTopicWithID(remoteTopic.ID, localTopic.Name, localTopic.Description)
+			result.update = append(result.update, *newTopic)
+			delete(topicMap, localTopic.Name)
+			continue
+		}
 	}
 
-	return Groups[entities.Topic]{}, nil
+	// the remaining remote data should be deleted
+	for _, remoteTopic := range topicMap {
+		result.delete = append(result.delete, remoteTopic)
+	}
+
+	slog.Debug(
+		"grouped topics",
+		"create", len(result.create),
+		"update", len(result.update),
+		"delete", len(result.delete),
+		"noop", len(result.noop),
+	)
+	return result, nil
 }
 
-// this InBlog will have their id filled
-func groupBlogs(localBlogs []BlogInfo, blogs []entities.OutBlogSimple) (Groups[BlogInfo], error) {
-	return Groups[BlogInfo]{}, nil
+func groupBlogs(localBlogs []BlogInfo, blogs []entities.OutBlogSimple) (BlogGroup[BlogInfo], error) {
+	slog.Debug("groupBlogs")
+
+	blogMap := map[int]entities.OutBlogSimple{}
+	for _, blog := range blogs {
+		blogMap[blog.ID] = blog
+	}
+
+	result := BlogGroup[BlogInfo]{}
+	for _, localBlog := range localBlogs {
+		remoteBlog, ok := blogMap[localBlog.Frontmatter.ID]
+
+		// the record dosen't exist on remote, we should create it.
+		// whether the blog should use its current ID will be decided at a later stage.
+		if !ok {
+			result.create = append(result.create, localBlog)
+			continue
+		}
+
+		// the record is identical, do nothing
+		if blogEqual(localBlog, remoteBlog) {
+			result.noop = append(result.noop, localBlog)
+			delete(blogMap, localBlog.Frontmatter.ID)
+			continue
+
+		} else {
+			// the content is differrnt, we should update it
+			result.update = append(result.update, localBlog)
+			delete(blogMap, localBlog.Frontmatter.ID)
+			continue
+		}
+	}
+
+	// the remaining remote data should be deleted
+	for _, remoteBlog := range blogMap {
+		result.delete = append(result.delete, remoteBlog)
+	}
+
+	slog.Debug(
+		"grouped blogs",
+		"create", len(result.create),
+		"update", len(result.update),
+		"delete", len(result.delete),
+		"noop", len(result.noop),
+	)
+	return result, nil
 }
 
-// map topics and tag slugs to their id
-// if there is no match, simply remove it
-func transformBlogs(tags Groups[entities.Tag], topics Groups[entities.Topic], blogs Groups[BlogInfo]) (Groups[entities.InBlog], error) {
-	return Groups[entities.InBlog]{}, nil
+func blogEqual(localBlog BlogInfo, remoteBlog entities.OutBlogSimple) bool {
+	if localBlog.Frontmatter.Title != remoteBlog.Title {
+		slog.Debug("Title not equal", "filename", localBlog.Filename)
+		return false
+	}
+	if localBlog.Frontmatter.Description != remoteBlog.Description {
+		slog.Debug("Description not equal", "filename", localBlog.Filename)
+		return false
+	}
+	if localBlog.Frontmatter.Pined != remoteBlog.Pined {
+		slog.Debug("Pined not equal", "filename", localBlog.Filename)
+		return false
+	}
+	if localBlog.Frontmatter.Visible != remoteBlog.Visible {
+		slog.Debug("Visible not equal", "filename", localBlog.Filename)
+		return false
+	}
+	if !slices.Equal[[]string](localBlog.Frontmatter.Tags, remoteBlog.Tags) {
+		slog.Debug("Tags not equal", "filename", localBlog.Filename)
+		return false
+	}
+	if !slices.Equal[[]string](localBlog.Frontmatter.Topics, remoteBlog.Topics) {
+		slog.Debug("Topics not equal", "filename", localBlog.Filename)
+		return false
+	}
+	if localBlog.Content_md5 != remoteBlog.ContentMD5 {
+		slog.Debug("Content_md5 not equal", "filename", localBlog.Filename)
+		return false
+	}
+	return true
+}
+
+// map topics and tag names to their id
+// if there is no match, record it and return an error
+func transformBlogs(tags Groups[entities.Tag], topics Groups[entities.Topic], blogs BlogGroup[BlogInfo]) (BlogGroup[entities.InBlog], error) {
+	return BlogGroup[entities.InBlog]{}, nil
 }
