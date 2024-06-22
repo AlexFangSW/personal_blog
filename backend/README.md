@@ -125,3 +125,8 @@ Only someone with direct access to the database can register.
 ## TODO
 - Rate Limit (login)
 - Remove unecessary pointer return
+- SQLite
+    - activate WAL
+    - command to manually vacuum "db" and "wal"
+- Refector server run() (model handler buildup)
+- Frontend... nice links (/<id>/<slug>)
