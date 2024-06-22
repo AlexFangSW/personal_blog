@@ -68,6 +68,7 @@ Will need JWT token to use some of the APIs, such as create, update, delete and 
         - [x] Option to return simple output with tags and topics as slugs (orignaly returns full struct of tags and topics)
             - This reduces the size from 1M to about 310K on 1000 blogs with 2 to 3 tags and topics
     - [x] md5 to check if content is the same.
+    - [x] Create blog with given id
 - Tags
     - [x] Basic CRUD operations
     - List filters
@@ -106,9 +107,12 @@ The notes should be organized like `dummyData` folder
 - A **meta.yaml** containing tags and topics
 - **blogs** folder containing blogs with frontmatter
 
+After the first sync, an **ids.json** file will be created, which maps blog filenames to their ids.
+This prevents blog ids from changing if we lost the database and need to sync from scratch.
+
 ### Referential integrity
 If some blog's frontmetter has a tag or topic that doesn't exist,
-it will be recorded, logged out and written to a file, after which the sync process will be terminated.
+it will be recorded, logged out and written to a file (**data-inconsistency.json**), after which the sync process will be terminated.
 Only after passing the validation process will the data be synced to the server.
 
 ### [User register](./cmd/register/main.go)
