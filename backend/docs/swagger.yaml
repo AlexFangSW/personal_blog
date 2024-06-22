@@ -435,6 +435,44 @@ paths:
       summary: Get blog
       tags:
       - blogs
+    post:
+      consumes:
+      - application/json
+      description: create blog with given id
+      parameters:
+      - description: blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: new blog content
+        in: body
+        name: blog
+        required: true
+        schema:
+          $ref: '#/definitions/entities.ReqInBlog'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Create blog with given id
+      tags:
+      - blogs
     put:
       consumes:
       - application/json

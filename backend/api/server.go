@@ -56,6 +56,7 @@ func (s *Server) Start() error {
 	mux.HandleFunc(s.get("/blogs"), WithMiddleware(s.blogs.ListBlogs))
 	mux.HandleFunc(s.get("/blogs/{id}"), WithMiddleware(s.blogs.GetBlog))
 	mux.HandleFunc(s.put("/blogs/{id}"), WithMiddleware(s.blogs.UpdateBlog))
+	mux.HandleFunc(s.post("/blogs/{id}"), WithMiddleware(s.blogs.CreateBlogWithID))
 	mux.HandleFunc(s.delete("/blogs/{id}"), WithMiddleware(s.blogs.SoftDeleteBlog))
 	mux.HandleFunc(s.delete("/blogs/deleted/{id}"), WithMiddleware(s.blogs.DeleteBlog))
 	mux.HandleFunc(s.patch("/blogs/deleted/{id}"), WithMiddleware(s.blogs.RestoreDeletedBlog))

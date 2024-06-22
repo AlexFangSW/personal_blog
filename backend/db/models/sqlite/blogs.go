@@ -58,6 +58,50 @@ func (b *Blogs) Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 
 	return newBlog, nil
 }
+func (b *Blogs) CreateWithID(ctx context.Context, tx *sql.Tx, blog entities.InBlog, id int) (*entities.Blog, error) {
+
+	stmt := `
+	INSERT INTO blogs
+	(
+		id,
+		title,
+		content,
+		content_md5,
+		description,
+		slug,
+		pined,
+		visible
+	)
+	VALUES
+	( ?, ?, ?, ?, ?, ?, ?, ?)
+	RETURNING *;
+	`
+
+	util.LogQuery(ctx, "CreateWithID:", stmt)
+
+	row := tx.QueryRowContext(
+		ctx,
+		stmt,
+		id,
+		blog.Title,
+		blog.Content,
+		blog.ContentMD5,
+		blog.Description,
+		blog.Slug,
+		blog.Pined,
+		blog.Visible,
+	)
+	if err := row.Err(); err != nil {
+		return &entities.Blog{}, fmt.Errorf("CreateWithID: insert blog failed: %w", err)
+	}
+
+	newBlog, scanErr := scanBlog(row)
+	if scanErr != nil {
+		return &entities.Blog{}, fmt.Errorf("CreateWithID: scan error: %w", scanErr)
+	}
+
+	return newBlog, nil
+}
 
 func (b *Blogs) Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog, id int) (*entities.Blog, error) {
 	stmt := `

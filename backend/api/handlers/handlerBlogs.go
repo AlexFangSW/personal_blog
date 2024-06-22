@@ -14,6 +14,7 @@ import (
 // Concrete implementations are at repository/<name>
 type blogsRepository interface {
 	Create(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error)
+	CreateWithID(ctx context.Context, blog entities.InBlog, id int) (*entities.OutBlog, error)
 	Update(ctx context.Context, blog entities.InBlog, id int) (*entities.OutBlog, error)
 
 	// This group of functions will only return rows with 'visible=true' and 'deleted_at=""'
@@ -388,6 +389,68 @@ func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 	return entities.NewRetSuccess(*updatedBlog).WriteJSON(w)
+}
+
+// CreateBlogWithID
+//
+//	@Summary		Create blog with given id
+//	@Description	create blog with given id
+//	@Tags			blogs
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int					true	"blog id"
+//	@Param			blog	body		entities.ReqInBlog	true	"new blog content"
+//	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400		{object}	entities.RetFailed
+//	@Failure		403		{object}	entities.RetFailed
+//	@Failure		500		{object}	entities.RetFailed
+//	@Router			/blogs/{id} [post]
+func (b *Blogs) CreateBlogWithID(w http.ResponseWriter, r *http.Request) error {
+	slog.Debug("CreateBlogWithID")
+
+	// authorization
+	authorized, err := b.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("CreateBlogWithID: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
+
+	// process path param
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		slog.Error("CreateBlogWithID: id path param to int failed", "error", err)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+
+	// process body
+	blog := &entities.ReqInBlog{}
+	if err := json.NewDecoder(r.Body).Decode(blog); err != nil {
+		slog.Error("CreateBlogWithID: parse body param failed", "error", err)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+	newBlog := entities.NewBlog(
+		blog.Title,
+		blog.Content,
+		blog.Description,
+		blog.Pined,
+		blog.Visible,
+	)
+	inBlog := entities.NewInBlog(
+		*newBlog,
+		blog.Tags,
+		blog.Topics,
+	)
+
+	// create
+	createdBlog, err := b.repo.CreateWithID(r.Context(), *inBlog, id)
+	if err != nil {
+		slog.Error("CreateBlogWithID: update failed", "error", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusBadRequest).WriteJSON(w)
+		}
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+	}
+	return entities.NewRetSuccess(*createdBlog).WriteJSON(w)
 }
 
 // SoftDeleteBlog
