@@ -104,10 +104,10 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
-//	@Param			simple query		bool	false	"output blog with tags and topics as slugs, not as a full struct"	default(false)
-//	@Param			topic	query		int		false	"filter by topic ids, can be multiple ids. ex: ?topic=1&topic=2"
-//	@Param			tag		query		int		false	"filter by tag ids, can be multiple ids, must be use with topic. ex: ?tag=1&tag=2"
+//	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"																				default(false)
+//	@Param			simple	query		bool	false	"output blog with tags and topics as slugs, not as a full struct"																			default(false)
+//	@Param			topic	query		[]int	false	"filter by topic ids, return blogs that have relation with all specified topics. ex: ?topic=1&topic=2"										collectionFormat(multi)
+//	@Param			tag		query		[]int	false	"filter by tag ids, return blogs that have relation with all specified tags, CAN ONLY BE USED IN COMBINATION WITH TOPIC. ex: ?tag=1&tag=2"	collectionFormat(multi)
 //	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlog]
 //	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlogSimple]
 //	@Failure		400		{object}	entities.RetFailed

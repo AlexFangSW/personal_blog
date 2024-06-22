@@ -1,102 +1,4 @@
 definitions:
-  blog_entities.RetSuccess-array_entities_OutBlog:
-    properties:
-      error:
-        type: string
-      msg:
-        items:
-          $ref: '#/definitions/entities.OutBlog'
-        type: array
-      status:
-        type: integer
-    type: object
-  blog_entities.RetSuccess-array_entities_OutBlogSimple:
-    properties:
-      error:
-        type: string
-      msg:
-        items:
-          $ref: '#/definitions/entities.OutBlogSimple'
-        type: array
-      status:
-        type: integer
-    type: object
-  blog_entities.RetSuccess-array_entities_Tag:
-    properties:
-      error:
-        type: string
-      msg:
-        items:
-          $ref: '#/definitions/entities.Tag'
-        type: array
-      status:
-        type: integer
-    type: object
-  blog_entities.RetSuccess-array_entities_Topic:
-    properties:
-      error:
-        type: string
-      msg:
-        items:
-          $ref: '#/definitions/entities.Topic'
-        type: array
-      status:
-        type: integer
-    type: object
-  blog_entities.RetSuccess-entities_JWT:
-    properties:
-      error:
-        type: string
-      msg:
-        $ref: '#/definitions/entities.JWT'
-      status:
-        type: integer
-    type: object
-  blog_entities.RetSuccess-entities_OutBlog:
-    properties:
-      error:
-        type: string
-      msg:
-        $ref: '#/definitions/entities.OutBlog'
-      status:
-        type: integer
-    type: object
-  blog_entities.RetSuccess-entities_RowsAffected:
-    properties:
-      error:
-        type: string
-      msg:
-        $ref: '#/definitions/entities.RowsAffected'
-      status:
-        type: integer
-    type: object
-  blog_entities.RetSuccess-entities_Tag:
-    properties:
-      error:
-        type: string
-      msg:
-        $ref: '#/definitions/entities.Tag'
-      status:
-        type: integer
-    type: object
-  blog_entities.RetSuccess-entities_Topic:
-    properties:
-      error:
-        type: string
-      msg:
-        $ref: '#/definitions/entities.Topic'
-      status:
-        type: integer
-    type: object
-  blog_entities.RetSuccess-string:
-    properties:
-      error:
-        type: string
-      msg:
-        type: string
-      status:
-        type: integer
-    type: object
   entities.InTag:
     properties:
       description:
@@ -212,6 +114,104 @@ definitions:
       status:
         type: integer
     type: object
+  entities.RetSuccess-array_entities_OutBlog:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.OutBlog'
+        type: array
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-array_entities_OutBlogSimple:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.OutBlogSimple'
+        type: array
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-array_entities_Tag:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.Tag'
+        type: array
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-array_entities_Topic:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.Topic'
+        type: array
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-entities_JWT:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.JWT'
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-entities_OutBlog:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.OutBlog'
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-entities_RowsAffected:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.RowsAffected'
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-entities_Tag:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.Tag'
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-entities_Topic:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.Topic'
+      status:
+        type: integer
+    type: object
+  entities.RetSuccess-string:
+    properties:
+      error:
+        type: string
+      msg:
+        type: string
+      status:
+        type: integer
+    type: object
   entities.RowsAffected:
     properties:
       affectedRows:
@@ -270,7 +270,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-string'
+            $ref: '#/definitions/entities.RetSuccess-string'
         "403":
           description: Forbidden
           schema:
@@ -294,22 +294,29 @@ paths:
         in: query
         name: simple
         type: boolean
-      - description: 'filter by topic ids, can be multiple ids. ex: ?topic=1&topic=2'
+      - collectionFormat: multi
+        description: 'filter by topic ids, return blogs that have relation with all
+          specified topics. ex: ?topic=1&topic=2'
         in: query
+        items:
+          type: integer
         name: topic
-        type: integer
-      - description: 'filter by tag ids, can be multiple ids, must be use with topic.
-          ex: ?tag=1&tag=2'
+        type: array
+      - collectionFormat: multi
+        description: 'filter by tag ids, return blogs that have relation with all
+          specified tags, CAN ONLY BE USED IN COMBINATION WITH TOPIC. ex: ?tag=1&tag=2'
         in: query
+        items:
+          type: integer
         name: tag
-        type: integer
+        type: array
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-array_entities_OutBlogSimple'
+            $ref: '#/definitions/entities.RetSuccess-array_entities_OutBlogSimple'
         "400":
           description: Bad Request
           schema:
@@ -342,7 +349,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_OutBlog'
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
         "400":
           description: Bad Request
           schema:
@@ -375,7 +382,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_RowsAffected'
+            $ref: '#/definitions/entities.RetSuccess-entities_RowsAffected'
         "400":
           description: Bad Request
           schema:
@@ -412,7 +419,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_OutBlog'
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
         "400":
           description: Bad Request
           schema:
@@ -450,7 +457,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_OutBlog'
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
         "400":
           description: Bad Request
           schema:
@@ -483,7 +490,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_OutBlog'
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
         "400":
           description: Bad Request
           schema:
@@ -515,7 +522,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_OutBlog'
+            $ref: '#/definitions/entities.RetSuccess-entities_OutBlog'
         "400":
           description: Bad Request
           schema:
@@ -548,7 +555,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_JWT'
+            $ref: '#/definitions/entities.RetSuccess-entities_JWT'
         "400":
           description: Bad Request
           schema:
@@ -586,7 +593,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-string'
+            $ref: '#/definitions/entities.RetSuccess-string'
         "403":
           description: Forbidden
           schema:
@@ -618,7 +625,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-array_entities_Tag'
+            $ref: '#/definitions/entities.RetSuccess-array_entities_Tag'
         "500":
           description: Internal Server Error
           schema:
@@ -643,7 +650,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_Tag'
+            $ref: '#/definitions/entities.RetSuccess-entities_Tag'
         "400":
           description: Bad Request
           schema:
@@ -672,7 +679,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_RowsAffected'
+            $ref: '#/definitions/entities.RetSuccess-entities_RowsAffected'
         "400":
           description: Bad Request
           schema:
@@ -704,7 +711,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_Tag'
+            $ref: '#/definitions/entities.RetSuccess-entities_Tag'
         "400":
           description: Bad Request
           schema:
@@ -742,7 +749,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_Tag'
+            $ref: '#/definitions/entities.RetSuccess-entities_Tag'
         "400":
           description: Bad Request
           schema:
@@ -769,7 +776,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-array_entities_Topic'
+            $ref: '#/definitions/entities.RetSuccess-array_entities_Topic'
         "500":
           description: Internal Server Error
           schema:
@@ -794,7 +801,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_Topic'
+            $ref: '#/definitions/entities.RetSuccess-entities_Topic'
         "400":
           description: Bad Request
           schema:
@@ -823,7 +830,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_RowsAffected'
+            $ref: '#/definitions/entities.RetSuccess-entities_RowsAffected'
         "400":
           description: Bad Request
           schema:
@@ -855,7 +862,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_Topic'
+            $ref: '#/definitions/entities.RetSuccess-entities_Topic'
         "400":
           description: Bad Request
           schema:
@@ -893,7 +900,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blog_entities.RetSuccess-entities_Topic'
+            $ref: '#/definitions/entities.RetSuccess-entities_Topic'
         "400":
           description: Bad Request
           schema:

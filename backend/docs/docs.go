@@ -41,7 +41,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-string"
+                            "$ref": "#/definitions/entities.RetSuccess-string"
                         }
                     },
                     "403": {
@@ -82,14 +82,22 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "filter by topic ids, can be multiple ids. ex: ?topic=1\u0026topic=2",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "filter by topic ids, return blogs that have relation with all specified topics. ex: ?topic=1\u0026topic=2",
                         "name": "topic",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "filter by tag ids, can be multiple ids, must be use with topic. ex: ?tag=1\u0026tag=2",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "filter by tag ids, return blogs that have relation with all specified tags, CAN ONLY BE USED IN COMBINATION WITH TOPIC. ex: ?tag=1\u0026tag=2",
                         "name": "tag",
                         "in": "query"
                     }
@@ -98,7 +106,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-array_entities_OutBlogSimple"
+                            "$ref": "#/definitions/entities.RetSuccess-array_entities_OutBlogSimple"
                         }
                     },
                     "400": {
@@ -148,7 +156,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
                         }
                     },
                     "400": {
@@ -198,7 +206,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
                         }
                     },
                     "400": {
@@ -246,7 +254,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
                         }
                     },
                     "400": {
@@ -303,7 +311,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
                         }
                     },
                     "400": {
@@ -360,7 +368,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
                         }
                     },
                     "400": {
@@ -408,7 +416,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_RowsAffected"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_RowsAffected"
                         }
                     },
                     "400": {
@@ -458,7 +466,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_JWT"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_JWT"
                         }
                     },
                     "400": {
@@ -514,7 +522,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-string"
+                            "$ref": "#/definitions/entities.RetSuccess-string"
                         }
                     },
                     "403": {
@@ -563,7 +571,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-array_entities_Tag"
+                            "$ref": "#/definitions/entities.RetSuccess-array_entities_Tag"
                         }
                     },
                     "500": {
@@ -601,7 +609,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Tag"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_Tag"
                         }
                     },
                     "400": {
@@ -645,7 +653,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Tag"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_Tag"
                         }
                     },
                     "400": {
@@ -702,7 +710,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Tag"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_Tag"
                         }
                     },
                     "400": {
@@ -750,7 +758,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_RowsAffected"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_RowsAffected"
                         }
                     },
                     "400": {
@@ -791,7 +799,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-array_entities_Topic"
+                            "$ref": "#/definitions/entities.RetSuccess-array_entities_Topic"
                         }
                     },
                     "500": {
@@ -829,7 +837,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Topic"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_Topic"
                         }
                     },
                     "400": {
@@ -873,7 +881,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Topic"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_Topic"
                         }
                     },
                     "400": {
@@ -930,7 +938,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_Topic"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_Topic"
                         }
                     },
                     "400": {
@@ -978,7 +986,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blog_entities.RetSuccess-entities_RowsAffected"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_RowsAffected"
                         }
                     },
                     "400": {
@@ -1004,158 +1012,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "blog_entities.RetSuccess-array_entities_OutBlog": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.OutBlog"
-                    }
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "blog_entities.RetSuccess-array_entities_OutBlogSimple": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.OutBlogSimple"
-                    }
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "blog_entities.RetSuccess-array_entities_Tag": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.Tag"
-                    }
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "blog_entities.RetSuccess-array_entities_Topic": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.Topic"
-                    }
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "blog_entities.RetSuccess-entities_JWT": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "$ref": "#/definitions/entities.JWT"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "blog_entities.RetSuccess-entities_OutBlog": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "$ref": "#/definitions/entities.OutBlog"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "blog_entities.RetSuccess-entities_RowsAffected": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "$ref": "#/definitions/entities.RowsAffected"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "blog_entities.RetSuccess-entities_Tag": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "$ref": "#/definitions/entities.Tag"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "blog_entities.RetSuccess-entities_Topic": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "$ref": "#/definitions/entities.Topic"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "blog_entities.RetSuccess-string": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
         "entities.InTag": {
             "type": "object",
             "properties": {
@@ -1319,6 +1175,158 @@ const docTemplate = `{
             }
         },
         "entities.RetFailed": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-array_entities_OutBlog": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.OutBlog"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-array_entities_OutBlogSimple": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.OutBlogSimple"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-array_entities_Tag": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Tag"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-array_entities_Topic": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Topic"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-entities_JWT": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/entities.JWT"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-entities_OutBlog": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/entities.OutBlog"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-entities_RowsAffected": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/entities.RowsAffected"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-entities_Tag": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/entities.Tag"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-entities_Topic": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "msg": {
+                    "$ref": "#/definitions/entities.Topic"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.RetSuccess-string": {
             "type": "object",
             "properties": {
                 "error": {
