@@ -116,21 +116,22 @@ func syncAll(ctx context.Context, baseURL, sourcePath string, batchSize int) err
 		// prepare blogs for CRUD operations
 		existingTopics := slices.Concat[[]entities.Topic](newTopics, updatedTopics, groupedTopics.noop)
 		existingTags := slices.Concat[[]entities.Tag](newTags, updatedTags, groupedTags.noop)
-		groupedInBlogs, err := transformBlogs(existingTags, existingTopics, groupedBlogs)
+		blogTransformHelper := NewBlogTransformHelper(existingTags, existingTopics, sourcePath)
+		transformedBlogs, err := blogTransformHelper.Transform(groupedBlogs)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: transform blogs failed: %w", err)
 			return
 		}
 
-		if err := syncHelper.CreateBlogs(groupedInBlogs.create); err != nil {
+		if err := syncHelper.CreateBlogs(transformedBlogs.create); err != nil {
 			processErr <- fmt.Errorf("syncAll: create blogs failed: %w", err)
 			return
 		}
-		if err := syncHelper.UpdateBlogs(groupedInBlogs.update); err != nil {
+		if err := syncHelper.UpdateBlogs(transformedBlogs.update); err != nil {
 			processErr <- fmt.Errorf("syncAll: create blogs failed: %w", err)
 			return
 		}
-		if err := syncHelper.DeleteBlogs(groupedInBlogs.delete); err != nil {
+		if err := syncHelper.DeleteBlogs(transformedBlogs.delete); err != nil {
 			processErr <- fmt.Errorf("syncAll: create blogs failed: %w", err)
 			return
 		}

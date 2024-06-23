@@ -3,14 +3,8 @@ package main
 
 import (
 	"blog/entities"
-	"errors"
 	"log/slog"
 	"slices"
-)
-
-var (
-	BlogTagReferenceError   = errors.New("referece error for blog.tags")
-	BlogTopicReferenceError = errors.New("referece error for blog.topics")
 )
 
 type GroupTypes interface {
@@ -213,24 +207,4 @@ func blogEqual(localBlog BlogInfo, remoteBlog entities.OutBlogSimple) bool {
 		return false
 	}
 	return true
-}
-
-// map topics and tag names to their id
-// if there is no match, record it and return an error
-func transformBlogs(tags []entities.Tag, topics []entities.Topic, blogs BlogGroup[BlogInfo]) (BlogGroup[entities.InBlog], error) {
-	slog.Debug("transformBlogs")
-
-	// prepare for lookup
-	topicMap := map[string]entities.Topic{}
-	for _, topic := range topics {
-		topicMap[topic.Slug] = topic
-	}
-	tagMap := map[string]entities.Tag{}
-	for _, tag := range tags {
-		tagMap[tag.Slug] = tag
-	}
-
-	// go though all the blogs, and transform them
-
-	return BlogGroup[entities.InBlog]{}, nil
 }
