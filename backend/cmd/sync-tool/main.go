@@ -22,6 +22,7 @@ func main() {
 		url        string
 		sourcePath string
 		verbose    int
+		batchSize  int
 	)
 
 	// use custom client to set timeout
@@ -43,6 +44,12 @@ func main() {
 			Usage: "verbose, shows debug log",
 			Count: &verbose,
 		},
+		&cli.IntFlag{
+			Name:        "bs",
+			Value:       5,
+			Usage:       "max `SIZE` of concurrent requests",
+			Destination: &batchSize,
+		},
 	}
 
 	ctxCancel, cancel := context.WithCancel(context.Background())
@@ -58,7 +65,7 @@ func main() {
 				Usage:                  "Sync everything",
 				UseShortOptionHandling: true,
 				Action: func(cCtx *cli.Context) error {
-					return syncAll(ctxCancel, url, sourcePath)
+					return syncAll(ctxCancel, url, sourcePath, batchSize)
 				},
 				Flags: commonFlags,
 				Before: func(ctx *cli.Context) error {

@@ -1,13 +1,15 @@
 package main
 
 import (
+	"blog/entities"
 	"context"
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"slices"
 )
 
-func syncAll(ctx context.Context, baseURL, sourcePath string) error {
+func syncAll(ctx context.Context, baseURL, sourcePath string, batchSize int) error {
 	slog.Info("syncAll")
 
 	loginDone := make(chan bool, 1)
@@ -24,7 +26,7 @@ func syncAll(ctx context.Context, baseURL, sourcePath string) error {
 		}
 		slog.Debug("got jwt", "token", jwt)
 
-		syncHelper := NewSyncHelper(baseURL, jwt)
+		syncHelper := NewSyncHelper(baseURL, jwt, batchSize)
 
 		// get data from server
 		tags, err := syncHelper.GetAllTags()
@@ -86,28 +88,35 @@ func syncAll(ctx context.Context, baseURL, sourcePath string) error {
 
 		// sync
 		// create tags and topics, also fills in their ids for later use
-		if err := syncHelper.CreateTopics(groupedTopics.create); err != nil {
+		newTopics, err := syncHelper.CreateTopics(groupedTopics.create)
+		if err != nil {
 			processErr <- fmt.Errorf("syncAll: create topics failed: %w", err)
 			return
 		}
-		if err := syncHelper.CreateTags(groupedTags.create); err != nil {
+
+		newTags, err := syncHelper.CreateTags(groupedTags.create)
+		if err != nil {
 			processErr <- fmt.Errorf("syncAll: create tags failed: %w", err)
 			return
 		}
 
 		// update tags and topics
-		if err := syncHelper.UpdateTopics(groupedTopics.update); err != nil {
+		updatedTopics, err := syncHelper.UpdateTopics(groupedTopics.update)
+		if err != nil {
 			processErr <- fmt.Errorf("syncAll: update topics failed: %w", err)
 			return
 		}
-		if err := syncHelper.UpdateTags(groupedTags.update); err != nil {
+		updatedTags, err := syncHelper.UpdateTags(groupedTags.update)
+		if err != nil {
 			processErr <- fmt.Errorf("syncAll: update tags failed: %w", err)
 			return
 		}
 
 		// blogs
 		// prepare blogs for CRUD operations
-		groupedInBlogs, err := transformBlogs(groupedTags, groupedTopics, groupedBlogs)
+		existingTopics := slices.Concat[[]entities.Topic](newTopics, updatedTopics, groupedTopics.noop)
+		existingTags := slices.Concat[[]entities.Tag](newTags, updatedTags, groupedTags.noop)
+		groupedInBlogs, err := transformBlogs(existingTags, existingTopics, groupedBlogs)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: transform blogs failed: %w", err)
 			return

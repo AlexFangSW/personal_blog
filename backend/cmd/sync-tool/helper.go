@@ -17,13 +17,25 @@ func drainAndClose(body io.ReadCloser) error {
 }
 
 type SyncHelper struct {
-	baseURL string
-	token   string // jwt token
+	baseURL   string
+	token     string // jwt token
+	batchSize int
 }
 
-func NewSyncHelper(baseURL, token string) SyncHelper {
+func NewSyncHelper(baseURL, token string, batchSize int) SyncHelper {
 	return SyncHelper{
-		baseURL: baseURL,
-		token:   token,
+		baseURL:   baseURL,
+		token:     token,
+		batchSize: batchSize,
 	}
+}
+
+func batch[T any](inpt []T, size int, out chan<- []T) {
+	inptLength := len(inpt)
+	for i := 0; i < inptLength; i += size {
+		upperBound := min(i+size, inptLength)
+		out <- inpt[i:upperBound:upperBound]
+	}
+	close(out)
+	return
 }

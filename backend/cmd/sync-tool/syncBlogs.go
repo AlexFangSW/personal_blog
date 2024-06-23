@@ -8,12 +8,19 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 )
 
 func (s SyncHelper) GetAllBlogs() (oBlog []entities.OutBlogSimple, oErr error) {
 	slog.Debug("GetAllBlogs")
 
-	req, err := http.NewRequest(http.MethodGet, s.baseURL+"/blogs", nil)
+	apiURL, err := url.JoinPath(s.baseURL, "blogs")
+	if err != nil {
+		return []entities.OutBlogSimple{}, fmt.Errorf("GetAllBlogs: join api url failed: %w", err)
+	}
+	slog.Debug("api url", "url", apiURL)
+
+	req, err := http.NewRequest(http.MethodGet, apiURL, nil)
 	if err != nil {
 		return []entities.OutBlogSimple{}, fmt.Errorf("GetAllBlogs: create new request failed: %w", err)
 	}

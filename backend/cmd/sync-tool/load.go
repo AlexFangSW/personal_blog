@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gosimple/slug"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,13 +36,31 @@ func loadMetaFile(metaFile string) (MetaFileContent, error) {
 }
 
 type BlogFrontmatter struct {
-	ID          int      // this will be loaded separately
-	Title       string   `yaml:"title"`
-	Description string   `yaml:"description"`
-	Pined       bool     `yaml:"pined"`
-	Visible     bool     `yaml:"visible"`
-	Tags        []string `yaml:"tags"`   // slug
-	Topics      []string `yaml:"topics"` // slug
+	ID          int    // this will be loaded separately
+	Title       string `yaml:"title"`
+	Description string `yaml:"description"`
+	Pined       bool   `yaml:"pined"`
+	Visible     bool   `yaml:"visible"`
+
+	// will be transformed into slugs
+	Tags   []string `yaml:"tags"`
+	Topics []string `yaml:"topics"`
+}
+
+func (b *BlogFrontmatter) slugify() {
+	// tags
+	newTags := make([]string, 0, len(b.Tags))
+	for _, tag := range b.Tags {
+		newTags = append(newTags, slug.Make(tag))
+	}
+	b.Tags = newTags
+
+	// topics
+	newTopics := make([]string, 0, len(b.Tags))
+	for _, topic := range b.Topics {
+		newTopics = append(newTopics, slug.Make(topic))
+	}
+	b.Topics = newTopics
 }
 
 type BlogInfo struct {
@@ -52,6 +71,7 @@ type BlogInfo struct {
 
 func NewBlogInfo(frontmatter BlogFrontmatter, content string, filename string) BlogInfo {
 	content_md5 := fmt.Sprintf("%x", md5.Sum([]byte(content)))
+	frontmatter.slugify()
 	return BlogInfo{
 		Frontmatter: frontmatter,
 		Content_md5: content_md5,
