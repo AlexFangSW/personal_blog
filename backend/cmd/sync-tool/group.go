@@ -139,6 +139,8 @@ func groupBlogs(localBlogs []BlogInfo, blogs []entities.OutBlogSimple) (BlogGrou
 
 	result := BlogGroup[BlogInfo]{}
 	for _, localBlog := range localBlogs {
+		// if the blogs hasen't been created yet, the id will be '0',
+		// which should match nothing as well
 		remoteBlog, ok := blogMap[localBlog.Frontmatter.ID]
 
 		// the record dosen't exist on remote, we should create it.

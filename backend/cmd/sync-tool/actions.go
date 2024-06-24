@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"path"
 	"path/filepath"
 	"slices"
 )
@@ -26,7 +27,7 @@ func syncAll(ctx context.Context, baseURL, sourcePath string, batchSize int) err
 		}
 		slog.Debug("got jwt", "token", jwt)
 
-		syncHelper := NewSyncHelper(baseURL, jwt, batchSize)
+		syncHelper := NewSyncHelper(baseURL, jwt, batchSize, sourcePath)
 
 		// get data from server
 		tags, err := syncHelper.GetAllTags()
@@ -116,23 +117,24 @@ func syncAll(ctx context.Context, baseURL, sourcePath string, batchSize int) err
 		// prepare blogs for CRUD operations
 		existingTopics := slices.Concat[[]entities.Topic](newTopics, updatedTopics, groupedTopics.noop)
 		existingTags := slices.Concat[[]entities.Tag](newTags, updatedTags, groupedTags.noop)
-		blogTransformHelper := NewBlogTransformHelper(existingTags, existingTopics, sourcePath)
-		transformedBlogs, err := blogTransformHelper.Transform(groupedBlogs)
+		blogMaper := NewBlogMaper(existingTags, existingTopics, sourcePath)
+		updatedBlogs, err := blogMaper.MapIDs(groupedBlogs)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: transform blogs failed: %w", err)
 			return
 		}
 
-		if err := syncHelper.CreateBlogs(transformedBlogs.create); err != nil {
+		newIDMapping, err := syncHelper.CreateBlogs(updatedBlogs.create)
+		if err != nil {
 			processErr <- fmt.Errorf("syncAll: create blogs failed: %w", err)
 			return
 		}
-		if err := syncHelper.UpdateBlogs(transformedBlogs.update); err != nil {
-			processErr <- fmt.Errorf("syncAll: create blogs failed: %w", err)
+		if err := syncHelper.UpdateBlogs(updatedBlogs.update); err != nil {
+			processErr <- fmt.Errorf("syncAll: update blogs failed: %w", err)
 			return
 		}
-		if err := syncHelper.DeleteBlogs(transformedBlogs.delete); err != nil {
-			processErr <- fmt.Errorf("syncAll: create blogs failed: %w", err)
+		if err := syncHelper.DeleteBlogs(updatedBlogs.delete); err != nil {
+			processErr <- fmt.Errorf("syncAll: delete blogs failed: %w", err)
 			return
 		}
 
@@ -143,6 +145,17 @@ func syncAll(ctx context.Context, baseURL, sourcePath string, batchSize int) err
 		}
 		if err := syncHelper.DeleteTags(groupedTags.delete); err != nil {
 			processErr <- fmt.Errorf("syncAll: delete tags failed: %w", err)
+			return
+		}
+
+		// update blog id mapping
+		existingBlogs := slices.Concat[[]BlogInfo](
+			groupedBlogs.create,
+			groupedBlogs.update,
+			groupedBlogs.noop,
+		)
+		if err := updateIDMapping(existingBlogs, newIDMapping, path.Join(sourcePath, "ids.json")); err != nil {
+			processErr <- fmt.Errorf("syncAll: updated id mapping failed: %w", err)
 			return
 		}
 

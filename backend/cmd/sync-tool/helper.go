@@ -26,16 +26,18 @@ func drainAndClose(body io.ReadCloser) error {
 }
 
 type SyncHelper struct {
-	baseURL   string
-	token     string // jwt token
-	batchSize int
+	baseURL    string
+	token      string // jwt token
+	batchSize  int
+	sourcePath string
 }
 
-func NewSyncHelper(baseURL, token string, batchSize int) SyncHelper {
+func NewSyncHelper(baseURL, token string, batchSize int, sourcePath string) SyncHelper {
 	return SyncHelper{
-		baseURL:   baseURL,
-		token:     token,
-		batchSize: batchSize,
+		baseURL:    baseURL,
+		token:      token,
+		batchSize:  batchSize,
+		sourcePath: sourcePath,
 	}
 }
 
@@ -49,15 +51,14 @@ func batch[T any](inpt []T, size int, out chan<- []T) {
 	return
 }
 
-// format to store blog transform errors
-type TransformError struct {
+type MaperError struct {
 	Ref                BlogInfo `json:"ref"`
 	NoneMatchingTags   []string `json:"noneMatchingTags"`   // slug
 	NoneMatchingTopics []string `json:"noneMatchingTopics"` // slug
 }
 
-func NewTransformError(ref BlogInfo, tags, topics []string) TransformError {
-	return TransformError{
+func NewMaperError(ref BlogInfo, tags, topics []string) MaperError {
+	return MaperError{
 		Ref:                ref,
 		NoneMatchingTags:   tags,
 		NoneMatchingTopics: topics,
@@ -65,14 +66,15 @@ func NewTransformError(ref BlogInfo, tags, topics []string) TransformError {
 }
 
 // this struct should only be used once
-type BlogTransformHelper struct {
+// used for mapping tag and topic slugs to their ids
+type BlogMaper struct {
 	tagMap            map[string]int
 	topicMap          map[string]int
-	accumulatedErrors []TransformError
+	accumulatedErrors []MaperError
 	errorFilePath     string
 }
 
-func NewBlogTransformHelper(tags []entities.Tag, topics []entities.Topic, sourcePath string) BlogTransformHelper {
+func NewBlogMaper(tags []entities.Tag, topics []entities.Topic, sourcePath string) BlogMaper {
 	// prepare for lookup
 	topicMap := map[string]int{}
 	for _, topic := range topics {
@@ -83,43 +85,43 @@ func NewBlogTransformHelper(tags []entities.Tag, topics []entities.Topic, source
 		tagMap[tag.Slug] = tag.ID
 	}
 
-	return BlogTransformHelper{
+	return BlogMaper{
 		tagMap:        tagMap,
 		topicMap:      topicMap,
-		errorFilePath: path.Join(sourcePath, "blog-transform-error.json"),
+		errorFilePath: path.Join(sourcePath, "blog-map-error.json"),
 	}
 }
 
-// transform the blog the a format that the server api accepts.
-func (b *BlogTransformHelper) Transform(blogs BlogGroup[BlogInfo]) (BlogGroup[entities.InBlog], error) {
-	slog.Debug("Transform")
+// map topic and tag slugs to their ids
+func (b *BlogMaper) MapIDs(blogs BlogGroup[BlogInfo]) (BlogGroup[BlogInfo], error) {
+	slog.Debug("MapIDs")
 
-	result := BlogGroup[entities.InBlog]{}
+	result := BlogGroup[BlogInfo]{}
 
 	defer func() {
 		slog.Debug(
-			"blog transform result",
-			"transformed blogs", len(result.create)+len(result.update),
+			"map id result",
+			"processed blogs", len(result.create)+len(result.update),
 			"errors", len(b.accumulatedErrors),
 		)
 	}()
 
-	result.create = b.transform(blogs.create)
-	result.update = b.transform(blogs.update)
+	result.create = b.mapIds(blogs.create)
+	result.update = b.mapIds(blogs.update)
 	result.delete = blogs.delete
 
 	if len(b.accumulatedErrors) > 0 {
 		if err := b.saveError(); err != nil {
-			return BlogGroup[entities.InBlog]{}, fmt.Errorf("Transform: save error failed: %w", err)
+			return BlogGroup[BlogInfo]{}, fmt.Errorf("MapIDs: save error failed: %w", err)
 		}
-		return BlogGroup[entities.InBlog]{}, BlogReferenceError
+		return BlogGroup[BlogInfo]{}, BlogReferenceError
 	}
 
 	return result, nil
 }
 
 // save the error record to a file
-func (b BlogTransformHelper) saveError() error {
+func (b BlogMaper) saveError() error {
 	data, err := json.Marshal(b.accumulatedErrors)
 	if err != nil {
 		return fmt.Errorf("saveError: encode accumulated error failed: %w", err)
@@ -133,13 +135,13 @@ func (b BlogTransformHelper) saveError() error {
 
 // map topics and tag names to their id
 // if there is no match, record it and return an error
-func (b *BlogTransformHelper) transform(blogs []BlogInfo) []entities.InBlog {
-	slog.Debug("transform")
+func (b *BlogMaper) mapIds(blogs []BlogInfo) []BlogInfo {
+	slog.Debug("mapIds")
 
-	result := []entities.InBlog{}
+	result := []BlogInfo{}
 	for _, blog := range blogs {
-		slog.Debug("transforming blog", "blog", blog.Filename)
-		currErr := NewTransformError(blog, []string{}, []string{})
+		slog.Debug("map ids", "blog", blog.Filename)
+		currErr := NewMaperError(blog, []string{}, []string{})
 
 		// check if the blog contains any topic or tags that doesn't exist
 		tagIDs := []int{}
@@ -162,7 +164,7 @@ func (b *BlogTransformHelper) transform(blogs []BlogInfo) []entities.InBlog {
 			topicIDs = append(topicIDs, id)
 		}
 
-		// we don't need to do a full transformation after we hit an error,
+		// we don't need to finish this after we hit an error,
 		// but we will still loop through all the blogs to get a complete error report.
 		if len(currErr.NoneMatchingTags) > 0 ||
 			len(currErr.NoneMatchingTopics) > 0 {
@@ -172,20 +174,10 @@ func (b *BlogTransformHelper) transform(blogs []BlogInfo) []entities.InBlog {
 			continue
 		}
 
-		// we still won't load the entire content
-		newBlog := entities.NewBlog(
-			blog.Frontmatter.Title,
-			"",
-			blog.Frontmatter.Description,
-			blog.Frontmatter.Pined,
-			blog.Frontmatter.Visible,
-		)
-		newInBlog := entities.NewInBlog(
-			*newBlog,
-			tagIDs,
-			topicIDs,
-		)
-		result = append(result, *newInBlog)
+		blog.Frontmatter.TagIDs = tagIDs
+		blog.Frontmatter.TopicIDs = topicIDs
+
+		result = append(result, blog)
 	}
 	return result
 }

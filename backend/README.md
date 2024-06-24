@@ -134,3 +134,8 @@ Only someone with direct access to the database can register.
     - command to manually vacuum "db" and "wal"
 - Refector server run() (model handler buildup)
 - Frontend... nice links (/<id>/<slug>)
+
+## BUG
+- sync-tool:
+    - update tags not have extra update...
+    - batch needs to actually wait for last batch to finish

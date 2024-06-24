@@ -193,7 +193,7 @@ func (s SyncHelper) UpdateTags(tags []entities.Tag) ([]entities.Tag, error) {
 				}
 
 				defer func() {
-					oErr = errors.Join(oErr, drainAndClose(req.Body))
+					oErr = errors.Join(oErr, drainAndClose(res.Body))
 				}()
 
 				// process response and send it through the channel
@@ -234,5 +234,89 @@ func (s SyncHelper) UpdateTags(tags []entities.Tag) ([]entities.Tag, error) {
 	}
 }
 func (s SyncHelper) DeleteTags(tags []entities.Tag) error {
-	return nil
+	slog.Debug("DeleteTags")
+
+	batchData := make(chan []entities.Tag, 1)
+	go batch[entities.Tag](tags, s.batchSize, batchData)
+
+	requestErr := make(chan error, 1)
+	successResponse := make(chan bool, len(tags))
+
+	// seperate into batches
+	for currentBatch := range batchData {
+		// there is no 'bulk api' for now, so we just create tags one by one
+		for _, tag := range currentBatch {
+			go func(t entities.Tag) {
+				var oErr error
+				defer func() {
+					if oErr != nil {
+						requestErr <- oErr
+					}
+				}()
+
+				apiURL, err := url.JoinPath(s.baseURL, "tags", strconv.Itoa(t.ID))
+				if err != nil {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTags: join api url failed for tag %q: %w", t.Name, err))
+					return
+				}
+				slog.Debug("api url", "url", apiURL)
+
+				req, err := http.NewRequest(http.MethodDelete, apiURL, nil)
+				if err != nil {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTags: new request failed for tag %q: %w", t.Name, err))
+					return
+				}
+				req.Header.Set("content-type", "application/json")
+				req.Header.Set("Authorization", "Bearer "+s.token)
+
+				res, err := httpClient.Do(req)
+				if err != nil {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTags: requset failed for tag %q: %w", t.Name, err))
+					return
+				}
+
+				defer func() {
+					oErr = errors.Join(oErr, drainAndClose(res.Body))
+				}()
+
+				// process response and send it through the channel
+				resBody, err := io.ReadAll(res.Body)
+				if err != nil {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTags: read response body failed for tag %q: %w", t.Name, err))
+					return
+				}
+				if res.StatusCode >= 400 {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTags: status code %d for tag %q: %s", res.StatusCode, t.Name, string(resBody)))
+					return
+				}
+				resData := entities.RetSuccess[entities.RowsAffected]{}
+				if err := json.Unmarshal(resBody, &resData); err != nil {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTags: parse response body failed for tag %q: %w", t.Name, err))
+					return
+				}
+
+				if resData.Msg.AffectedRows != 1 {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTags: should only delete one tag %q", t.Name))
+					return
+				}
+				successResponse <- true
+
+			}(tag)
+		}
+	}
+
+	// wait for all requests to finish or if an error occurs
+	successCount := 0
+	for {
+		if successCount == len(tags) {
+			slog.Debug("deleted tags", "count", successCount)
+			return nil
+		}
+		select {
+		case <-successResponse:
+			successCount++
+		case err := <-requestErr:
+			return err
+		}
+	}
 }

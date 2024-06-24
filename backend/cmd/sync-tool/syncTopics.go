@@ -194,7 +194,7 @@ func (s SyncHelper) UpdateTopics(topics []entities.Topic) ([]entities.Topic, err
 				}
 
 				defer func() {
-					oErr = errors.Join(oErr, drainAndClose(req.Body))
+					oErr = errors.Join(oErr, drainAndClose(res.Body))
 				}()
 
 				// process response and send it through the channel
@@ -235,5 +235,90 @@ func (s SyncHelper) UpdateTopics(topics []entities.Topic) ([]entities.Topic, err
 	}
 }
 func (s SyncHelper) DeleteTopics(topics []entities.Topic) error {
-	return nil
+	slog.Debug("DeleteTopics")
+
+	batchData := make(chan []entities.Topic, 1)
+	go batch[entities.Topic](topics, s.batchSize, batchData)
+
+	requestErr := make(chan error, 1)
+	successResponse := make(chan bool, len(topics))
+
+	// seperate into batches
+	for currentBatch := range batchData {
+		// there is no 'bulk api' for now, so we just create topics one by one
+		for _, topic := range currentBatch {
+			go func(t entities.Topic) {
+				var oErr error
+				defer func() {
+					if oErr != nil {
+						requestErr <- oErr
+					}
+				}()
+
+				apiURL, err := url.JoinPath(s.baseURL, "topics", strconv.Itoa(t.ID))
+				if err != nil {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTopics: join api url failed for topic %q: %w", t.Name, err))
+					return
+				}
+				slog.Debug("api url", "url", apiURL)
+
+				req, err := http.NewRequest(http.MethodDelete, apiURL, nil)
+				if err != nil {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTopics: new request failed for topic %q: %w", t.Name, err))
+					return
+				}
+				req.Header.Set("content-type", "application/json")
+				req.Header.Set("Authorization", "Bearer "+s.token)
+
+				res, err := httpClient.Do(req)
+				if err != nil {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTopics: requset failed for topic %q: %w", t.Name, err))
+					return
+				}
+
+				defer func() {
+					oErr = errors.Join(oErr, drainAndClose(res.Body))
+				}()
+
+				// process response and send it through the channel
+				resBody, err := io.ReadAll(res.Body)
+				if err != nil {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTopics: read response body failed for topic %q: %w", t.Name, err))
+					return
+				}
+				if res.StatusCode >= 400 {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTopics: status code %d for topic %q: %s", res.StatusCode, t.Name, string(resBody)))
+					return
+				}
+				resData := entities.RetSuccess[entities.RowsAffected]{}
+				if err := json.Unmarshal(resBody, &resData); err != nil {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTopics: parse response body failed for topic %q: %w", t.Name, err))
+					return
+				}
+
+				if resData.Msg.AffectedRows != 1 {
+					oErr = errors.Join(oErr, fmt.Errorf("DeleteTopics: should only delete one topic %q", t.Name))
+					return
+				}
+
+				successResponse <- true
+
+			}(topic)
+		}
+	}
+
+	// wait for all requests to finish or if an error occurs
+	successCount := 0
+	for {
+		if successCount == len(topics) {
+			slog.Debug("deleted topics", "count", successCount)
+			return nil
+		}
+		select {
+		case <-successResponse:
+			successCount++
+		case err := <-requestErr:
+			return err
+		}
+	}
 }

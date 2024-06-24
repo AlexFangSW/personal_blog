@@ -45,6 +45,10 @@ type BlogFrontmatter struct {
 	// will be transformed into slugs
 	Tags   []string `yaml:"tags"`
 	Topics []string `yaml:"topics"`
+
+	// filled in after transform step
+	TagIDs   []int
+	TopicIDs []int
 }
 
 func (b *BlogFrontmatter) slugify() {
