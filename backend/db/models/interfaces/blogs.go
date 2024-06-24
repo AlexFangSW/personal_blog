@@ -22,5 +22,6 @@ type BlogsModel interface {
 	AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicID, tagID []int) ([]entities.Blog, error)
 	SoftDelete(ctx context.Context, tx *sql.Tx, id int) (int, error)
 	Delete(ctx context.Context, tx *sql.Tx, id int) (int, error)
+	DeleteNow(ctx context.Context, tx *sql.Tx, id int) (int, error)
 	RestoreDeleted(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error)
 }

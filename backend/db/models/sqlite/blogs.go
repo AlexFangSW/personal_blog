@@ -535,6 +535,29 @@ func (b *Blogs) Delete(ctx context.Context, tx *sql.Tx, id int) (int, error) {
 	return int(affectedRows), nil
 }
 
+func (b *Blogs) DeleteNow(ctx context.Context, tx *sql.Tx, id int) (int, error) {
+	stmt := `
+	DELETE FROM blogs WHERE id = ?;
+	`
+	util.LogQuery(ctx, "DeleteBlogNow:", stmt)
+
+	res, err := tx.ExecContext(
+		ctx,
+		stmt,
+		id,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("DeleteBlogNow: delete blog failed: %w", err)
+	}
+
+	affectedRows, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("DeleteBlogNow: get affected rows failed: %w", err)
+	}
+
+	return int(affectedRows), nil
+}
+
 func (b *Blogs) RestoreDeleted(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error) {
 	stmt := `
 	UPDATE blogs SET deleted_at = "" WHERE id = ? RETURNING *;

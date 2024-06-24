@@ -5,6 +5,8 @@ topics:
   - name: Topic2 
     description: just some descroption for topics 2
   - name: Topic3
+    description: jjust some descroption for topics 3
+  - name: Topic4
     description: just some descroption for topics 3
 
 tags:
@@ -13,4 +15,6 @@ tags:
   - name: Tag2
     description: just some descroption for tag 2
   - name: Tag3
+    description: jjust some descroption for tag 3
+  - name: Tag4
     description: just some descroption for tag 3

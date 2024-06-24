@@ -180,6 +180,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/blogs/delete-now/{id}": {
+            "delete": {
+                "description": "delete blog now, skip soft delete",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "blogs"
+                ],
+                "summary": "Delete blog now",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "target blog id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetSuccess-entities_RowsAffected"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    }
+                }
+            }
+        },
         "/blogs/deleted/{id}": {
             "delete": {
                 "description": "delete blog",
@@ -206,7 +256,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.RetSuccess-entities_OutBlog"
+                            "$ref": "#/definitions/entities.RetSuccess-entities_RowsAffected"
                         }
                     },
                     "400": {
