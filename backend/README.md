@@ -68,7 +68,6 @@ Will need JWT token to use some of the APIs, such as create, update, delete and 
         - [x] Option to return simple output with tags and topics as slugs (orignaly returns full struct of tags and topics)
             - This reduces the size from 1M to about 310K on 1000 blogs with 2 to 3 tags and topics
     - [x] md5 to check if content is the same.
-    - [x] Create blog with given id
 - Tags
     - [x] Basic CRUD operations
     - List filters
@@ -128,14 +127,16 @@ Only someone with direct access to the database can register.
 
 ## TODO
 - Rate Limit (login)
+- sync-tool:
+  - batch needs to actually wait for last batch to finish [doing]
+
 - Remove unecessary pointer return
+- test:
+    - create blog with specified id
 - SQLite
     - activate WAL
     - command to manually vacuum "db" and "wal"
 - Refector server run() (model handler buildup)
+
 - Frontend... nice links (/<id>/<slug>)
 
-## BUG
-- sync-tool:
-    - update tags not have extra update...
-    - batch needs to actually wait for last batch to finish

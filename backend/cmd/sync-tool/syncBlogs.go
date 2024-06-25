@@ -14,6 +14,8 @@ import (
 	"path"
 	"strconv"
 	"strings"
+
+	"golang.org/x/exp/maps"
 )
 
 func (s SyncHelper) GetAllBlogs() (oBlog []entities.OutBlogSimple, oErr error) {
@@ -74,6 +76,80 @@ func NewFileIDMap(filename string, id int) FileIDMap {
 	}
 }
 
+func (s *SyncHelper) createBlogs(inpt BlogInfo) (result FileIDMap, oErr error) {
+	// load content
+	targetFile := path.Join(s.sourcePath, "blogs", inpt.Filename)
+	content, err := os.ReadFile(targetFile)
+	if err != nil {
+		return FileIDMap{}, fmt.Errorf("createBlogs: load content failed for blog %q: %w", inpt.Filename, err)
+	}
+
+	// prepare request body
+	newBlog := entities.NewBlog(
+		inpt.Frontmatter.Title,
+		strings.Split(string(content), "---")[2],
+		inpt.Frontmatter.Description,
+		inpt.Frontmatter.Pined,
+		inpt.Frontmatter.Visible,
+	)
+	newInBlog := entities.NewInBlog(
+		*newBlog,
+		inpt.Frontmatter.TagIDs,
+		inpt.Frontmatter.TopicIDs,
+	)
+
+	body := &bytes.Buffer{}
+	if err := json.NewEncoder(body).Encode(newInBlog); err != nil {
+		return FileIDMap{}, fmt.Errorf("createBlogs: encode body failed for blog %q: %w", inpt.Filename, err)
+	}
+
+	// If we somehow lost our database, we will have to create blogs with their original ids
+	apiURL := ""
+	if inpt.Frontmatter.ID == 0 {
+		apiURL, err = url.JoinPath(s.baseURL, "blogs")
+		if err != nil {
+			return FileIDMap{}, fmt.Errorf("createBlogs: join api url failed for blog %q: %w", inpt.Filename, err)
+		}
+	} else {
+		apiURL, err = url.JoinPath(s.baseURL, "blogs", strconv.Itoa(inpt.Frontmatter.ID))
+		if err != nil {
+			return FileIDMap{}, fmt.Errorf("createBlogs: join api url failed for blog %q: %w", inpt.Filename, err)
+		}
+	}
+	slog.Debug("api url", "url", apiURL)
+
+	req, err := http.NewRequest(http.MethodPost, apiURL, body)
+	if err != nil {
+		return FileIDMap{}, fmt.Errorf("createBlogs: new requset failed for blog %q: %w", inpt.Filename, err)
+	}
+	req.Header.Set("content-type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+s.token)
+
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return FileIDMap{}, fmt.Errorf("createBlogs: requset failed for blog %q: %w", inpt.Filename, err)
+	}
+
+	defer func() {
+		oErr = errors.Join(oErr, drainAndClose(res.Body))
+	}()
+
+	// process response and send it through the channel
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return FileIDMap{}, fmt.Errorf("createBlogs: read response body failed for blog %q: %w", inpt.Filename, err)
+	}
+	if res.StatusCode >= 400 {
+		return FileIDMap{}, fmt.Errorf("createBlogs: status code %d for blog %q: %s", res.StatusCode, inpt.Filename, string(resBody))
+	}
+	resData := entities.RetSuccess[entities.OutBlog]{}
+	if err := json.Unmarshal(resBody, &resData); err != nil {
+		return FileIDMap{}, fmt.Errorf("createBlogs: parse response body failed for blog %q: %w", inpt.Filename, err)
+	}
+
+	return NewFileIDMap(inpt.Filename, resData.Msg.ID), nil
+}
+
 // return a mapping of blog_filename and id
 func (s SyncHelper) CreateBlogs(blogs []BlogInfo) (map[string]int, error) {
 	slog.Debug("CreateBlogs")
@@ -82,121 +158,116 @@ func (s SyncHelper) CreateBlogs(blogs []BlogInfo) (map[string]int, error) {
 	batchData := make(chan []BlogInfo, 1)
 	go batch[BlogInfo](blogs, s.batchSize, batchData)
 
-	requestErr := make(chan error, 1)
-	successResponse := make(chan FileIDMap, len(blogs))
+	result := map[string]int{}
 
 	// seperate into batches
 	for currentBatch := range batchData {
+		requestErr := make(chan error, 1)
+		response := make(chan FileIDMap, len(currentBatch))
+		responseBuffer := map[string]int{}
+
 		for _, blog := range currentBatch {
 			go func(b BlogInfo) {
-				var oErr error
-				defer func() {
-					if oErr != nil {
-						requestErr <- oErr
-					}
-				}()
-
-				// load content
-				targetFile := path.Join(s.sourcePath, "blogs", b.Filename)
-				content, err := os.ReadFile(targetFile)
+				ret, err := s.createBlogs(b)
 				if err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("CreateBlogs: load content failed for blog %q: %w", b.Filename, err))
+					requestErr <- err
 					return
 				}
-
-				// prepare request body
-				newBlog := entities.NewBlog(
-					b.Frontmatter.Title,
-					strings.Split(string(content), "---")[2],
-					b.Frontmatter.Description,
-					b.Frontmatter.Pined,
-					b.Frontmatter.Visible,
-				)
-				newInBlog := entities.NewInBlog(
-					*newBlog,
-					b.Frontmatter.TagIDs,
-					b.Frontmatter.TopicIDs,
-				)
-
-				body := &bytes.Buffer{}
-				if err := json.NewEncoder(body).Encode(newInBlog); err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("CreateBlogs: encode body failed for blog %q: %w", b.Filename, err))
-					return
-				}
-
-				// If we somehow lost our database, we will have to create blogs with their original ids
-				apiURL := ""
-				if b.Frontmatter.ID == 0 {
-					apiURL, err = url.JoinPath(s.baseURL, "blogs")
-					if err != nil {
-						oErr = errors.Join(oErr, fmt.Errorf("CreateBlogs: join api url failed for blog %q: %w", b.Filename, err))
-						return
-					}
-				} else {
-					apiURL, err = url.JoinPath(s.baseURL, "blogs", strconv.Itoa(b.Frontmatter.ID))
-					if err != nil {
-						oErr = errors.Join(oErr, fmt.Errorf("CreateBlogs: join api url failed for blog %q: %w", b.Filename, err))
-						return
-					}
-				}
-				slog.Debug("api url", "url", apiURL)
-
-				req, err := http.NewRequest(http.MethodPost, apiURL, body)
-				if err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("CreateBlogs: new requset failed for blog %q: %w", b.Filename, err))
-					return
-				}
-				req.Header.Set("content-type", "application/json")
-				req.Header.Set("Authorization", "Bearer "+s.token)
-
-				res, err := httpClient.Do(req)
-				if err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("CreateBlogs: requset failed for blog %q: %w", b.Filename, err))
-					return
-				}
-
-				defer func() {
-					oErr = errors.Join(oErr, drainAndClose(res.Body))
-				}()
-
-				// process response and send it through the channel
-				resBody, err := io.ReadAll(res.Body)
-				if err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("CreateBlogs: read response body failed for blog %q: %w", b.Filename, err))
-					return
-				}
-				if res.StatusCode >= 400 {
-					oErr = errors.Join(oErr, fmt.Errorf("CreateBlogs: status code %d for blog %q: %s", res.StatusCode, b.Filename, string(resBody)))
-					return
-				}
-				resData := entities.RetSuccess[entities.OutBlog]{}
-				if err := json.Unmarshal(resBody, &resData); err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("CreateBlogs: parse response body failed for blog %q: %w", b.Filename, err))
-					return
-				}
-
-				successResponse <- NewFileIDMap(b.Filename, resData.Msg.ID)
-
+				response <- ret
 			}(blog)
 		}
-	}
 
-	// wait for all requests to finish or if an error occurs
-	result := map[string]int{}
-	for {
-		if len(result) == len(blogs) {
-			slog.Debug("new blogs", "count", len(result))
-			return result, nil
-		}
-
-		select {
-		case fileMapID := <-successResponse:
-			result[fileMapID.Filename] = fileMapID.Id
-		case err := <-requestErr:
-			return map[string]int{}, err
+		// wait for all requests to finish or if an error occurs
+		for {
+			if len(responseBuffer) == len(currentBatch) {
+				maps.Copy[map[string]int](result, responseBuffer)
+				break
+			}
+			select {
+			case err := <-requestErr:
+				return map[string]int{}, err
+			case res := <-response:
+				responseBuffer[res.Filename] = res.Id
+			}
 		}
 	}
+
+	slog.Debug("created blogs", "count", len(blogs), "id mapping", result)
+	return result, nil
 }
+
+func (s SyncHelper) updateBlogs(inpt BlogInfo) (oErr error) {
+
+	// load content
+	targetFile := path.Join(s.sourcePath, "blogs", inpt.Filename)
+	content, err := os.ReadFile(targetFile)
+	if err != nil {
+		return fmt.Errorf("updateBlogs: load content failed for blog %q: %w", inpt.Filename, err)
+	}
+
+	// prepare request body
+	newBlog := entities.NewBlog(
+		inpt.Frontmatter.Title,
+		strings.Split(string(content), "---")[2],
+		inpt.Frontmatter.Description,
+		inpt.Frontmatter.Pined,
+		inpt.Frontmatter.Visible,
+	)
+	newInBlog := entities.NewInBlog(
+		*newBlog,
+		inpt.Frontmatter.TagIDs,
+		inpt.Frontmatter.TopicIDs,
+	)
+
+	body := &bytes.Buffer{}
+	if err := json.NewEncoder(body).Encode(newInBlog); err != nil {
+		return fmt.Errorf("updateBlogs: encode body failed for blog %q: %w", inpt.Filename, err)
+	}
+
+	if inpt.Frontmatter.ID == 0 {
+		return fmt.Errorf("updateBlogs: blog id shouldn't be '0', blog %q", inpt.Filename)
+	}
+
+	apiURL, err := url.JoinPath(s.baseURL, "blogs", strconv.Itoa(inpt.Frontmatter.ID))
+	if err != nil {
+		return fmt.Errorf("updateBlogs: join api url failed for blog %q: %w", inpt.Filename, err)
+	}
+	slog.Debug("api url", "url", apiURL)
+
+	req, err := http.NewRequest(http.MethodPut, apiURL, body)
+	if err != nil {
+		return fmt.Errorf("updateBlogs: new requset failed for blog %q: %w", inpt.Filename, err)
+	}
+	req.Header.Set("content-type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+s.token)
+
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("updateBlogs: requset failed for blog %q: %w", inpt.Filename, err)
+	}
+
+	defer func() {
+		oErr = errors.Join(oErr, drainAndClose(res.Body))
+	}()
+
+	// process response and send it through the channel
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("updateBlogs: read response body failed for blog %q: %w", inpt.Filename, err)
+	}
+	if res.StatusCode >= 400 {
+		return fmt.Errorf("updateBlogs: status code %d for blog %q: %s", res.StatusCode, inpt.Filename, string(resBody))
+	}
+
+	// just to make sure the response is what we expect
+	resData := entities.RetSuccess[entities.OutBlog]{}
+	if err := json.Unmarshal(resBody, &resData); err != nil {
+		return fmt.Errorf("updateBlogs: parse response body failed for blog %q: %w", inpt.Filename, err)
+	}
+
+	return nil
+}
+
 func (s SyncHelper) UpdateBlogs(blogs []BlogInfo) error {
 	slog.Debug("UpdateBlogs")
 
@@ -204,117 +275,36 @@ func (s SyncHelper) UpdateBlogs(blogs []BlogInfo) error {
 	batchData := make(chan []BlogInfo, 1)
 	go batch[BlogInfo](blogs, s.batchSize, batchData)
 
-	requestErr := make(chan error, 1)
-	successResponse := make(chan bool, len(blogs))
-
 	// seperate into batches
 	for currentBatch := range batchData {
+		requestErr := make(chan error, 1)
+		finish := make(chan bool, 1)
+		finishCount := 0
+
 		for _, blog := range currentBatch {
 			go func(b BlogInfo) {
-				var oErr error
-				defer func() {
-					if oErr != nil {
-						requestErr <- oErr
-					}
-				}()
-
-				// load content
-				targetFile := path.Join(s.sourcePath, "blogs", b.Filename)
-				content, err := os.ReadFile(targetFile)
-				if err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("UpdateBlogs: load content failed for blog %q: %w", b.Filename, err))
+				if err := s.updateBlogs(b); err != nil {
+					requestErr <- err
 					return
 				}
-
-				// prepare request body
-				newBlog := entities.NewBlog(
-					b.Frontmatter.Title,
-					strings.Split(string(content), "---")[2],
-					b.Frontmatter.Description,
-					b.Frontmatter.Pined,
-					b.Frontmatter.Visible,
-				)
-				newInBlog := entities.NewInBlog(
-					*newBlog,
-					b.Frontmatter.TagIDs,
-					b.Frontmatter.TopicIDs,
-				)
-
-				body := &bytes.Buffer{}
-				if err := json.NewEncoder(body).Encode(newInBlog); err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("UpdateBlogs: encode body failed for blog %q: %w", b.Filename, err))
-					return
-				}
-
-				if b.Frontmatter.ID == 0 {
-					oErr = errors.Join(oErr, fmt.Errorf("UpdateBlogs: blog id shouldn't be '0', blog %q", b.Filename))
-					return
-				}
-
-				apiURL, err := url.JoinPath(s.baseURL, "blogs", strconv.Itoa(b.Frontmatter.ID))
-				if err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("UpdateBlogs: join api url failed for blog %q: %w", b.Filename, err))
-					return
-				}
-				slog.Debug("api url", "url", apiURL)
-
-				req, err := http.NewRequest(http.MethodPut, apiURL, body)
-				if err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("UpdateBlogs: new requset failed for blog %q: %w", b.Filename, err))
-					return
-				}
-				req.Header.Set("content-type", "application/json")
-				req.Header.Set("Authorization", "Bearer "+s.token)
-
-				res, err := httpClient.Do(req)
-				if err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("UpdateBlogs: requset failed for blog %q: %w", b.Filename, err))
-					return
-				}
-
-				defer func() {
-					oErr = errors.Join(oErr, drainAndClose(res.Body))
-				}()
-
-				// process response and send it through the channel
-				resBody, err := io.ReadAll(res.Body)
-				if err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("UpdateBlogs: read response body failed for blog %q: %w", b.Filename, err))
-					return
-				}
-				if res.StatusCode >= 400 {
-					oErr = errors.Join(oErr, fmt.Errorf("UpdateBlogs: status code %d for blog %q: %s", res.StatusCode, b.Filename, string(resBody)))
-					return
-				}
-
-				// just to make sure the response is what we expect
-				resData := entities.RetSuccess[entities.OutBlog]{}
-				if err := json.Unmarshal(resBody, &resData); err != nil {
-					oErr = errors.Join(oErr, fmt.Errorf("UpdateBlogs: parse response body failed for blog %q: %w", b.Filename, err))
-					return
-				}
-
-				successResponse <- true
-
+				finish <- true
 			}(blog)
 		}
-	}
 
-	// wait for all requests to finish or if an error occurs
-	successCount := 0
-	for {
-		if successCount == len(blogs) {
-			slog.Debug("updated blogs", "count", successCount)
-			return nil
-		}
-
-		select {
-		case <-successResponse:
-			successCount++
-		case err := <-requestErr:
-			return err
+		// wait for all requests to finish or if an error occurs
+		for {
+			if finishCount == len(blogs) {
+				return nil
+			}
+			select {
+			case err := <-requestErr:
+				return err
+			case <-finish:
+				finishCount++
+			}
 		}
 	}
+	return nil
 }
 
 func (s SyncHelper) DeleteBlogs(blogs []entities.OutBlogSimple) error {
@@ -421,6 +411,7 @@ func updateIDMapping(blogs []BlogInfo, newBlogIDs map[string]int, targetFile str
 	for _, blog := range blogs {
 		newMapping[blog.Filename] = blog.Frontmatter.ID
 	}
+	slog.Debug("new id mapping", "mapping", newMapping)
 
 	data, err := json.Marshal(newMapping)
 	if err != nil {

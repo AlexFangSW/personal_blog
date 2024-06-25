@@ -150,7 +150,6 @@ func syncAll(ctx context.Context, baseURL, sourcePath string, batchSize int) err
 
 		// update blog id mapping
 		existingBlogs := slices.Concat[[]BlogInfo](
-			groupedBlogs.create,
 			groupedBlogs.update,
 			groupedBlogs.noop,
 		)
