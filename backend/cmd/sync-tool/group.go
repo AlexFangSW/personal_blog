@@ -30,7 +30,7 @@ type BlogGroup[T BlogGroupTypes] struct {
 }
 
 func groupTags(localTags []entities.InTag, tags []entities.Tag) (Groups[entities.Tag], error) {
-	slog.Debug("groupTags")
+	slog.Info("groupTags")
 
 	// for faster lookup
 	tagMap := map[string]entities.Tag{}
@@ -70,7 +70,7 @@ func groupTags(localTags []entities.InTag, tags []entities.Tag) (Groups[entities
 		result.delete = append(result.delete, remoteTag)
 	}
 
-	slog.Debug(
+	slog.Info(
 		"grouped tags",
 		"create", len(result.create),
 		"update", len(result.update),
@@ -81,7 +81,7 @@ func groupTags(localTags []entities.InTag, tags []entities.Tag) (Groups[entities
 }
 
 func groupTopics(localTopics []entities.InTopic, topics []entities.Topic) (Groups[entities.Topic], error) {
-	slog.Debug("groupTopics")
+	slog.Info("groupTopics")
 
 	topicMap := map[string]entities.Topic{}
 	for _, topic := range topics {
@@ -119,7 +119,7 @@ func groupTopics(localTopics []entities.InTopic, topics []entities.Topic) (Group
 		result.delete = append(result.delete, remoteTopic)
 	}
 
-	slog.Debug(
+	slog.Info(
 		"grouped topics",
 		"create", len(result.create),
 		"update", len(result.update),
@@ -130,7 +130,7 @@ func groupTopics(localTopics []entities.InTopic, topics []entities.Topic) (Group
 }
 
 func groupBlogs(localBlogs []BlogInfo, blogs []entities.OutBlogSimple) (BlogGroup[BlogInfo], error) {
-	slog.Debug("groupBlogs")
+	slog.Info("groupBlogs")
 
 	blogMap := map[int]entities.OutBlogSimple{}
 	for _, blog := range blogs {
@@ -169,7 +169,7 @@ func groupBlogs(localBlogs []BlogInfo, blogs []entities.OutBlogSimple) (BlogGrou
 		result.delete = append(result.delete, remoteBlog)
 	}
 
-	slog.Debug(
+	slog.Info(
 		"grouped blogs",
 		"create", len(result.create),
 		"update", len(result.update),

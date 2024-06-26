@@ -94,12 +94,12 @@ func NewBlogMaper(tags []entities.Tag, topics []entities.Topic, sourcePath strin
 
 // map topic and tag slugs to their ids
 func (b *BlogMaper) MapIDs(blogs BlogGroup[BlogInfo]) (BlogGroup[BlogInfo], error) {
-	slog.Debug("MapIDs")
+	slog.Info("MapIDs")
 
 	result := BlogGroup[BlogInfo]{}
 
 	defer func() {
-		slog.Debug(
+		slog.Info(
 			"map id result",
 			"processed blogs", len(result.create)+len(result.update),
 			"errors", len(b.accumulatedErrors),

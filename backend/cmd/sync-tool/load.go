@@ -19,7 +19,7 @@ type MetaFileContent struct {
 }
 
 func loadMetaFile(metaFile string) (MetaFileContent, error) {
-	slog.Debug("loadMetaFile")
+	slog.Info("loadMetaFile")
 
 	byteData, err := os.ReadFile(metaFile)
 	if err != nil {
@@ -85,7 +85,7 @@ func NewBlogInfo(frontmatter BlogFrontmatter, content string, filename string) B
 
 // load all blogs in blogDir, parse their mdx frontmatter
 func loadBlogs(blogDir string, idMap map[string]int) ([]BlogInfo, error) {
-	slog.Debug("loadBlogs")
+	slog.Info("loadBlogs")
 
 	// get all the files
 	files, err := os.ReadDir(blogDir)
@@ -126,12 +126,14 @@ func loadBlogs(blogDir string, idMap map[string]int) ([]BlogInfo, error) {
 		result = append(result, blogsInfo)
 	}
 
-	slog.Debug("local blogs loaded", "blog count", len(result))
+	slog.Info("local blogs loaded", "blog count", len(result))
 	return result, nil
 }
 
 // load ids.json
 func loadIDMap(idFile string) (map[string]int, error) {
+	slog.Info("loadIDMap", "filename", idFile)
+
 	idMap := map[string]int{}
 	file, err := os.ReadFile(idFile)
 	if err != nil {

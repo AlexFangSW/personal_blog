@@ -60,7 +60,7 @@ func getJWT(baseURL, username, password string) (oStr string, oErr error) {
 
 // reads username and password and get jwt token
 func login(ctx context.Context, done chan<- bool, baseURL string) (oStr string, oErr error) {
-	slog.Debug("login")
+	slog.Info("login")
 
 	defer func() {
 		done <- true
