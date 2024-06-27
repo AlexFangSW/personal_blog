@@ -74,11 +74,14 @@ Will need JWT token to use some of the APIs, such as create, update, delete and 
         - [x] By topic id ( in relation to blogs under a specific topic )
 - Topics
     - [x] Basic CRUD operations
+- Auth
+    - [x] Rate limit
 
 ### Tests
 - repository integration test
     - blogs
         - [x] Basic CRUD
+        - [ ] create blogs with specific ID
         - List filters
             - [x] By topic ids
             - [x] By topic and tag ids
@@ -138,17 +141,10 @@ Only someone with direct access to the database can register.
 - CRUD for user table, directly operates on the database.
 
 ## TODO
-- Rate Limit (login)
-- sync-tool:
-  - batch needs to actually wait for last batch to finish [ok]
-
 - Remove unecessary pointer return
-- test:
-    - create blog with specified id
 - SQLite
     - activate WAL
     - command to manually vacuum "db" and "wal"
 - Refector server run() (model handler buildup)
 
 - Frontend... nice links (/<id>/<slug>)
-
