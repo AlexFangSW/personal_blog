@@ -10,6 +10,7 @@ import (
 // List will not return 'content', use Get instead
 type BlogsModel interface {
 	Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*entities.Blog, error)
+	CreateWithID(ctx context.Context, tx *sql.Tx, blog entities.InBlog, id int) (*entities.Blog, error)
 	Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog, id int) (*entities.Blog, error)
 	Get(ctx context.Context, db *sql.DB, id int) (*entities.Blog, error)
 	List(ctx context.Context, db *sql.DB) ([]entities.Blog, error)
@@ -21,5 +22,6 @@ type BlogsModel interface {
 	AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicID, tagID []int) ([]entities.Blog, error)
 	SoftDelete(ctx context.Context, tx *sql.Tx, id int) (int, error)
 	Delete(ctx context.Context, tx *sql.Tx, id int) (int, error)
+	DeleteNow(ctx context.Context, tx *sql.Tx, id int) (int, error)
 	RestoreDeleted(ctx context.Context, tx *sql.Tx, id int) (*entities.Blog, error)
 }

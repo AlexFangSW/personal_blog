@@ -58,6 +58,50 @@ func (b *Blogs) Create(ctx context.Context, tx *sql.Tx, blog entities.InBlog) (*
 
 	return newBlog, nil
 }
+func (b *Blogs) CreateWithID(ctx context.Context, tx *sql.Tx, blog entities.InBlog, id int) (*entities.Blog, error) {
+
+	stmt := `
+	INSERT INTO blogs
+	(
+		id,
+		title,
+		content,
+		content_md5,
+		description,
+		slug,
+		pined,
+		visible
+	)
+	VALUES
+	( ?, ?, ?, ?, ?, ?, ?, ?)
+	RETURNING *;
+	`
+
+	util.LogQuery(ctx, "CreateWithID:", stmt)
+
+	row := tx.QueryRowContext(
+		ctx,
+		stmt,
+		id,
+		blog.Title,
+		blog.Content,
+		blog.ContentMD5,
+		blog.Description,
+		blog.Slug,
+		blog.Pined,
+		blog.Visible,
+	)
+	if err := row.Err(); err != nil {
+		return &entities.Blog{}, fmt.Errorf("CreateWithID: insert blog failed: %w", err)
+	}
+
+	newBlog, scanErr := scanBlog(row)
+	if scanErr != nil {
+		return &entities.Blog{}, fmt.Errorf("CreateWithID: scan error: %w", scanErr)
+	}
+
+	return newBlog, nil
+}
 
 func (b *Blogs) Update(ctx context.Context, tx *sql.Tx, blog entities.InBlog, id int) (*entities.Blog, error) {
 	stmt := `
@@ -486,6 +530,29 @@ func (b *Blogs) Delete(ctx context.Context, tx *sql.Tx, id int) (int, error) {
 	affectedRows, err := res.RowsAffected()
 	if err != nil {
 		return 0, fmt.Errorf("DeleteBlog: get affected rows failed: %w", err)
+	}
+
+	return int(affectedRows), nil
+}
+
+func (b *Blogs) DeleteNow(ctx context.Context, tx *sql.Tx, id int) (int, error) {
+	stmt := `
+	DELETE FROM blogs WHERE id = ?;
+	`
+	util.LogQuery(ctx, "DeleteBlogNow:", stmt)
+
+	res, err := tx.ExecContext(
+		ctx,
+		stmt,
+		id,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("DeleteBlogNow: delete blog failed: %w", err)
+	}
+
+	affectedRows, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("DeleteBlogNow: get affected rows failed: %w", err)
 	}
 
 	return int(affectedRows), nil

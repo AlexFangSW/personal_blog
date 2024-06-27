@@ -92,6 +92,49 @@ func (b *Blogs) Create(ctx context.Context, blog entities.InBlog) (*entities.Out
 	return outBlog, nil
 }
 
+func (b *Blogs) CreateWithID(ctx context.Context, blog entities.InBlog, id int) (*entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := b.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: begin transaction error: %w", err)
+	}
+
+	newBlog, err := b.models.blog.CreateWithID(ctxTimeout, tx, blog, id)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("CreateWithID: query rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: models create blog failed: %w", err)
+	}
+
+	if err := b.models.blogTags.Upsert(ctxTimeout, tx, newBlog.ID, blog.Tags); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("CreateWithID: model create blog_tags rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: model create blog_tags error: %w", err)
+	}
+
+	if err := b.models.blogTopics.Upsert(ctxTimeout, tx, newBlog.ID, blog.Topics); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("CreateWithID: model create blog_topics rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: model create blog_topics error: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: commit error: %w", err)
+	}
+
+	outBlog, err := b.fillOutBlog(ctxTimeout, *newBlog)
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: fill OutBlog failed: %w", err)
+	}
+
+	return outBlog, nil
+}
+
 func (b *Blogs) Update(ctx context.Context, blog entities.InBlog, id int) (*entities.OutBlog, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
 	defer cancel()
@@ -429,6 +472,46 @@ func (b *Blogs) Delete(ctx context.Context, id int) (int, error) {
 
 	if err := tx.Commit(); err != nil {
 		return 0, fmt.Errorf("Delete: commit failed: %w", err)
+	}
+
+	return affectedRows, nil
+}
+
+func (b *Blogs) DeleteNow(ctx context.Context, id int) (int, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := b.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return 0, fmt.Errorf("DeleteNow: begin transaction failed: %w", err)
+	}
+
+	// delete relations
+	if err := b.models.blogTags.Delete(ctxTimeout, tx, id); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("DeleteNow: model delete blog_tags rollback error: %w", err)
+		}
+		return 0, fmt.Errorf("DeleteNow: model delete blog_tags error: %w", err)
+	}
+
+	if err := b.models.blogTopics.Delete(ctxTimeout, tx, id); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("DeleteNow: model delete blog_topics rollback error: %w", err)
+		}
+		return 0, fmt.Errorf("DeleteNow: model delete blog_topics error: %w", err)
+	}
+
+	// delete blog
+	affectedRows, err := b.models.blog.Delete(ctxTimeout, tx, id)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("DeleteNow: model delete blog rollback failed: %w", err)
+		}
+		return 0, fmt.Errorf("DeleteNow: model delete blog failed: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("DeleteNow: commit failed: %w", err)
 	}
 
 	return affectedRows, nil

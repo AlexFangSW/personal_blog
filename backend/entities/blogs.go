@@ -42,6 +42,20 @@ func NewBlog(title, content, description string, pined, visible bool) *Blog {
 	return blog
 }
 
+func NewBlogWithID(id int, title, content, description string, pined, visible bool) *Blog {
+	blog := &Blog{
+		ID:          id,
+		Title:       title,
+		Content:     content,
+		Description: description,
+		Pined:       pined,
+		Visible:     visible,
+	}
+	blog.GenSlug()
+	blog.GenMD5()
+	return blog
+}
+
 type InBlog struct {
 	Blog
 	Tags   []int `json:"tags"`
@@ -49,6 +63,14 @@ type InBlog struct {
 }
 
 func NewInBlog(blog Blog, tags, topics []int) *InBlog {
+	return &InBlog{
+		Blog:   blog,
+		Tags:   tags,
+		Topics: topics,
+	}
+}
+
+func NewInBlogWithID(blog Blog, tags, topics []int) *InBlog {
 	return &InBlog{
 		Blog:   blog,
 		Tags:   tags,

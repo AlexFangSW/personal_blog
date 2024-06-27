@@ -14,6 +14,7 @@ import (
 // Concrete implementations are at repository/<name>
 type blogsRepository interface {
 	Create(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error)
+	CreateWithID(ctx context.Context, blog entities.InBlog, id int) (*entities.OutBlog, error)
 	Update(ctx context.Context, blog entities.InBlog, id int) (*entities.OutBlog, error)
 
 	// This group of functions will only return rows with 'visible=true' and 'deleted_at=""'
@@ -32,6 +33,7 @@ type blogsRepository interface {
 	SoftDelete(ctx context.Context, id int) (int, error)
 	// blogs need to be soft deleted first to be deleted
 	Delete(ctx context.Context, id int) (int, error)
+	DeleteNow(ctx context.Context, id int) (int, error)
 	RestoreDeleted(ctx context.Context, id int) (*entities.OutBlog, error)
 }
 
@@ -104,10 +106,10 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
-//	@Param			simple query		bool	false	"output blog with tags and topics as slugs, not as a full struct"	default(false)
-//	@Param			topic	query		int		false	"filter by topic ids, can be multiple ids. ex: ?topic=1&topic=2"
-//	@Param			tag		query		int		false	"filter by tag ids, can be multiple ids, must be use with topic. ex: ?tag=1&tag=2"
+//	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"																				default(false)
+//	@Param			simple	query		bool	false	"output blog with tags and topics as slugs, not as a full struct"																			default(false)
+//	@Param			topic	query		[]int	false	"filter by topic ids, return blogs that have relation with all specified topics. ex: ?topic=1&topic=2"										collectionFormat(multi)
+//	@Param			tag		query		[]int	false	"filter by tag ids, return blogs that have relation with all specified tags, CAN ONLY BE USED IN COMBINATION WITH TOPIC. ex: ?tag=1&tag=2"	collectionFormat(multi)
 //	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlog]
 //	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlogSimple]
 //	@Failure		400		{object}	entities.RetFailed
@@ -390,6 +392,68 @@ func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
 	return entities.NewRetSuccess(*updatedBlog).WriteJSON(w)
 }
 
+// CreateBlogWithID
+//
+//	@Summary		Create blog with given id
+//	@Description	create blog with given id
+//	@Tags			blogs
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int					true	"blog id"
+//	@Param			blog	body		entities.ReqInBlog	true	"new blog content"
+//	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400		{object}	entities.RetFailed
+//	@Failure		403		{object}	entities.RetFailed
+//	@Failure		500		{object}	entities.RetFailed
+//	@Router			/blogs/{id} [post]
+func (b *Blogs) CreateBlogWithID(w http.ResponseWriter, r *http.Request) error {
+	slog.Debug("CreateBlogWithID")
+
+	// authorization
+	authorized, err := b.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("CreateBlogWithID: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
+
+	// process path param
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		slog.Error("CreateBlogWithID: id path param to int failed", "error", err)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+
+	// process body
+	blog := &entities.ReqInBlog{}
+	if err := json.NewDecoder(r.Body).Decode(blog); err != nil {
+		slog.Error("CreateBlogWithID: parse body param failed", "error", err)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+	newBlog := entities.NewBlog(
+		blog.Title,
+		blog.Content,
+		blog.Description,
+		blog.Pined,
+		blog.Visible,
+	)
+	inBlog := entities.NewInBlog(
+		*newBlog,
+		blog.Tags,
+		blog.Topics,
+	)
+
+	// create
+	createdBlog, err := b.repo.CreateWithID(r.Context(), *inBlog, id)
+	if err != nil {
+		slog.Error("CreateBlogWithID: update failed", "error", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusBadRequest).WriteJSON(w)
+		}
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+	}
+	return entities.NewRetSuccess(*createdBlog).WriteJSON(w)
+}
+
 // SoftDeleteBlog
 //
 //	@Summary		Soft delete blog
@@ -427,7 +491,7 @@ func (b *Blogs) SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 	if affectedRows == 0 {
-		slog.Error("SoftDeleteBlog: target not failed", "error", err)
+		slog.Error("SoftDeleteBlog: target not found", "id", id)
 		return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 	}
 
@@ -485,7 +549,7 @@ func (b *Blogs) RestoreDeletedBlog(w http.ResponseWriter, r *http.Request) error
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"target blog id"
-//	@Success		200	{object}	entities.RetSuccess[entities.OutBlog]
+//	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
 //	@Failure		400	{object}	entities.RetFailed
 //	@Failure		403	{object}	entities.RetFailed
 //	@Failure		500	{object}	entities.RetFailed
@@ -515,6 +579,50 @@ func (b *Blogs) DeleteBlog(w http.ResponseWriter, r *http.Request) error {
 	}
 	if affectedRows == 0 {
 		slog.Error("DeleteBlog: target not failed", "error", err)
+		return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
+	}
+
+	return entities.NewRetSuccess(*entities.NewRowsAffected(affectedRows)).WriteJSON(w)
+}
+
+// DeleteBlogNow
+//
+//	@Summary		Delete blog now
+//	@Description	delete blog now, skip soft delete
+//	@Tags			blogs
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"target blog id"
+//	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
+//	@Failure		400	{object}	entities.RetFailed
+//	@Failure		403	{object}	entities.RetFailed
+//	@Failure		500	{object}	entities.RetFailed
+//	@Router			/blogs/delete-now/{id} [delete]
+func (b *Blogs) DeleteBlogNow(w http.ResponseWriter, r *http.Request) error {
+	slog.Debug("DeleteBlogNow")
+
+	// authorization
+	authorized, err := b.auth.Verify(r)
+	if err != nil || !authorized {
+		slog.Warn("DeleteBlogNow: authorization failed", "error", err.Error())
+		return entities.NewRetFailed(err, http.StatusForbidden).WriteJSON(w)
+	}
+
+	// parse path param
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		slog.Error("DeleteBlogNow: id path param to int failed", "error", err)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+
+	// delete blog
+	affectedRows, err := b.repo.DeleteNow(r.Context(), id)
+	if err != nil {
+		slog.Error("DeleteBlogNow: delete failed", "error", err)
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+	}
+	if affectedRows == 0 {
+		slog.Error("DeleteBlogNow: target not failed", "error", err)
 		return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 	}
 

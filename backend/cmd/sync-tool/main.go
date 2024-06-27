@@ -1,10 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/urfave/cli/v2"
@@ -15,9 +18,12 @@ var httpClient = &http.Client{
 }
 
 func main() {
-	var url string
-	var metaFile string
-	var blogsDir string
+	var (
+		url        string
+		sourcePath string
+		verbose    int
+		batchSize  int
+	)
 
 	// use custom client to set timeout
 	commonFlags := []cli.Flag{
@@ -28,60 +34,67 @@ func main() {
 			Destination: &url,
 		},
 		&cli.StringFlag{
-			Name:        "meta",
-			Value:       "./meta.yaml",
-			Usage:       "`PATH` to yaml file containing topic and tags",
-			Destination: &metaFile,
+			Name:        "source",
+			Value:       "./",
+			Usage:       "`PATH` to folder containing meta.yaml, blogs/ and ids.json",
+			Destination: &sourcePath,
 		},
-		&cli.StringFlag{
-			Name:        "blogs",
-			Value:       "./blogs",
-			Usage:       "`PATH` to directory containing blogs",
-			Destination: &blogsDir,
+		&cli.BoolFlag{
+			Name:  "v",
+			Usage: "verbose, shows debug log",
+			Count: &verbose,
+		},
+		&cli.IntFlag{
+			Name:        "bs",
+			Value:       5,
+			Usage:       "max `SIZE` of concurrent requests",
+			Destination: &batchSize,
 		},
 	}
+
+	ctxCancel, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	notifyDone := make(chan bool, 1)
 
 	app := &cli.App{
 		Name:  "Coding notes sync tool",
 		Usage: "Used for syncing files to blog page",
 		Commands: []*cli.Command{
 			{
-				Name:  "sync",
-				Usage: "Sync everything",
+				Name:                   "sync",
+				Usage:                  "Sync everything",
+				UseShortOptionHandling: true,
 				Action: func(cCtx *cli.Context) error {
-					// Sync everything
-					return syncAll(url, metaFile, blogsDir)
+					return syncAll(ctxCancel, url, sourcePath, batchSize)
 				},
 				Flags: commonFlags,
-				Subcommands: []*cli.Command{
-					{
-						Name:  "meta",
-						Usage: "Sync topic and tags",
-						Action: func(cCtx *cli.Context) error {
-							// Sync topic and tags
-							// update create delete
-							fmt.Println("Sync topic and tags")
-							return nil
-						},
-						Flags: commonFlags,
-					},
-					{
-						Name:  "blogs",
-						Usage: "Sync blogs",
-						Action: func(cCtx *cli.Context) error {
-							// Sync blogs
-							// update create delete
-							fmt.Println("Sync blogs")
-							return nil
-						},
-						Flags: commonFlags,
-					},
+				Before: func(ctx *cli.Context) error {
+					log.SetFlags(log.Llongfile | log.Ltime)
+					if verbose > 0 {
+						slog.SetLogLoggerLevel(slog.LevelDebug)
+					}
+					return nil
 				},
 			},
 		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
+	go func() {
+		if err := app.Run(os.Args); err != nil {
+			log.Fatal(err)
+		}
+		notifyDone <- true
+	}()
+
+	notifyClose := make(chan os.Signal, 1)
+	signal.Notify(notifyClose, syscall.SIGTERM, syscall.SIGINT)
+
+	select {
+	case <-notifyClose:
+		cancel()
+		slog.Warn("Stoping...")
+		<-notifyDone
+		slog.Warn("Stoped")
+	case <-notifyDone:
 	}
 }

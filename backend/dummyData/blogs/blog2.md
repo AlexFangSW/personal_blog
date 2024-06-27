@@ -1,10 +1,11 @@
 ---
-title: another dummy blog
+title: just a dummy blog 
 description: Use some key words here to help users find this post
 pined: false
 visible: true
 tags:
 - Tag1
+- Tag2
 topics:
 - Topic1
 ---

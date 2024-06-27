@@ -1,16 +1,20 @@
-# name sould be the same as slug for simplicity
+# name sould be single words, prevent speces
 topics:
-  - name: topic-1
+  - name: Topic1
     description: just some descroption for topics 1
-  - name: topic-2
+  - name: Topic2 
     description: just some descroption for topics 2
-  - name: topic-3
+  - name: Topic3
+    description: jjust some descroption for topics 3
+  - name: Topic4
     description: just some descroption for topics 3
 
 tags:
-  - name: tag-1
+  - name: Tag1
     description: just some descroption for tag 1
-  - name: tag-2
+  - name: Tag2
     description: just some descroption for tag 2
-  - name: tag-3
+  - name: Tag3
+    description: jjust some descroption for tag 3
+  - name: Tag4
     description: just some descroption for tag 3

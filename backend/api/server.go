@@ -51,13 +51,14 @@ func (s *Server) Start() error {
 	mux.HandleFunc(s.post("/logout"), WithMiddleware(s.users.Logout))
 	mux.HandleFunc(s.post("/auth-check"), WithMiddleware(s.users.AuthorizeCheck))
 
-	// TODO: block 'list, get ?all=true' requests that dosen't have token
 	mux.HandleFunc(s.post("/blogs"), WithMiddleware(s.blogs.CreateBlog))
 	mux.HandleFunc(s.get("/blogs"), WithMiddleware(s.blogs.ListBlogs))
 	mux.HandleFunc(s.get("/blogs/{id}"), WithMiddleware(s.blogs.GetBlog))
 	mux.HandleFunc(s.put("/blogs/{id}"), WithMiddleware(s.blogs.UpdateBlog))
+	mux.HandleFunc(s.post("/blogs/{id}"), WithMiddleware(s.blogs.CreateBlogWithID))
 	mux.HandleFunc(s.delete("/blogs/{id}"), WithMiddleware(s.blogs.SoftDeleteBlog))
 	mux.HandleFunc(s.delete("/blogs/deleted/{id}"), WithMiddleware(s.blogs.DeleteBlog))
+	mux.HandleFunc(s.delete("/blogs/delete-now/{id}"), WithMiddleware(s.blogs.DeleteBlogNow))
 	mux.HandleFunc(s.patch("/blogs/deleted/{id}"), WithMiddleware(s.blogs.RestoreDeletedBlog))
 
 	mux.HandleFunc(s.post("/tags"), WithMiddleware(s.tags.CreateTag))

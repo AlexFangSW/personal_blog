@@ -25,6 +25,7 @@ Mostily uses golang's builtin librariy
 - **http.ServeMux** for routing
 - **database/sql** for querying databases
 - **goose** for database migrations
+- **SQLite** as the database
 
 ## Code Architecture.
 - **Entities**
@@ -97,16 +98,36 @@ Will need JWT token to use some of the APIs, such as create, update, delete and 
 
 ## Tools
 ### [Sync tool](./cmd/sync-tool/main.go) [TODO]
+#### Install
+```bash
+some command
+```
+
+#### Overview
 I want to use my own editor to write notes.
 
 This is a tool that can sync my notes to the server.
-#### Functions
-- Sync all
-- Sync topics and tags
-- Sync blogs
+
+The notes should be organized like `dummyData` folder
+- A **meta.yaml** containing tags and topics
+- **blogs** folder containing blogs with frontmatter
+
+After the first sync, an **ids.json** file will be created, which maps blog filenames to their ids.
+This prevents blog ids from changing if we lost the database and need to sync from scratch.
+
+#### Referential integrity
+If some blog's frontmetter has a tag or topic that doesn't exist,
+it will be recorded, logged out and written to a file (**data-inconsistency.json**), after which the sync process will be terminated.
+Only after passing the validation process will the data be synced to the server.
 
 ### [User register](./cmd/register/main.go)
+#### Install
+```bash
+some command
+```
+> **This is build and placed alongside server binary in the docker image**
 
+#### Overview
 This project is only used by one person, with no intention of saving other user's stuff.
 
 And because of this, there is no api for registoring a new user.
@@ -117,5 +138,17 @@ Only someone with direct access to the database can register.
 - CRUD for user table, directly operates on the database.
 
 ## TODO
-- Rate Limit (login): with istio
+- Rate Limit (login)
+- sync-tool:
+  - batch needs to actually wait for last batch to finish [ok]
+
 - Remove unecessary pointer return
+- test:
+    - create blog with specified id
+- SQLite
+    - activate WAL
+    - command to manually vacuum "db" and "wal"
+- Refector server run() (model handler buildup)
+
+- Frontend... nice links (/<id>/<slug>)
+
