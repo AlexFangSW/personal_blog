@@ -3,6 +3,8 @@ package api
 import (
 	"log/slog"
 	"net/http"
+
+	"golang.org/x/time/rate"
 )
 
 type apiHandler func(w http.ResponseWriter, r *http.Request) error
@@ -25,6 +27,28 @@ func WithMiddleware(
 	}
 
 	return finalHandler
+}
+
+type RateLimit struct {
+	limiter *rate.Limiter
+}
+
+func NewRateLimit(average, burst int) RateLimit {
+	slog.Debug("new rate limit", "average", average, "burst", burst)
+	return RateLimit{
+		limiter: rate.NewLimiter(rate.Limit(average), burst),
+	}
+}
+
+func (rlimit *RateLimit) RateLimit(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if rlimit.limiter.Allow() == false {
+			http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)
+			return
+		}
+
+		next(w, r)
+	}
 }
 
 // logging request path

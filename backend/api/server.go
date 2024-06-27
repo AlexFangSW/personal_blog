@@ -14,7 +14,7 @@ import (
 
 type Server struct {
 	server *http.Server
-	config config.ServerSetting
+	config config.Config
 	blogs  handlers.Blogs
 	topics handlers.Topics
 	tags   handlers.Tags
@@ -22,7 +22,7 @@ type Server struct {
 }
 
 func NewServer(
-	config config.ServerSetting,
+	config config.Config,
 	blogs handlers.Blogs,
 	tags handlers.Tags,
 	topics handlers.Topics,
@@ -42,14 +42,16 @@ func (s *Server) Start() error {
 
 	// api specification
 	slog.Info("API specification at: /docs/*")
-	filepath := fmt.Sprintf("http://localhost%s/docs/doc.json", s.config.Port)
+	filepath := fmt.Sprintf("http://localhost%s/docs/doc.json", s.config.Server.Port)
 	mux.HandleFunc("GET /docs/*", WithMiddleware(apiHandlerWrapper(
 		httpSwagger.Handler(httpSwagger.URL(filepath)))))
 
 	// authentication
-	mux.HandleFunc(s.post("/login"), WithMiddleware(s.users.Login))
+	loginRateLimit := NewRateLimit(s.config.Login.RateLimit, s.config.Login.RateLimit*2)
+	authCheckRateLimit := NewRateLimit(s.config.Login.RateLimit, s.config.Login.RateLimit*2)
+	mux.HandleFunc(s.post("/login"), WithMiddleware(s.users.Login, loginRateLimit.RateLimit))
 	mux.HandleFunc(s.post("/logout"), WithMiddleware(s.users.Logout))
-	mux.HandleFunc(s.post("/auth-check"), WithMiddleware(s.users.AuthorizeCheck))
+	mux.HandleFunc(s.post("/auth-check"), WithMiddleware(s.users.AuthorizeCheck, authCheckRateLimit.RateLimit))
 
 	mux.HandleFunc(s.post("/blogs"), WithMiddleware(s.blogs.CreateBlog))
 	mux.HandleFunc(s.get("/blogs"), WithMiddleware(s.blogs.ListBlogs))
@@ -74,10 +76,10 @@ func (s *Server) Start() error {
 	mux.HandleFunc(s.delete("/topics/{id}"), WithMiddleware(s.topics.DeleteTopic))
 
 	s.server = &http.Server{
-		Addr:    s.config.Port,
+		Addr:    s.config.Server.Port,
 		Handler: mux,
 	}
-	slog.Info("Server is listening on", "port", s.config.Port)
+	slog.Info("Server is listening on", "port", s.config.Server.Port)
 	return s.server.ListenAndServe()
 }
 

@@ -23,11 +23,16 @@ type JWTSetting struct {
 	Secret string `json:"secret"`
 }
 
+type LoginSetting struct {
+	RateLimit int `json:"rateLimit"` // request per second
+}
+
 type Config struct {
 	Server ServerSetting `json:"server"`
 	Logger LoggerSetting `json:"logger"`
 	DB     DBSetting     `json:"db"`
 	JWT    JWTSetting    `json:"jwt"`
+	Login  LoginSetting  `json:"login"`
 }
 
 func NewConfig() *Config {
@@ -48,6 +53,9 @@ func NewConfig() *Config {
 		JWT: JWTSetting{
 			Issuer: "alexfangsw",
 			Expire: 6,
+		},
+		Login: LoginSetting{
+			RateLimit: 1,
 		},
 	}
 }
