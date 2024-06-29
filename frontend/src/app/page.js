@@ -4,15 +4,18 @@ import { LinkCard } from "./components/linkCard";
 
 async function Topics() {
   const topics = [];
-  for (let index = 0; index < 10; index++) {
+
+  // TODO: error handling
+  const url = `${process.env.BACKEND_BASE_URL}/topics`
+  const res = await fetch(url)
+  const parsedResponse = await res.json()
+
+  for (const topic of parsedResponse.msg) {
     topics.push(
-      <LinkCard href={`/topics/${index}`}>
+      <LinkCard href={`/topics/${topic.id}`}>
         <div className="card-body">
-          <h2 className="card-title">Topic Number: {index}</h2>
-          <p>
-            If a dog chews shoes whose shoes does he choose?
-            fjdkslajfkdasjfkdlsajfldsajfljlsajfsak
-          </p>
+          <h2 className="card-title">{topic.name}</h2>
+          <p>{topic.description}</p>
         </div>
       </LinkCard>,
     );
