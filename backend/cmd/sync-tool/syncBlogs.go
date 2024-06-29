@@ -156,7 +156,7 @@ func (s SyncHelper) CreateBlogs(blogs []BlogInfo) (map[string]int, error) {
 
 	// load blog content by batch
 	batchData := make(chan []BlogInfo, 1)
-	go batch[BlogInfo](blogs, s.batchSize, batchData)
+	go batch(blogs, s.batchSize, batchData)
 
 	result := map[string]int{}
 
@@ -274,7 +274,7 @@ func (s SyncHelper) UpdateBlogs(blogs []BlogInfo) error {
 
 	// load blog content by batch
 	batchData := make(chan []BlogInfo, 1)
-	go batch[BlogInfo](blogs, s.batchSize, batchData)
+	go batch(blogs, s.batchSize, batchData)
 	totalCount := 0
 
 	// seperate into batches
@@ -367,7 +367,7 @@ func (s SyncHelper) DeleteBlogs(blogs []entities.OutBlogSimple) error {
 
 	// load blog content by batch
 	batchData := make(chan []entities.OutBlogSimple, 1)
-	go batch[entities.OutBlogSimple](blogs, s.batchSize, batchData)
+	go batch(blogs, s.batchSize, batchData)
 	totalCount := 0
 
 	// seperate into batches

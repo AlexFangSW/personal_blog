@@ -102,7 +102,7 @@ func (s SyncHelper) CreateTopics(topics []entities.Topic) ([]entities.Topic, err
 	slog.Info("CreateTopics", "count", len(topics))
 
 	batchData := make(chan []entities.Topic, 1)
-	go batch[entities.Topic](topics, s.batchSize, batchData)
+	go batch(topics, s.batchSize, batchData)
 
 	result := []entities.Topic{}
 
@@ -132,6 +132,7 @@ func (s SyncHelper) CreateTopics(topics []entities.Topic) ([]entities.Topic, err
 			select {
 			case newTopic := <-response:
 				result = append(result, newTopic)
+				responseCount++
 			case err := <-requestErr:
 				return []entities.Topic{}, err
 			}
@@ -194,7 +195,7 @@ func (s SyncHelper) UpdateTopics(topics []entities.Topic) ([]entities.Topic, err
 	slog.Info("UpdateTopics", "count", len(topics))
 
 	batchData := make(chan []entities.Topic, 1)
-	go batch[entities.Topic](topics, s.batchSize, batchData)
+	go batch(topics, s.batchSize, batchData)
 
 	result := []entities.Topic{}
 
@@ -224,6 +225,7 @@ func (s SyncHelper) UpdateTopics(topics []entities.Topic) ([]entities.Topic, err
 			select {
 			case newTopic := <-response:
 				result = append(result, newTopic)
+				responseCount++
 			case err := <-requestErr:
 				return []entities.Topic{}, err
 			}
@@ -282,7 +284,7 @@ func (s SyncHelper) DeleteTopics(topics []entities.Topic) error {
 	slog.Info("DeleteTopics", "count", len(topics))
 
 	batchData := make(chan []entities.Topic, 1)
-	go batch[entities.Topic](topics, s.batchSize, batchData)
+	go batch(topics, s.batchSize, batchData)
 
 	totalCount := 0
 

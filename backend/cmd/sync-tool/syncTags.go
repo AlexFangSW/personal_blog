@@ -103,7 +103,7 @@ func (s SyncHelper) CreateTags(tags []entities.Tag) ([]entities.Tag, error) {
 	slog.Info("CreateTags", "count", len(tags))
 
 	batchData := make(chan []entities.Tag, 1)
-	go batch[entities.Tag](tags, s.batchSize, batchData)
+	go batch(tags, s.batchSize, batchData)
 
 	result := []entities.Tag{}
 
@@ -133,6 +133,7 @@ func (s SyncHelper) CreateTags(tags []entities.Tag) ([]entities.Tag, error) {
 			select {
 			case newTag := <-response:
 				result = append(result, newTag)
+				responseCount++
 			case err := <-requestErr:
 				return []entities.Tag{}, err
 			}
@@ -195,7 +196,7 @@ func (s SyncHelper) UpdateTags(tags []entities.Tag) ([]entities.Tag, error) {
 	slog.Info("UpdateTags", "count", len(tags))
 
 	batchData := make(chan []entities.Tag, 1)
-	go batch[entities.Tag](tags, s.batchSize, batchData)
+	go batch(tags, s.batchSize, batchData)
 
 	result := []entities.Tag{}
 
@@ -225,6 +226,7 @@ func (s SyncHelper) UpdateTags(tags []entities.Tag) ([]entities.Tag, error) {
 			select {
 			case newTag := <-response:
 				result = append(result, newTag)
+				responseCount++
 			case err := <-requestErr:
 				return []entities.Tag{}, err
 			}
@@ -283,7 +285,7 @@ func (s SyncHelper) DeleteTags(tags []entities.Tag) error {
 	slog.Info("DeleteTags", "count", len(tags))
 
 	batchData := make(chan []entities.Tag, 1)
-	go batch[entities.Tag](tags, s.batchSize, batchData)
+	go batch(tags, s.batchSize, batchData)
 
 	totalCount := 0
 
