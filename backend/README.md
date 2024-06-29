@@ -8,6 +8,12 @@ Which adds support of limiting request method in ServieMux routing pattern.
 
 ## Development
 ### Run locally
+install `goose` and `swaggo`
+```bash
+go install github.com/pressly/goose/v3/cmd/goose@latest
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+Run
 ```bash
 ./scripts/run.sh
 ```
