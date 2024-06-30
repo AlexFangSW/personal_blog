@@ -24,7 +24,7 @@ I enjoy using my own editor, and I also want to seperate my content from the sou
 - Write blogs and organize it like [dummyData](./backend/dummyData/) directory.
 - Use **SyncTool** to sync data to the server.
 
-> Tools mentioned in [CLI tools](<README#CLI Tools>) section.
+> Tools are mentioned in [CLI tools](#cli-tools) section.
 
 ## Project Stucture
 This project is seperated into **frontend**, **backend** and **CLI tools** for me to sync my data to the server.
