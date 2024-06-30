@@ -12,7 +12,7 @@ async function Topics() {
 
   for (const topic of parsedResponse.msg) {
     topics.push(
-      <LinkCard href={`/topics/${topic.id}`}>
+      <LinkCard href={`/topics/${topic.id}/${topic.slug}`}>
         <div className="card-body">
           <h2 className="card-title">{topic.name}</h2>
           <p>{topic.description}</p>

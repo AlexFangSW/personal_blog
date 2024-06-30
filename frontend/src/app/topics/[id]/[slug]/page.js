@@ -1,7 +1,7 @@
 import { merianda } from "@/app/fonts";
 import Link from "next/link";
 import Image from "next/image";
-import pinIcon from "../../../../public/pin.svg";
+import pinIcon from "../../../../../public/pin.svg";
 import { LinkCard } from "@/app/components/linkCard";
 
 /**
@@ -23,24 +23,24 @@ function displayTagName(tag, selected) {
   * @param {number} param0.selected 
   * @param {number} param0.topicID 
   */
-async function Tags({ selected, topicID }) {
+async function Tags({ selected, topic }) {
   // selected tag id current topic
   console.log(selected);
   const tags = [];
 
-  const url = `${process.env.BACKEND_BASE_URL}/tags?topic=${topicID}`
+  const url = `${process.env.BACKEND_BASE_URL}/tags?topic=${topic.id}`
   const res = await fetch(url)
   const parsedRes = await res.json()
 
   tags.push(
-    <Link className="btn btn-ghost" href={`/topics/${topicID}`}>
+    <Link className="btn btn-ghost" href={`/topics/${topic.id}/${topic.slug}`}>
       All
     </Link>,
   );
 
   for (const tag of parsedRes.msg) {
     tags.push(
-      <Link className="btn btn-ghost" href={`/topics/${topicID}?tag=${tag.id}`}>
+      <Link className="btn btn-ghost" href={`/topics/${topic.id}/${topic.slug}?tag=${tag.id}`}>
         {displayTagName(tag, selected)}
       </Link>,
     );
@@ -79,7 +79,7 @@ async function Blogs({ topicID, tagID }) {
 
   for (const blog of parsedRes.msg) {
     blogs.push(
-      <LinkCard href={`/blogs/${blog.id}`}>
+      <LinkCard href={`/blogs/${blog.id}/${blog.slug}`}>
         <div className="card-body">
           <div className="flex flex-row flex-wrap justify-left gap-2">
             {
@@ -129,7 +129,7 @@ export default async function Page({ params, searchParams }) {
         <p>{currentTopic.description}</p>
         <div className="divider">Tags</div>
         <div className="flex flex-row flex-wrap justify-center gap-2">
-          <Tags selected={selectedTag} topicID={params.id} />
+          <Tags selected={selectedTag} topic={currentTopic} />
         </div>
         <div className="divider">Posts</div>
         <div className="flex flex-row flex-wrap justify-center gap-2">

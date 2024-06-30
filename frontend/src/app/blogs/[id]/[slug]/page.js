@@ -24,7 +24,7 @@ function BlogTopics({ topics }) {
   const topic_list = [];
   for (const topic of topics) {
     topic_list.push(
-      <Link className="badge badge-outline" href={`/topics/${topic.id}`}>
+      <Link className="badge badge-outline" href={`/topics/${topic.id}/${topic.slug}`}>
         {topic.name}
       </Link>,
     );
