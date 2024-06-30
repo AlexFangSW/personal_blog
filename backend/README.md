@@ -1,11 +1,4 @@
-# Coding Blog Backend
-
-A place for me to document things I have learned.
-
-And as a opportunity to test out go 1.22's new "net/http" update.
-
-Which adds support of limiting request method in ServieMux routing pattern.
-
+# Coding notes backend
 ## Development
 ### Run locally
 install `goose` and `swaggo`
@@ -106,7 +99,7 @@ Will need JWT token to use some of the APIs, such as create, update, delete and 
     - [ ] topics
 
 ## Tools
-### [Sync tool](./cmd/sync-tool/main.go) [TODO]
+### [Sync tool](./cmd/sync-tool/main.go)
 #### Install
 ```bash
 some command
