@@ -1,6 +1,8 @@
 import "./globals.css";
 import { BlogFooter } from "./components/footer";
 import { BlogNav } from "./components/nav";
+import { ErrorBoundary } from "next/dist/client/components/error-boundary";
+import ErrorPage from "./error";
 
 export const metadata = {
   title: "Coding Notes",
@@ -12,7 +14,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <BlogNav />
-        {children}
+        <ErrorBoundary fallback={<ErrorPage />} >
+          {children}
+        </ErrorBoundary>
         <BlogFooter />
       </body>
     </html>

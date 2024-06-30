@@ -5,12 +5,15 @@ import { LinkCard } from "./components/linkCard";
 async function Topics() {
   const topics = [];
 
-  // TODO: error handling
   const url = `${process.env.BACKEND_BASE_URL}/topics`
   const res = await fetch(url)
-  const parsedResponse = await res.json()
+  const parsedRes = await res.json()
 
-  for (const topic of parsedResponse.msg) {
+  if (parsedRes.status >= 500) {
+    throw new Error(`home page load topics error: ${parsedRes.error}`)
+  }
+
+  for (const topic of parsedRes.msg) {
     topics.push(
       <LinkCard href={`/topics/${topic.id}/${topic.slug}`}>
         <div className="card-body">

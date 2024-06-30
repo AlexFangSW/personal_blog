@@ -3,6 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import pinIcon from "../../../../../public/pin.svg";
 import { LinkCard } from "@/app/components/linkCard";
+import { getCurrentTopic } from "@/app/util/topic";
+import { notFound, redirect } from 'next/navigation'
 
 /**
  * @param {object} tag
@@ -25,12 +27,15 @@ function displayTagName(tag, selected) {
   */
 async function Tags({ selected, topic }) {
   // selected tag id current topic
-  console.log(selected);
   const tags = [];
 
   const url = `${process.env.BACKEND_BASE_URL}/tags?topic=${topic.id}`
   const res = await fetch(url)
   const parsedRes = await res.json()
+
+  if (parsedRes.status >= 500) {
+    throw new Error(`topic page load tag error: ${parsedRes.error}`)
+  }
 
   tags.push(
     <Link className="btn btn-ghost" href={`/topics/${topic.id}/${topic.slug}`}>
@@ -76,6 +81,9 @@ async function Blogs({ topicID, tagID }) {
   const res = await fetch(url)
   const parsedRes = await res.json()
 
+  if (parsedRes.status >= 500) {
+    throw new Error(`topic page load blogs error: ${parsedRes.error}`)
+  }
 
   for (const blog of parsedRes.msg) {
     blogs.push(
@@ -102,23 +110,23 @@ async function Blogs({ topicID, tagID }) {
   return blogs;
 }
 
-/**
-  * Retruns info for the current topic
-  *
-  * @param {number} id 
-  */
-async function getCurrentTopic(id) {
-  const url = `${process.env.BACKEND_BASE_URL}/topics/${id}`
-  const res = await fetch(url)
-  const parsedRes = await res.json()
-
-  return parsedRes.msg
-}
 
 export default async function Page({ params, searchParams }) {
-  console.log(searchParams["tag"]);
   const selectedTag = searchParams["tag"];
-  const currentTopic = await getCurrentTopic(params.id)
+  const topicRes = await getCurrentTopic(params.id)
+
+  if (topicRes.status >= 400) {
+    notFound()
+  } else if (topicRes.status >= 500) {
+    throw new Error(`Topic page error: ${topicRes.error}`)
+  }
+
+  const currentTopic = topicRes.msg
+
+  // adjust slug
+  if (currentTopic.slug != params.slug) {
+    redirect(`/topics/${params.id}/${currentTopic.slug}`)
+  }
 
   return (
     <div className="flex flex-col min-h-screen items-center p-5">
