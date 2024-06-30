@@ -1,9 +1,9 @@
-# Coding Notes: Things that I find useful.
+# Coding Notes
+Things that I find useful.
+
 [Build status XXX] 
 
 Link to the website: [PLACE THE LINK HERE]
-
-
 
 ## Motive
 A opportunity to practice **GO** while creating something I could use.
@@ -24,6 +24,8 @@ I enjoy using my own editor, and I also want to seperate my content from the sou
 - Write blogs and organize it like [dummyData](./backend/dummyData/) directory.
 - Use **SyncTool** to sync data to the server.
 
+> Tools mentioned in [CLI tools](<README#CLI Tools>) section.
+
 ## Project Stucture
 This project is seperated into **frontend**, **backend** and **CLI tools** for me to sync my data to the server.
 
@@ -42,32 +44,22 @@ finding that by strictly following **clean code** caused the project to feel ove
 - Language: **GO**
 - Server: **net/http** ( Routing is done with `net/http.ServeMux`)
 - ORM: **None**, this project uses `database/sql` with **raw sql queries**.
+- Database: **SQLite**
 - Database Migration: **[goose](https://github.com/pressly/goose)**
 - API documentation: generated with **[swaggo](https://github.com/swaggo/swag)**
 
-### Code architecture
-- **Entities**
-    - Basic structs
-- **Models**
-    - Focuses on making sql queries on specific tables 
-    - Including:
-        - blogs
-        - tags
-        - topics
-        - blog_tags (many to many)
-        - blog_topics (many to many)
-- **Repository**
-    - A interface for CRUD operations on base tables such as: blogs, tags, topics
-    - Automaticly maintains many-to-many tables: blog_tags, blog_topics
-- **Handlers**
-    - Core app logics, uses repository layer for CRUD operations
+> SQLite [WAL](https://www.sqlite.org/wal.html) mode enables **none blocking**
+read and writes.
 
 ### API Documentation
-Swagger Doc: [swagger.json](./backend/docs/swagger.json)
-
-> [Swaggo](https://github.com/swaggo/swag) (auto genrate swagger.json) dosn't support JWT auth yet. 
-> So the auth part is missing in the swagger doc. 😔 
 #### Overview:
+APIs are seperated into **PUBLIC** and **PRIVATE**, 
+**PUBLIC** APIs can be access by anyone, while **PRIVATE** APIs 
+needs **JWT** token.
+
+**JWT** is also stored in the database, in order to use **PRIVATE** APIs,
+one must have a valid **JWT** token, while also matching the entry in the database.
+
 -   <details>
     <summary>Blogs API</summary>
 
@@ -85,12 +77,15 @@ Swagger Doc: [swagger.json](./backend/docs/swagger.json)
             - all
             - filter by topic id (allow multiple ids)
             - filter by topic and tag ids (allow multiple ids) 
-            - simplified ( used by sync tool )
+            - simplified
+                - only includes necessary fields to verify change, such as: **content_md5**, **tag.slugs**, **topic.slugs**...etc.
+                  (used by **SyncTool**)
         - Update
         - Delete
             - soft delete
             - restore soft deleted blog
             - delete
+
     </details>
 
 -   <details>
@@ -118,6 +113,20 @@ Swagger Doc: [swagger.json](./backend/docs/swagger.json)
         - Delete
 
     </details>
+
+-   <details>
+    <summary>Auth API</summary>
+
+    - **Public API**
+        - Login ( returns **JWT** token on success )
+        - Logout ( removes **JWT** token from database )
+        - Auth check ( mostly unused, checks if jwt token is valid )
+
+    </details>
+
+### Details
+For more complete documantation on the backend, please refer to the [backend](./backend/) directory.
+
 ## CLI Tools
 > Source code for cli tools are included in [backend](./backend) directory
 
@@ -162,7 +171,7 @@ Only someone with direct access to the database can register.
 ## Frontend
 Only used to display content.
 
-Inspired by stackoverflow's url design, a slug is shown at the end of the url
+Inspired by **Stack Overflow's** url design, slug is shown at the end of the url.
 
 Ex: 
 - `https://<domain>/blogs/<id>/<slug>`
