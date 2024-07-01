@@ -20,9 +20,9 @@ I thought, 'why not give the standard library a try ?' After than, this project 
 ## How it is used
 I enjoy using my own editor, and I also want to seperate my content from the source code.
 
-- Deploy the server, and create a user with **UserRegistor** CLI tool.
+- Deploy the server, and create a user with **[UserRegister](#user-register)** CLI tool.
 - Write blogs and organize it like [dummyData](./backend/dummyData/) directory.
-- Use **SyncTool** to sync data to the server.
+- Use **[SyncTool](#synctool)** to sync data to the server.
 
 > Tools are mentioned in [CLI tools](#cli-tools) section.
 
@@ -52,7 +52,7 @@ finding that by strictly following **clean code** caused the project to feel ove
 read and writes.
 
 ### API Documentation
-#### Overview:
+#### Overview
 APIs are seperated into **PUBLIC** and **PRIVATE**, 
 **PUBLIC** APIs can be access by anyone, while **PRIVATE** APIs 
 needs **JWT** token.
@@ -124,7 +124,12 @@ one must have a valid **JWT** token, while also matching the entry in the databa
 
     </details>
 
-### Details
+#### Details
+> [Swaggo](https://github.com/swaggo/swag) (auto genrate swagger.json) dosn't support JWT auth yet. 
+> The 'Authorization' header is placed as a headers param.
+- Swagger Doc: [swagger.json](./backend/docs/swagger.json)
+
+### More on backend
 For more complete documantation on the backend, please refer to the [backend](./backend/) directory.
 
 ## CLI Tools

@@ -19,12 +19,93 @@ Run
 ```
 
 ## Tech stack
-Mostily uses golang's builtin librariy
-- **net/http** for server
-- **http.ServeMux** for routing
-- **database/sql** for querying databases
-- **goose** for database migrations
-- **SQLite** as the database
+- Language: **GO**
+- Server: **net/http** ( Routing is done with `net/http.ServeMux`)
+- ORM: **None**, this project uses `database/sql` with **raw sql queries**.
+- Database: **SQLite**
+- Database Migration: **[goose](https://github.com/pressly/goose)**
+- API documentation: generated with **[swaggo](https://github.com/swaggo/swag)**
+
+> SQLite [WAL](https://www.sqlite.org/wal.html) mode enables **none blocking**
+read and writes.
+
+## API Documentation
+### Overview
+APIs are seperated into **PUBLIC** and **PRIVATE**, 
+**PUBLIC** APIs can be access by anyone, while **PRIVATE** APIs 
+needs **JWT** token.
+
+**JWT** is also stored in the database, in order to use **PRIVATE** APIs,
+one must have a valid **JWT** token, while also matching the entry in the database.
+
+-   <details>
+    <summary>Blogs API</summary>
+
+    - **Public API** ( Access blogs that are visible or not soft deleted):
+        - List
+            - all
+            - filter by topic id (allow multiple ids)
+            - filter by topic and tag ids (allow multiple ids) 
+        - Get by id
+    - **Private API** ( Needs JWT token, have access to all blogs regarding visibility or soft delete status )
+        - Create
+            - auto generate id
+            - with specified id
+        - List
+            - all
+            - filter by topic id (allow multiple ids)
+            - filter by topic and tag ids (allow multiple ids) 
+            - simplified
+                - only includes necessary fields to verify change, such as: **content_md5**, **tag.slugs**, **topic.slugs**...etc.
+                  (used by **SyncTool**)
+        - Update
+        - Delete
+            - soft delete
+            - restore soft deleted blog
+            - delete
+
+    </details>
+
+-   <details>
+    <summary>Tags API</summary>
+
+    - **Public API**
+        - List     
+            - all
+            - by topic id ( tags related to blogs under a specific topic )
+    - **Private API**
+        - Create
+        - Update
+        - Delete
+
+    </details>
+
+-   <details>
+    <summary>Topics API</summary>
+
+    - **Public API**
+        - List     
+    - **Private API**
+        - Create
+        - Update
+        - Delete
+
+    </details>
+
+-   <details>
+    <summary>Auth API</summary>
+
+    - **Public API**
+        - Login ( returns **JWT** token on success )
+        - Logout ( removes **JWT** token from database )
+        - Auth check ( mostly unused, checks if jwt token is valid )
+
+    </details>
+
+### Details
+> [Swaggo](https://github.com/swaggo/swag) (auto genrate swagger.json) dosn't support JWT auth yet. 
+> The 'Authorization' header is placed as a headers param.
+- Swagger Doc: [swagger.json](./docs/swagger.json)
 
 ## Code Architecture.
 - **Entities**
@@ -43,21 +124,10 @@ Mostily uses golang's builtin librariy
 - **Handlers**
     - Core app logics, uses repository layer for CRUD operations
 
-### Architecture diagram
+## Database relations
 TODO
 
-### Database relations
-TODO
-
-### API Documentation
-Will need JWT token to use some of the APIs, such as create, update, delete and listing invisible resources.
-
-> [Swaggo](https://github.com/swaggo/swag) (auto genrate swagger.json) dosn't support JWT auth yet. 
-> So the auth part is missing in the swagger doc. 😔 
-
-- Swagger Doc: [swagger.json](./docs/swagger.json)
-
-#### Progress
+## Progress
 - Blogs
     - [x] Basic CRUD operations
         - List operations will return empty 'content' field to reduse size.
@@ -76,7 +146,7 @@ Will need JWT token to use some of the APIs, such as create, update, delete and 
 - Auth
     - [x] Rate limit
 
-### Tests
+## Tests
 - repository integration test
     - blogs
         - [x] Basic CRUD
@@ -98,14 +168,13 @@ Will need JWT token to use some of the APIs, such as create, update, delete and 
     - [x] tags
     - [ ] topics
 
-## Tools
-### [Sync tool](./cmd/sync-tool/main.go)
-#### Install
+## CLI Tools
+### SyncTool
+#### Installation
 ```bash
 some command
 ```
 
-#### Overview
 I want to use my own editor to write notes.
 
 This is a tool that can sync my notes to the server.
@@ -117,19 +186,18 @@ The notes should be organized like `dummyData` folder
 After the first sync, an **ids.json** file will be created, which maps blog filenames to their ids.
 This prevents blog ids from changing if we lost the database and need to sync from scratch.
 
-#### Referential integrity
+#### About referential integrity
 If some blog's frontmetter has a tag or topic that doesn't exist,
 it will be recorded, logged out and written to a file (**data-inconsistency.json**), after which the sync process will be terminated.
 Only after passing the validation process will the data be synced to the server.
 
-### [User register](./cmd/register/main.go)
-#### Install
+### User register
+#### Installation 
 ```bash
 some command
 ```
 > **This is build and placed alongside server binary in the docker image**
 
-#### Overview
 This project is only used by one person, with no intention of saving other user's stuff.
 
 And because of this, there is no api for registoring a new user.
@@ -145,5 +213,3 @@ Only someone with direct access to the database can register.
     - activate WAL
     - command to manually vacuum "db" and "wal"
 - Refector server run() (model handler buildup)
-
-- Frontend... nice links (/<id>/<slug>)
