@@ -56,12 +56,12 @@ func NewBlogs(repo blogsRepository, auth authHelper) *Blogs {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			blog	body		entities.ReqInBlog	true	"new blog contents"
-//	@Param			Authorization	header		string	true	"jwt token"
-//	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
-//	@Failure		400		{object}	entities.RetFailed
-//	@Failure		403		{object}	entities.RetFailed
-//	@Failure		500		{object}	entities.RetFailed
+//	@Param			blog			body		entities.ReqInBlog	true	"new blog contents"
+//	@Param			Authorization	header		string				true	"jwt token"
+//	@Success		200				{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		403				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/blogs [post]
 func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTag")
@@ -107,16 +107,16 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"																				default(false)
+//	@Param			all				query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
 //	@Param			Authorization	header		string	false	"jwt token"
-//	@Param			simple	query		bool	false	"output blog with tags and topics as slugs, not as a full struct"																			default(false)
-//	@Param			topic	query		[]int	false	"filter by topic ids, return blogs that have relation with all specified topics. ex: ?topic=1&topic=2"										collectionFormat(multi)
-//	@Param			tag		query		[]int	false	"filter by tag ids, return blogs that have relation with all specified tags, CAN ONLY BE USED IN COMBINATION WITH TOPIC. ex: ?tag=1&tag=2"	collectionFormat(multi)
-//	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlog]
-//	@Success		200		{object}	entities.RetSuccess[[]entities.OutBlogSimple]
-//	@Failure		400		{object}	entities.RetFailed
-//	@Failure		403		{object}	entities.RetFailed
-//	@Failure		500		{object}	entities.RetFailed
+//	@Param			simple			query		bool	false	"output blog with tags and topics as slugs, not as a full struct"																			default(false)
+//	@Param			topic			query		[]int	false	"filter by topic ids, return blogs that have relation with all specified topics. ex: ?topic=1&topic=2"										collectionFormat(multi)
+//	@Param			tag				query		[]int	false	"filter by tag ids, return blogs that have relation with all specified tags, CAN ONLY BE USED IN COMBINATION WITH TOPIC. ex: ?tag=1&tag=2"	collectionFormat(multi)
+//	@Success		200				{object}	entities.RetSuccess[[]entities.OutBlog]
+//	@Success		200				{object}	entities.RetSuccess[[]entities.OutBlogSimple]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		403				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/blogs [get]
 func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("ListBlogs")
@@ -271,13 +271,13 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int		true	"target blog id"
+//	@Param			id				path		int		true	"target blog id"
 //	@Param			Authorization	header		string	false	"jwt token"
-//	@Param			all	query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
-//	@Success		200	{object}	entities.RetSuccess[entities.OutBlog]
-//	@Failure		400	{object}	entities.RetFailed
-//	@Failure		403	{object}	entities.RetFailed
-//	@Failure		500	{object}	entities.RetFailed
+//	@Param			all				query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
+//	@Success		200				{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		403				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/blogs/{id} [get]
 func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("GetBlog")
@@ -340,13 +340,13 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		int					true	"target blog id"
-//	@Param			Authorization	header		string	true	"jwt token"
-//	@Param			blog	body		entities.ReqInBlog	true	"new blog content"
-//	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
-//	@Failure		400		{object}	entities.RetFailed
-//	@Failure		403		{object}	entities.RetFailed
-//	@Failure		500		{object}	entities.RetFailed
+//	@Param			id				path		int					true	"target blog id"
+//	@Param			Authorization	header		string				true	"jwt token"
+//	@Param			blog			body		entities.ReqInBlog	true	"new blog content"
+//	@Success		200				{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		403				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/blogs/{id} [put]
 func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("UpdateBlog")
@@ -403,13 +403,13 @@ func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			id		path		int					true	"blog id"
-//	@Param			Authorization	header		string	true	"jwt token"
-//	@Param			blog	body		entities.ReqInBlog	true	"new blog content"
-//	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
-//	@Failure		400		{object}	entities.RetFailed
-//	@Failure		403		{object}	entities.RetFailed
-//	@Failure		500		{object}	entities.RetFailed
+//	@Param			id				path		int					true	"blog id"
+//	@Param			Authorization	header		string				true	"jwt token"
+//	@Param			blog			body		entities.ReqInBlog	true	"new blog content"
+//	@Success		200				{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		403				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/blogs/{id} [post]
 func (b *Blogs) CreateBlogWithID(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateBlogWithID")
@@ -466,12 +466,12 @@ func (b *Blogs) CreateBlogWithID(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int	true	"target blog id"
+//	@Param			id				path		int		true	"target blog id"
 //	@Param			Authorization	header		string	true	"jwt token"
-//	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
-//	@Failure		400	{object}	entities.RetFailed
-//	@Failure		403	{object}	entities.RetFailed
-//	@Failure		500	{object}	entities.RetFailed
+//	@Success		200				{object}	entities.RetSuccess[entities.RowsAffected]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		403				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/blogs/{id} [delete]
 func (b *Blogs) SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("SoftDeleteBlog")
@@ -511,12 +511,12 @@ func (b *Blogs) SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int	true	"target blog id"
+//	@Param			id				path		int		true	"target blog id"
 //	@Param			Authorization	header		string	true	"jwt token"
-//	@Success		200	{object}	entities.RetSuccess[entities.OutBlog]
-//	@Failure		400	{object}	entities.RetFailed
-//	@Failure		403	{object}	entities.RetFailed
-//	@Failure		500	{object}	entities.RetFailed
+//	@Success		200				{object}	entities.RetSuccess[entities.OutBlog]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		403				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/blogs/deleted/{id} [patch]
 func (b *Blogs) RestoreDeletedBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("RestoreDeletedBlog")
@@ -555,12 +555,12 @@ func (b *Blogs) RestoreDeletedBlog(w http.ResponseWriter, r *http.Request) error
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int	true	"target blog id"
+//	@Param			id				path		int		true	"target blog id"
 //	@Param			Authorization	header		string	true	"jwt token"
-//	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
-//	@Failure		400	{object}	entities.RetFailed
-//	@Failure		403	{object}	entities.RetFailed
-//	@Failure		500	{object}	entities.RetFailed
+//	@Success		200				{object}	entities.RetSuccess[entities.RowsAffected]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		403				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/blogs/deleted/{id} [delete]
 func (b *Blogs) DeleteBlog(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("DeleteBlog")
@@ -600,12 +600,12 @@ func (b *Blogs) DeleteBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			blogs
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int	true	"target blog id"
+//	@Param			id				path		int		true	"target blog id"
 //	@Param			Authorization	header		string	true	"jwt token"
-//	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
-//	@Failure		400	{object}	entities.RetFailed
-//	@Failure		403	{object}	entities.RetFailed
-//	@Failure		500	{object}	entities.RetFailed
+//	@Success		200				{object}	entities.RetSuccess[entities.RowsAffected]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		403				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/blogs/delete-now/{id} [delete]
 func (b *Blogs) DeleteBlogNow(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("DeleteBlogNow")

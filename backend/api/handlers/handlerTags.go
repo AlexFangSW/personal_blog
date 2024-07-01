@@ -40,11 +40,11 @@ func NewTags(repo tagsRepository, auth authHelper) *Tags {
 //	@Tags			tags
 //	@Accept			json
 //	@Produce		json
-//	@Param			tag	body		entities.InTag	true	"new tag contents"
-//	@Param			Authorization	header		string	true	"jwt token"
-//	@Success		200	{object}	entities.RetSuccess[entities.Tag]
-//	@Failure		400	{object}	entities.RetFailed
-//	@Failure		500	{object}	entities.RetFailed
+//	@Param			tag				body		entities.InTag	true	"new tag contents"
+//	@Param			Authorization	header		string			true	"jwt token"
+//	@Success		200				{object}	entities.RetSuccess[entities.Tag]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/tags [post]
 func (t *Tags) CreateTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("CreateTag")
@@ -164,13 +164,13 @@ func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			tags
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int				true	"target tag id"
-//	@Param			Authorization	header		string	true	"jwt token"
-//	@Param			tag	body		entities.InTag	true	"new tag content"
-//	@Success		200	{object}	entities.RetSuccess[entities.Tag]
-//	@Failure		400	{object}	entities.RetFailed
-//	@Failure		404	{object}	entities.RetFailed
-//	@Failure		500	{object}	entities.RetFailed
+//	@Param			id				path		int				true	"target tag id"
+//	@Param			Authorization	header		string			true	"jwt token"
+//	@Param			tag				body		entities.InTag	true	"new tag content"
+//	@Success		200				{object}	entities.RetSuccess[entities.Tag]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		404				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/tags/{id} [put]
 func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Debug("UpdateTag")
@@ -221,12 +221,12 @@ func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 //	@Tags			tags
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int	true	"target tag id"
+//	@Param			id				path		int		true	"target tag id"
 //	@Param			Authorization	header		string	true	"jwt token"
-//	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
-//	@Failure		400	{object}	entities.RetFailed
-//	@Failure		404	{object}	entities.RetFailed
-//	@Failure		500	{object}	entities.RetFailed
+//	@Success		200				{object}	entities.RetSuccess[entities.RowsAffected]
+//	@Failure		400				{object}	entities.RetFailed
+//	@Failure		404				{object}	entities.RetFailed
+//	@Failure		500				{object}	entities.RetFailed
 //	@Router			/tags/{id} [delete]
 func (t *Tags) DeleteTag(w http.ResponseWriter, r *http.Request) error {
 	slog.Info("DeleteTag")
