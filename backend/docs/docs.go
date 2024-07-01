@@ -75,6 +75,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header"
+                    },
+                    {
                         "type": "boolean",
                         "default": false,
                         "description": "output blog with tags and topics as slugs, not as a full struct",
@@ -150,6 +156,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/entities.ReqInBlog"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -199,6 +212,13 @@ const docTemplate = `{
                         "description": "target blog id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -250,6 +270,13 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -297,6 +324,13 @@ const docTemplate = `{
                         "description": "target blog id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -348,6 +382,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header"
                     },
                     {
                         "type": "boolean",
@@ -402,6 +442,13 @@ const docTemplate = `{
                         "description": "target blog id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     },
                     {
@@ -462,6 +509,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "new blog content",
                         "name": "blog",
                         "in": "body",
@@ -516,6 +570,13 @@ const docTemplate = `{
                         "description": "target blog id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -710,6 +771,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/entities.InTag"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -804,6 +872,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "new tag content",
                         "name": "tag",
                         "in": "body",
@@ -858,6 +933,13 @@ const docTemplate = `{
                         "description": "target tag id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -930,6 +1012,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create topic",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "new topic contents",
                         "name": "topic",
@@ -1032,6 +1121,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "new topic content",
                         "name": "topic",
                         "in": "body",
@@ -1086,6 +1182,13 @@ const docTemplate = `{
                         "description": "target topic id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],

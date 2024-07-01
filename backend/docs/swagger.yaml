@@ -289,6 +289,10 @@ paths:
         in: query
         name: all
         type: boolean
+      - description: jwt token
+        in: header
+        name: Authorization
+        type: string
       - default: false
         description: output blog with tags and topics as slugs, not as a full struct
         in: query
@@ -343,6 +347,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/entities.ReqInBlog'
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -376,6 +385,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -408,6 +422,10 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        type: string
       - default: false
         description: show all blogs regardless of visibility or soft delete status
         in: query
@@ -445,6 +463,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: new blog content
         in: body
         name: blog
@@ -483,6 +506,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: new blog content
         in: body
         name: blog
@@ -522,6 +550,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -555,6 +588,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -587,6 +625,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -715,6 +758,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/entities.InTag'
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -744,6 +792,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -808,6 +861,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: new tag content
         in: body
         name: tag
@@ -860,6 +918,11 @@ paths:
       - application/json
       description: topics must have unique names
       parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: new topic contents
         in: body
         name: topic
@@ -895,6 +958,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -959,6 +1027,11 @@ paths:
         name: id
         required: true
         type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: new topic content
         in: body
         name: topic

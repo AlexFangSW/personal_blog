@@ -67,6 +67,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header"
+                    },
+                    {
                         "type": "boolean",
                         "default": false,
                         "description": "output blog with tags and topics as slugs, not as a full struct",
@@ -142,6 +148,13 @@
                         "schema": {
                             "$ref": "#/definitions/entities.ReqInBlog"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -191,6 +204,13 @@
                         "description": "target blog id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -242,6 +262,13 @@
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -289,6 +316,13 @@
                         "description": "target blog id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -340,6 +374,12 @@
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header"
                     },
                     {
                         "type": "boolean",
@@ -394,6 +434,13 @@
                         "description": "target blog id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     },
                     {
@@ -454,6 +501,13 @@
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "new blog content",
                         "name": "blog",
                         "in": "body",
@@ -508,6 +562,13 @@
                         "description": "target blog id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -702,6 +763,13 @@
                         "schema": {
                             "$ref": "#/definitions/entities.InTag"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -796,6 +864,13 @@
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "new tag content",
                         "name": "tag",
                         "in": "body",
@@ -850,6 +925,13 @@
                         "description": "target tag id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -922,6 +1004,13 @@
                 ],
                 "summary": "Create topic",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "new topic contents",
                         "name": "topic",
@@ -1024,6 +1113,13 @@
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "new topic content",
                         "name": "topic",
                         "in": "body",
@@ -1078,6 +1174,13 @@
                         "description": "target topic id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],

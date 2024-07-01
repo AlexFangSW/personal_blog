@@ -57,6 +57,7 @@ func NewBlogs(repo blogsRepository, auth authHelper) *Blogs {
 //	@Accept			json
 //	@Produce		json
 //	@Param			blog	body		entities.ReqInBlog	true	"new blog contents"
+//	@Param			Authorization	header		string	true	"jwt token"
 //	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400		{object}	entities.RetFailed
 //	@Failure		403		{object}	entities.RetFailed
@@ -107,6 +108,7 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			all		query		bool	false	"show all blogs regardless of visibility or soft delete status"																				default(false)
+//	@Param			Authorization	header		string	false	"jwt token"
 //	@Param			simple	query		bool	false	"output blog with tags and topics as slugs, not as a full struct"																			default(false)
 //	@Param			topic	query		[]int	false	"filter by topic ids, return blogs that have relation with all specified topics. ex: ?topic=1&topic=2"										collectionFormat(multi)
 //	@Param			tag		query		[]int	false	"filter by tag ids, return blogs that have relation with all specified tags, CAN ONLY BE USED IN COMBINATION WITH TOPIC. ex: ?tag=1&tag=2"	collectionFormat(multi)
@@ -270,6 +272,7 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int		true	"target blog id"
+//	@Param			Authorization	header		string	false	"jwt token"
 //	@Param			all	query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
 //	@Success		200	{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400	{object}	entities.RetFailed
@@ -338,6 +341,7 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		int					true	"target blog id"
+//	@Param			Authorization	header		string	true	"jwt token"
 //	@Param			blog	body		entities.ReqInBlog	true	"new blog content"
 //	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400		{object}	entities.RetFailed
@@ -400,6 +404,7 @@ func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		int					true	"blog id"
+//	@Param			Authorization	header		string	true	"jwt token"
 //	@Param			blog	body		entities.ReqInBlog	true	"new blog content"
 //	@Success		200		{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400		{object}	entities.RetFailed
@@ -462,6 +467,7 @@ func (b *Blogs) CreateBlogWithID(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"target blog id"
+//	@Param			Authorization	header		string	true	"jwt token"
 //	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
 //	@Failure		400	{object}	entities.RetFailed
 //	@Failure		403	{object}	entities.RetFailed
@@ -506,6 +512,7 @@ func (b *Blogs) SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"target blog id"
+//	@Param			Authorization	header		string	true	"jwt token"
 //	@Success		200	{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400	{object}	entities.RetFailed
 //	@Failure		403	{object}	entities.RetFailed
@@ -549,6 +556,7 @@ func (b *Blogs) RestoreDeletedBlog(w http.ResponseWriter, r *http.Request) error
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"target blog id"
+//	@Param			Authorization	header		string	true	"jwt token"
 //	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
 //	@Failure		400	{object}	entities.RetFailed
 //	@Failure		403	{object}	entities.RetFailed
@@ -593,6 +601,7 @@ func (b *Blogs) DeleteBlog(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"target blog id"
+//	@Param			Authorization	header		string	true	"jwt token"
 //	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
 //	@Failure		400	{object}	entities.RetFailed
 //	@Failure		403	{object}	entities.RetFailed

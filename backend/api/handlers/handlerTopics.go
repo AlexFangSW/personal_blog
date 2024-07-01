@@ -39,6 +39,7 @@ func NewTopics(repo topicsRepository, auth authHelper) *Topics {
 //	@Tags			topics
 //	@Accept			json
 //	@Produce		json
+//	@Param			Authorization	header		string	true	"jwt token"
 //	@Param			topic	body		entities.InTopic	true	"new topic contents"
 //	@Success		200		{object}	entities.RetSuccess[entities.Topic]
 //	@Failure		400		{object}	entities.RetFailed
@@ -139,6 +140,7 @@ func (t *Topics) GetTopic(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		int					true	"target tag id"
+//	@Param			Authorization	header		string	true	"jwt token"
 //	@Param			topic	body		entities.InTopic	true	"new topic content"
 //	@Success		200		{object}	entities.RetSuccess[entities.Topic]
 //	@Failure		400		{object}	entities.RetFailed
@@ -196,6 +198,7 @@ func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		int	true	"target topic id"
+//	@Param			Authorization	header		string	true	"jwt token"
 //	@Success		200	{object}	entities.RetSuccess[entities.RowsAffected]
 //	@Failure		400	{object}	entities.RetFailed
 //	@Failure		404	{object}	entities.RetFailed
