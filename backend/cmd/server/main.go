@@ -5,8 +5,9 @@ import (
 	"blog/api/handlers"
 	"blog/config"
 	"blog/db/models/sqlite"
-	"blog/docs"
 	"blog/repositories"
+	"blog/swagger_docs"
+	_ "blog/swagger_docs"
 	"blog/util"
 	"context"
 	"database/sql"
@@ -46,8 +47,8 @@ func run() error {
 	util.InitLogger(config.Logger.Level)
 
 	// init swagger info
-	docs.SwaggerInfo.Host = "localhost" + config.Server.Port
-	docs.SwaggerInfo.BasePath = config.Server.Prefix
+	swagger_docs.SwaggerInfo.Host = "localhost" + config.Server.Port
+	swagger_docs.SwaggerInfo.BasePath = config.Server.Prefix
 
 	// db connection
 	db, err := sql.Open("sqlite3", config.DB.DSNURL)

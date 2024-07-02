@@ -3,7 +3,7 @@ package api
 import (
 	"blog/api/handlers"
 	"blog/config"
-	_ "blog/docs"
+	_ "blog/swagger_docs"
 	"context"
 	"fmt"
 	"log/slog"
