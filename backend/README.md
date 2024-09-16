@@ -1,10 +1,14 @@
 # Coding notes backend
 ## Development
 ### Run locally
-install `goose` and `swaggo`
+Install `goose` and `swaggo`
 ```bash
 go install github.com/pressly/goose/v3/cmd/goose@latest
 go install github.com/swaggo/swag/cmd/swag@latest
+```
+Install dependences
+```
+go mod download
 ```
 Run
 ```bash
@@ -26,17 +30,11 @@ Run
 - Database Migration: **[goose](https://github.com/pressly/goose)**
 - API documentation: generated with **[swaggo](https://github.com/swaggo/swag)**
 
-> SQLite [WAL](https://www.sqlite.org/wal.html) mode enables **none blocking**
-read and writes.
-
 ## API Documentation
 ### Overview
 APIs are seperated into **PUBLIC** and **PRIVATE**, 
 **PUBLIC** APIs can be access by anyone, while **PRIVATE** APIs 
 needs **JWT** token.
-
-**JWT** is also stored in the database, in order to use **PRIVATE** APIs,
-one must have a valid **JWT** token, while also matching the entry in the database.
 
 -   <details>
     <summary>Blogs API</summary>
@@ -209,7 +207,3 @@ Only someone with direct access to the database can register.
 
 ## TODO
 - Remove unecessary pointer return
-- SQLite
-    - activate WAL
-    - command to manually vacuum "db" and "wal"
-- Refector server run() (model handler buildup)
