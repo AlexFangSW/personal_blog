@@ -1,9 +1,9 @@
-import { merianda } from "@/app/fonts";
-import Link from "next/link";
-import Image from "next/image";
-import pinIcon from "../../../../../public/pin.svg";
-import { LinkCard } from "@/app/components/linkCard";
-import { getCurrentTopic } from "@/app/util/topic";
+import { merianda } from "@/app/fonts"
+import Link from "next/link"
+import Image from "next/image"
+import pinIcon from "../../../../../public/pin.svg"
+import { LinkCard } from "@/app/components/linkCard"
+import { getCurrentTopic } from "@/app/util/topic"
 import { notFound, redirect } from 'next/navigation'
 
 /**
@@ -27,7 +27,7 @@ function displayTagName(tag, selected) {
   */
 async function Tags({ selected, topic }) {
   // selected tag id current topic
-  const tags = [];
+  const tags = []
 
   const url = `${process.env.BACKEND_BASE_URL}/tags?topic=${topic.id}`
   const res = await fetch(url)
@@ -41,25 +41,25 @@ async function Tags({ selected, topic }) {
     <Link className="btn btn-ghost" href={`/topics/${topic.id}/${topic.slug}`}>
       All
     </Link>,
-  );
+  )
 
   for (const tag of parsedRes.msg) {
     tags.push(
       <Link className="btn btn-ghost" href={`/topics/${topic.id}/${topic.slug}?tag=${tag.id}`}>
         {displayTagName(tag, selected)}
       </Link>,
-    );
+    )
   }
-  return tags;
+  return tags
 }
 
 function BlogTags({ tags }) {
   // list of tags
-  const tag_list = [];
+  const tag_list = []
   for (const tag of tags) {
-    tag_list.push(<div className="badge badge-outline">{tag.name}</div>);
+    tag_list.push(<div className="badge badge-outline">{tag.name}</div>)
   }
-  return tag_list;
+  return tag_list
 }
 
 
@@ -72,7 +72,7 @@ function BlogTags({ tags }) {
   */
 async function Blogs({ topicID, tagID }) {
   // use single topic, multiple tags to filter blogs
-  const blogs = [];
+  const blogs = []
 
   const url = new URL(`${process.env.BACKEND_BASE_URL}/blogs?topic=${topicID}`)
   if (tagID) {
@@ -105,14 +105,14 @@ async function Blogs({ topicID, tagID }) {
           </div>
         </div>
       </LinkCard>,
-    );
+    )
   }
-  return blogs;
+  return blogs
 }
 
 
 export default async function Page({ params, searchParams }) {
-  const selectedTag = searchParams["tag"];
+  const selectedTag = searchParams["tag"]
   const topicRes = await getCurrentTopic(params.id)
 
   if (topicRes.status >= 400) {
@@ -130,10 +130,10 @@ export default async function Page({ params, searchParams }) {
 
   return (
     <div className="flex flex-col min-h-screen items-center p-5">
-      <div className="flex flex-col items-center gap-y-5">
-        <h1 className={`title text-6xl ${merianda.className}`}>
-          {currentTopic.name}
-        </h1>
+      <h1 className={`title lg:text-6xl text-2xl ${merianda.className}`}>
+        {currentTopic.name}
+      </h1>
+      <div className="flex flex-col items-center gap-y-1 pt-5">
         <p>{currentTopic.description}</p>
         <div className="divider">Tags</div>
         <div className="flex flex-row flex-wrap justify-center gap-2">
@@ -145,5 +145,5 @@ export default async function Page({ params, searchParams }) {
         </div>
       </div>
     </div>
-  );
+  )
 }

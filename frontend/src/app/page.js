@@ -30,13 +30,13 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen items-center p-5">
       <div className="flex flex-col items-center gap-y-5">
-        <h1 className={`title text-6xl ${merianda.className}`}>Coding Notes</h1>
-        <div className="flex items-center gap-x-5 ">
+        <h1 className={`lg:text-6xl text-2xl ${merianda.className}`}>Coding Notes</h1>
+        <div className="flex flex-col lg:flex-row items-center gap-x-5">
           <p>By: AlexFangSW</p>
           <div className="divider divider-horizontal"></div>
-          <p>Email: alexfangsw@gmail.com</p>
+          <p className="hidden lg:block">Email: alexfangsw@gmail.com</p>
           <Link
-            className="btn btn-neutral"
+            className="btn btn-neutral hidden lg:flex lg:items-center lg:justify-center"
             href="https://github.com/AlexFangSW"
           >
             GitHub
