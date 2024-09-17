@@ -17,4 +17,7 @@
     - [x] home
     - [x] topics
     - [x] blogs
+- [ ] optamize loading
+- [ ] re-organize page layout
+- [ ] page layout for mobile
 

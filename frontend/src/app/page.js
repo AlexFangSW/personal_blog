@@ -1,9 +1,9 @@
-import Link from "next/link";
-import { merianda } from "./fonts";
-import { LinkCard } from "./components/linkCard";
+import Link from "next/link"
+import { merianda } from "./fonts"
+import { LinkCard } from "./components/linkCard"
 
 async function Topics() {
-  const topics = [];
+  const topics = []
 
   const url = `${process.env.BACKEND_BASE_URL}/topics`
   const res = await fetch(url)
@@ -21,9 +21,9 @@ async function Topics() {
           <p>{topic.description}</p>
         </div>
       </LinkCard>,
-    );
+    )
   }
-  return topics;
+  return topics
 }
 
 export default function Home() {
@@ -48,5 +48,5 @@ export default function Home() {
         <Topics />
       </div>
     </div>
-  );
+  )
 }
