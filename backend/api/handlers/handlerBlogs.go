@@ -312,7 +312,13 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 
-	mdParser := goldmark.New(goldmark.WithExtensions(highlighting.Highlighting))
+	mdParser := goldmark.New(
+		goldmark.WithExtensions(
+			highlighting.NewHighlighting(
+				highlighting.WithStyle("gruvbox"),
+			),
+		),
+	)
 
 	// admin get
 	if len(all) > 0 && all[0] {
