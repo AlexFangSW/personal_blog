@@ -56,19 +56,14 @@ export default async function Page({ params }) {
     redirect(`/blogs/${params.id}/${currentBlog.slug}`)
   }
 
-  const customizeComponents = {
-    p: (props) => <p className="text-xl">{props.children}</p>,
-    strong: (props) => <strong className="text-inherit">{props.children}</strong>,
-  }
-
-  // NOTE: markdown rander can't handle '{}' in content, unless we escape them with '\'
+  // https://github.com/tailwindlabs/tailwindcss-typography
   return (
     <div className="flex flex-col min-h-screen  items-center p-5">
-      <div className="flex flex-col items-center gap-y-10">
-        <h1 className={`title text-6xl ${merianda.className}`}>
+      <div className="flex flex-col items-center lg:gap-y-10 gap-y-5">
+        <h1 className={`title text-2xl lg:text-6xl ${merianda.className}`}>
           {currentBlog.title}
         </h1>
-        <div className="flex flex-row flex-wrap justify-center items-center gap-2">
+        <div className="flex flex-col lg:flex-row flex-wrap justify-center items-center lg:gap-2">
           <p>Created at: {createAtStr}</p>
           <div className="divider divider-horizontal"></div>
           <p>By: AlexFangSW</p>
@@ -83,9 +78,10 @@ export default async function Page({ params }) {
           <div className="divider divider-horizontal"></div>
           <BlogTags tags={currentBlog.tags} />
         </div>
-        <div className="divider">Content</div>
-        <article className="prose max-w-4xl text-neutral-content">
-          <MDXRemote source={currentBlog.content} components={customizeComponents} />
+        <div className="divider" >Content</div>
+
+        <article className="prose prose-strong:text-neutral-content text-neutral-content">
+          <div dangerouslySetInnerHTML={{ __html: currentBlog.content }}></div>
         </article>
       </div>
     </div >
