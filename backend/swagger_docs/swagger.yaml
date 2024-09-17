@@ -431,6 +431,10 @@ paths:
         in: query
         name: all
         type: boolean
+      - description: parse markdown to html before returning
+        in: query
+        name: parsed
+        type: boolean
       produces:
       - application/json
       responses:

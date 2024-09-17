@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"blog/entities"
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -9,6 +10,9 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/yuin/goldmark"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 )
 
 // Concrete implementations are at repository/<name>
@@ -274,6 +278,7 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 //	@Param			id				path		int		true	"target blog id"
 //	@Param			Authorization	header		string	false	"jwt token"
 //	@Param			all				query		bool	false	"show all blogs regardless of visibility or soft delete status"	default(false)
+//	@Param			parsed		query		bool  false "parse markdown to html before returning"
 //	@Success		200				{object}	entities.RetSuccess[entities.OutBlog]
 //	@Failure		400				{object}	entities.RetFailed
 //	@Failure		403				{object}	entities.RetFailed
@@ -300,6 +305,15 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
 	}
 
+	rowParsed := queries["parsed"]
+	parsed, err := strListToBool(rowParsed)
+	if err != nil {
+		slog.Error("GetBlog: 'parsed' string list to bool failed", "error", err)
+		return entities.NewRetFailed(err, http.StatusBadRequest).WriteJSON(w)
+	}
+
+	mdParser := goldmark.New(goldmark.WithExtensions(highlighting.Highlighting))
+
 	// admin get
 	if len(all) > 0 && all[0] {
 
@@ -318,6 +332,15 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 			}
 			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
+
+		// parse markdown to html with highlighing
+		if len(parsed) > 0 && parsed[0] {
+			var buf bytes.Buffer
+			if err := mdParser.Convert([]byte(blog.Content), &buf); err != nil {
+				return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+			}
+			blog.Content = buf.String()
+		}
 		return entities.NewRetSuccess(*blog).WriteJSON(w)
 	}
 
@@ -329,6 +352,16 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 		}
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+
+	}
+
+	// parse markdown to html with highlighing
+	if len(parsed) > 0 && parsed[0] {
+		var buf bytes.Buffer
+		if err := mdParser.Convert([]byte(blog.Content), &buf); err != nil {
+			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
+		}
+		blog.Content = buf.String()
 	}
 	return entities.NewRetSuccess(*blog).WriteJSON(w)
 }

@@ -395,6 +395,12 @@ const docTemplate = `{
                         "description": "show all blogs regardless of visibility or soft delete status",
                         "name": "all",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "parse markdown to html before returning",
+                        "name": "parsed",
+                        "in": "query"
                     }
                 ],
                 "responses": {
