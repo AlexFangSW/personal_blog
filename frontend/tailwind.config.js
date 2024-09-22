@@ -18,5 +18,5 @@ const config = {
   daisyui: {
     themes: ["coffee"],
   },
-};
-export default config;
+}
+export default config
