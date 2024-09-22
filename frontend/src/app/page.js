@@ -30,7 +30,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen items-center p-5">
       <div className="flex flex-col items-center gap-y-5">
-        <h1 className={`lg:text-6xl text-2xl ${merianda.className}`}>Coding Notes</h1>
+        <h1 className={`text-5xl ${merianda.className}`}>Coding Notes</h1>
         <div className="flex flex-col lg:flex-row items-center gap-x-5">
           <p>By: AlexFangSW</p>
           <div className="divider divider-horizontal"></div>

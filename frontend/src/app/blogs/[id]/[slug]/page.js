@@ -58,32 +58,27 @@ export default async function Page({ params }) {
 
   // https://github.com/tailwindlabs/tailwindcss-typography
   return (
-    <div className="flex flex-col min-h-screen  items-center p-5">
-      <div className="flex flex-col items-center lg:gap-y-10 gap-y-5">
-        <h1 className={`title text-2xl lg:text-6xl ${merianda.className}`}>
-          {currentBlog.title}
-        </h1>
+    <div className="flex flex-col min-h-screen items-center p-5">
+      <h1 className={`title text-5xl text-center ${merianda.className}`}>
+        {currentBlog.title}
+      </h1>
+      <div className="flex flex-col items-center lg:pt-10 pt-5 gap-y-5">
         <div className="flex flex-col lg:flex-row flex-wrap justify-center items-center lg:gap-2">
-          <p>Created at: {createAtStr}</p>
-          <div className="divider divider-horizontal"></div>
           <p>By: AlexFangSW</p>
+          <div className="divider divider-horizontal"></div>
+          <p>Created at: {createAtStr}</p>
           <div className="divider divider-horizontal"></div>
           <p>Updated at: {updateAtStr}</p>
         </div>
-      </div>
-      <div className="flex flex-col items-center gap-y-5 pt-3">
         <p>{currentBlog.description}</p>
         <div className="flex flex-row flex-wrap justify-center gap-3">
           <BlogTopics topics={currentBlog.topics} />
           <div className="divider divider-horizontal"></div>
           <BlogTags tags={currentBlog.tags} />
         </div>
-        <div className="divider" >Content</div>
-
-        <article className="prose prose-strong:text-neutral-content text-neutral-content">
-          <div dangerouslySetInnerHTML={{ __html: currentBlog.content }}></div>
-        </article>
       </div>
+      <div className="divider" >Content</div>
+      <div className="prose w-full" style={{ overflowWrap: "break-word" }} dangerouslySetInnerHTML={{ __html: currentBlog.content }}></div>
     </div >
   )
 }

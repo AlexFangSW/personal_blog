@@ -130,10 +130,10 @@ export default async function Page({ params, searchParams }) {
 
   return (
     <div className="flex flex-col min-h-screen items-center p-5">
-      <h1 className={`title lg:text-6xl text-2xl ${merianda.className}`}>
+      <h1 className={`title text-5xl ${merianda.className}`}>
         {currentTopic.name}
       </h1>
-      <div className="flex flex-col items-center gap-y-1 pt-5">
+      <div className="flex flex-col w-full items-center gap-y-1 pt-5">
         <p>{currentTopic.description}</p>
         <div className="divider">Tags</div>
         <div className="flex flex-row flex-wrap justify-center gap-2">
