@@ -6,7 +6,7 @@ COPY . /app
 WORKDIR /app
 RUN apk add build-base 
 RUN go build -trimpath -o server ./cmd/server/main.go
-RUN go build -trimpath -o user-register ./cmd/register/main.go
+RUN go build -trimpath -o user-register ./cmd/user-register/main.go
 
 FROM golang:1.22-alpine
 
