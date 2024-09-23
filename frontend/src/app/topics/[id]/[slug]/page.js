@@ -6,6 +6,8 @@ import { LinkCard } from "@/app/components/linkCard"
 import { getCurrentTopic } from "@/app/util/topic"
 import { notFound, redirect } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @param {object} tag
  * @param {number} selected 

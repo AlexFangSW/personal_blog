@@ -4,6 +4,8 @@ import { MDXRemote } from "next-mdx-remote/rsc"
 import { getCurrentBlog } from "@/app/util/blog"
 import { notFound, redirect } from "next/navigation"
 
+export const dynamic = 'force-dynamic'
+
 /**
  * @param {Object} param0 
  * @param {Object} param0.tags 
@@ -78,7 +80,7 @@ export default async function Page({ params }) {
         </div>
       </div>
       <div className="divider" >Content</div>
-      <div className="prose w-full prose-strong:text-neutral-content text-neutral-content" style={{ overflowWrap: "break-word" }} dangerouslySetInnerHTML={{ __html: currentBlog.content }}></div>
+      <div className="prose w-full lg:w-7/12 lg:max-w-none prose-strong:text-neutral-content text-neutral-content" style={{ overflowWrap: "break-word" }} dangerouslySetInnerHTML={{ __html: currentBlog.content }}></div>
     </div >
   )
 }

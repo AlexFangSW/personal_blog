@@ -2,6 +2,8 @@ import Link from "next/link"
 import { merianda } from "./fonts"
 import { LinkCard } from "./components/linkCard"
 
+export const dynamic = 'force-dynamic'
+
 async function Topics() {
   const topics = []
 
