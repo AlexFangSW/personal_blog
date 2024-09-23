@@ -1,0 +1,144 @@
+kind: pipeline
+type: kubernetes
+name: development-build
+
+trigger:
+  branch: 
+  - development
+  event: 
+  - push
+
+steps:
+- name: test-backend
+  image: golang:1.22-alpine
+  commands:
+    - go test ./...
+
+- name: docker-backend
+  image: docker.cloud.alexfangsw.com/cache/plugins/docker
+  settings:
+    username:
+      from_secret: docker-user
+    password:
+      from_secret: docker-password
+    registry: docker.cloud.alexfangsw.com
+    repo: docker.cloud.alexfangsw.com/blog/backend
+    cache_from: docker.cloud.alexfangsw.com/blog/backend:latest
+    context: ./backend/
+    tags:
+      - latest
+      - 0.0.1-dev
+  depends_on:
+    - test-backend
+
+- name: docker-frontend
+  image: docker.cloud.alexfangsw.com/cache/plugins/docker
+  settings:
+    username:
+      from_secret: docker-user
+    password:
+      from_secret: docker-password
+    registry: docker.cloud.alexfangsw.com
+    repo: docker.cloud.alexfangsw.com/blog/frontend
+    cache_from: docker.cloud.alexfangsw.com/blog/frontend:latest
+    context: ./frontend/
+    build_args: BACKEND_BASE_URL=backend
+    tags:
+      - latest
+      - 0.0.1-dev
+
+# - name: helm
+#   image: docker.cloud.alexfangsw.com/drone-plugin/helm
+#   environment:
+#     TEST_ENV: development-build
+#     IMAGE: nginx
+#   settings:
+#     sourceDir: ./helm 
+#     targetRepo: 
+#       from_secret: helm-repo
+#     targetBranch: development
+#     gitUser:
+#       from_secret: git-user
+#     gitEmail:
+#       from_secret: git-email
+#     gitToken:
+#       from_secret: git-helm-token
+#     semver: 0.0.1-dev
+#     touchRevision: true
+
+# ---
+# kind: pipeline
+# type: kubernetes
+# name: release
+#
+# trigger:
+#   event:
+#     - tag
+#   ref:
+#     include:
+#       - refs/tags/v*
+#     exclude:
+#       - refs/tags/**-dev
+#
+# steps:
+# - name: docker
+#   image: docker.cloud.alexfangsw.com/cache/plugins/docker
+#   settings:
+#     username:
+#       from_secret: docker-user
+#     password:
+#       from_secret: docker-password
+#     registry: docker.cloud.alexfangsw.com
+#     repo: docker.cloud.alexfangsw.com/drone-plugin/helm
+#     auto_tag: true
+#
+# - name: helm
+#   image: docker.cloud.alexfangsw.com/drone-plugin/helm
+#   environment:
+#     TEST_ENV: development-build
+#     IMAGE: nginx
+#   settings:
+#     sourceDir: ./helm 
+#     targetRepo: 
+#       from_secret: helm-repo
+#     targetBranch: development
+#     gitUser:
+#       from_secret: git-user
+#     gitEmail:
+#       from_secret: git-email
+#     gitToken:
+#       from_secret: git-helm-token
+#     semver: ${DRONE_TAG#v}
+#     touchRevision: true
+#
+# --- 
+#
+# kind: pipeline
+# type: kubernetes
+# name: helm-test
+#
+# trigger:
+#   branch: 
+#     - helm-dev
+#   event:
+#     - push
+#
+# steps:
+# - name: helm
+#   image: docker.cloud.alexfangsw.com/drone-plugin/helm
+#   environment:
+#     TEST_ENV: 123123
+#     IMAGE: nginx
+#   settings:
+#     sourceDir: ./helm 
+#     targetRepo: 
+#       from_secret: helm-repo
+#     targetBranch: development
+#     gitUser:
+#       from_secret: git-user
+#     gitEmail:
+#       from_secret: git-email
+#     gitToken:
+#       from_secret: git-helm-token
+#     semver: 0.0.1-dev
+#     touchRevision: true
