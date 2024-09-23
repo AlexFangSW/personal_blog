@@ -29,7 +29,7 @@ func main() {
 	commonFlags := []cli.Flag{
 		&cli.StringFlag{
 			Name:        "url",
-			Value:       "https://localhost:8080/api/v1",
+			Value:       "http://localhost:8080/api/v1",
 			Usage:       "Base `URL` for api",
 			Destination: &url,
 		},
