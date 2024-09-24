@@ -51,24 +51,24 @@ steps:
       - latest
       - 0.0.1-dev
 
-# - name: helm
-#   image: docker.cloud.alexfangsw.com/drone-plugin/helm
-#   environment:
-#     TEST_ENV: development-build
-#     IMAGE: nginx
-#   settings:
-#     sourceDir: ./helm 
-#     targetRepo: 
-#       from_secret: helm-repo
-#     targetBranch: development
-#     gitUser:
-#       from_secret: git-user
-#     gitEmail:
-#       from_secret: git-email
-#     gitToken:
-#       from_secret: git-helm-token
-#     semver: 0.0.1-dev
-#     touchRevision: true
+- name: helm
+  image: docker.cloud.alexfangsw.com/drone-plugin/helm
+  environment:
+    BACKEND_IMAGE: docker.cloud.alexfangsw.com/blog/backend
+    FRONTEND_IMAGE: docker.cloud.alexfangsw.com/blog/frontend
+  settings:
+    sourceDir: ./helm 
+    targetRepo: 
+      from_secret: helm-repo
+    targetBranch: development
+    gitUser:
+      from_secret: git-user
+    gitEmail:
+      from_secret: git-email
+    gitToken:
+      from_secret: git-helm-token
+    semver: 0.0.1-dev
+    touchRevision: true
 
 # ---
 # kind: pipeline
