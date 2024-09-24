@@ -1,7 +1,7 @@
 package config
 
 type ServerSetting struct {
-	Port            string `json:"port"`
+	Port            int    `json:"port"`
 	Prefix          string `json:"prefix"`
 	ShutdownTimeout int    `json:"shutdownTimeout"`
 }
@@ -38,7 +38,7 @@ type Config struct {
 func NewConfig() *Config {
 	return &Config{
 		Server: ServerSetting{
-			Port:            ":8080",
+			Port:            8080,
 			Prefix:          "/api/v1",
 			ShutdownTimeout: 30,
 		},
