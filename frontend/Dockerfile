@@ -9,7 +9,7 @@ WORKDIR /app
 
 COPY package* .env /app/
 
-RUN npm install 
+RUN npm install --include dev
 
 COPY . .
 
