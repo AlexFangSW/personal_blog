@@ -13,6 +13,7 @@ steps:
   image: golang:1.22-alpine
   commands:
     - cd ./backend/
+    - apk add build-base 
     - CGO_ENABLED=1 go test ./...
 
 - name: docker-backend
