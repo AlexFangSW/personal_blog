@@ -42,7 +42,7 @@ func (s *Server) Start() error {
 
 	// api specification
 	slog.Info("API specification at: /docs/*")
-	filepath := fmt.Sprintf("http://localhost%s/docs/doc.json", s.config.Server.Port)
+	filepath := fmt.Sprintf("http://localhost:%d/docs/doc.json", s.config.Server.Port)
 	mux.HandleFunc("GET /docs/*", WithMiddleware(apiHandlerWrapper(
 		httpSwagger.Handler(httpSwagger.URL(filepath)))))
 
@@ -76,7 +76,7 @@ func (s *Server) Start() error {
 	mux.HandleFunc(s.delete("/topics/{id}"), WithMiddleware(s.topics.DeleteTopic))
 
 	s.server = &http.Server{
-		Addr:    s.config.Server.Port,
+		Addr:    fmt.Sprintf(":%d", s.config.Server.Port),
 		Handler: mux,
 	}
 	slog.Info("Server is listening on", "port", s.config.Server.Port)

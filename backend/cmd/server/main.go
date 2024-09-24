@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -47,7 +48,7 @@ func run() error {
 	util.InitLogger(config.Logger.Level)
 
 	// init swagger info
-	swagger_docs.SwaggerInfo.Host = "localhost" + config.Server.Port
+	swagger_docs.SwaggerInfo.Host = "localhost:" + strconv.Itoa(config.Server.Port)
 	swagger_docs.SwaggerInfo.BasePath = config.Server.Prefix
 
 	// db connection
