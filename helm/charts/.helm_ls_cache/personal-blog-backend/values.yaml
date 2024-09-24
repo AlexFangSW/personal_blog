@@ -1,6 +1,6 @@
 deployment:
-  image: "${BACKEND_IMAGE}:${PLUGIN_SEMVER}"
-  version: "${PLUGIN_SEMVER}"
+  image: "${BACKEND_IMAGE}:${DRONE_SEMVER}"
+  version: "${DRONE_SEMVER}"
   pullsecret: "docker.cloud.alexfangsw.com"
   replicas: 1
   resources:
@@ -41,16 +41,11 @@ service:
   annotations: {}
   labels: {}
 
-runDBMigration: true
-
-persistentVolumeClaim:
-  enable: true
-  size: 5Gi
-  storageClass: longhorn
+run_db_migration: true
 
 settings:
   server:
-    port: 8080
+    port: ":8080"
     prefix: "/api/v1"
     shutdownTimeout: 30
   logger:
@@ -62,6 +57,6 @@ settings:
   jwt:
     issuer: alexfangsw
     expire: 6
-    secret: 'change-me'
+    secret: ''
   login:
     rateLimit: 1

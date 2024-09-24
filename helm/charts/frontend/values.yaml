@@ -1,5 +1,5 @@
 deployment:
-  image: "${BACKEND_IMAGE}:${PLUGIN_SEMVER}"
+  image: "${FRONTEND_IMAGE}:${PLUGIN_SEMVER}"
   version: "${PLUGIN_SEMVER}"
   pullsecret: "docker.cloud.alexfangsw.com"
   replicas: 1
@@ -13,7 +13,7 @@ deployment:
   nodeSelector: {}
   podAnnotations: {}
   podLabels:
-    blog-component: backend
+    blog-component: frontend
   strategy: {}
   readinessProbe: {}
     # httpGet:
@@ -40,28 +40,3 @@ service:
   type: ClusterIP
   annotations: {}
   labels: {}
-
-runDBMigration: true
-
-persistentVolumeClaim:
-  enable: true
-  size: 5Gi
-  storageClass: longhorn
-
-settings:
-  server:
-    port: 8080
-    prefix: "/api/v1"
-    shutdownTimeout: 30
-  logger:
-    level: INFO
-  db:
-    dsnURL: "/data/blog.db"
-    timeout: 30
-    connections: 10
-  jwt:
-    issuer: alexfangsw
-    expire: 6
-    secret: 'change-me'
-  login:
-    rateLimit: 1

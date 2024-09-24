@@ -1,3 +1,79 @@
 global:
   appName: personal-blog
 
+backend:
+  deployment:
+    image: "${BACKEND_IMAGE}:${PLUGIN_SEMVER}"
+    version: "${PLUGIN_SEMVER}"
+    pullsecret: "docker.cloud.alexfangsw.com"
+    replicas: 1
+    resources:
+      requests:
+        memory: "500Mi"
+      limits:
+        memory: "4Gi"
+    affinity: {}
+    tolerations: {}
+    nodeSelector: {}
+    podAnnotations: {}
+    podLabels:
+      blog-component: backend
+    strategy: {}
+    readinessProbe: {}
+    livenessProbe: {}
+
+  service:
+    type: ClusterIP
+    annotations: {}
+    labels: {}
+
+  runDBMigration: true
+
+  persistentVolumeClaim:
+    enable: true
+    size: 5Gi
+    storageClass: longhorn
+
+  settings:
+    server:
+      port: 8080
+      prefix: "/api/v1"
+      shutdownTimeout: 30
+    logger:
+      level: INFO
+    db:
+      dsnURL: "/data/blog.db"
+      timeout: 30
+      connections: 10
+    jwt:
+      issuer: alexfangsw
+      expire: 6
+      secret: 'change-me'
+    login:
+      rateLimit: 1
+
+frontend:
+  deployment:
+    image: "${FRONTEND_IMAGE}:${PLUGIN_SEMVER}"
+    version: "${PLUGIN_SEMVER}"
+    pullsecret: "docker.cloud.alexfangsw.com"
+    replicas: 1
+    resources:
+      requests:
+        memory: "500Mi"
+      limits:
+        memory: "4Gi"
+    affinity: {}
+    tolerations: {}
+    nodeSelector: {}
+    podAnnotations: {}
+    podLabels:
+      blog-component: frontend
+    strategy: {}
+    readinessProbe: {}
+    livenessProbe: {}
+
+  service:
+    type: ClusterIP
+    annotations: {}
+    labels: {}

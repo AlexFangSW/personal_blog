@@ -1,0 +1,16 @@
+{{ if .Values.persistentVolumeClaim.enable }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-backend
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.persistentVolumeClaim.size }}
+  storageClassName: {{ .Values.persistentVolumeClaim.storageClass }}
+  volumeMode: Filesystem
+  volumeName: {{ .Release.Name }}-backend
+{{ end }}

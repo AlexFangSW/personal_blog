@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-backend
+  name: {{ .Release.Name }}-frontend
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Values.global.appName }}
@@ -47,7 +47,7 @@ spec:
       {{- toYaml .Values.deployment.tolerations | nindent 6 }}
       {{- end }}
       containers:
-      - name: backend
+      - name: frontend
         image: {{ .Values.deployment.image }}
         imagePullPolicy: Always
         {{- if .Values.deployment.resources }}
@@ -62,19 +62,6 @@ spec:
         readinessProbe:
         {{- toYaml .Values.deployment.readinessProbe | nindent 10 }}
         {{- end }}
-        command:
-          - server
-          - --config 
-          - /app/config.json
-          {{- if .Values.runDBMigration }}
-          - --migrate
-          {{- end }}
-        volumeMounts:
-        - mountPath: /app/config.json
-          name: config
-          subPath: config.json
-        - mountPath: /data
-          name: db
         env:
         {{- if .Values.env }}
         {{- range $k, $v := .Values.env }}
@@ -84,11 +71,3 @@ spec:
         {{- end }}
       imagePullSecrets:
       - name: {{ .Values.deployment.pullsecret }}
-      volumes:
-      - configMap:
-          defaultMode: 420
-          name: {{ .Release.Name }}-backend-config
-        name: config
-      - name: db
-        persistentVolumeClaim:
-          claimName: {{ .Release.Name }}-backend
