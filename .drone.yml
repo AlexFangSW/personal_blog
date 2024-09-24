@@ -138,7 +138,7 @@ steps:
     sourceDir: ./helm 
     targetRepo: 
       from_secret: helm-repo
-    targetBranch: development
+    targetBranch: test
     gitUser:
       from_secret: git-user
     gitEmail:
