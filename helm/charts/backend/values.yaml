@@ -1,0 +1,46 @@
+deployment:
+  image: "${BACKEND_IMAGE}:${DRONE_SEMVER}"
+  version: "${DRONE_SEMVER}"
+  pullsecret: "docker.cloud.alexfangsw.com"
+  replicas: 1
+  resources:
+    requests:
+      memory: "500Mi"
+    limits:
+      memory: "4Gi"
+  affinity: {}
+  tolerations: {}
+  nodeSelector: {}
+  podAnnotations: {}
+  podLabels:
+    blog-component: backend
+  strategy: {}
+  readinessProbe: {}
+    # httpGet:
+    #   path: /ready
+    #   port: 8080
+    #   scheme: HTTP
+    # failureThreshold: 4
+    # successThreshold: 1
+    # initialDelaySeconds: 10
+    # timeoutSeconds: 1
+    # periodSeconds: 5
+  livenessProbe: {}
+    # httpGet:
+    #   path: /alive
+    #   port: 8080
+    #   scheme: HTTP
+    # failureThreshold: 3
+    # successThreshold: 1
+    # initialDelaySeconds: 10 
+    # timeoutSeconds: 1
+    # periodSeconds: 10
+
+service:
+  type: ClusterIP
+  annotations: {}
+  labels: {}
+
+run_db_migration: true
+
+settings: {}
