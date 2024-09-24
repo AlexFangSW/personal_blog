@@ -13,7 +13,7 @@ deployment:
   nodeSelector: {}
   podAnnotations: {}
   podLabels:
-    blog-component: backend
+    blogComponent: backend
   strategy: {}
   readinessProbe: {}
     # httpGet:

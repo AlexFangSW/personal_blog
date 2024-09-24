@@ -13,7 +13,7 @@ spec:
     matchLabels:
       app: {{ .Values.global.appName }}
       releaseName: {{ .Release.Name }}
-      blogComponent: {{ .Values.deployment.podLabels.blog-component }}
+      blogComponent: {{ .Values.deployment.podLabels.blogComponent }}
   {{- if .Values.deployment.strategy }}
   strategy:
   {{- toYaml .Values.deployment.strategy | nindent 4 }}

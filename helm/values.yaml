@@ -17,7 +17,7 @@ backend:
     nodeSelector: {}
     podAnnotations: {}
     podLabels:
-      blog-component: backend
+      blogComponent: backend
     strategy: {}
     readinessProbe: {}
     livenessProbe: {}
@@ -68,7 +68,7 @@ frontend:
     nodeSelector: {}
     podAnnotations: {}
     podLabels:
-      blog-component: frontend
+      blogComponent: frontend
     strategy: {}
     readinessProbe: {}
     livenessProbe: {}
