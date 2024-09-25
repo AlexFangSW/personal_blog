@@ -15,6 +15,26 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/alive": {
+            "get": {
+                "description": "Liveness probe for health check",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "healthCheck"
+                ],
+                "summary": "Liveness probe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/blog_entities.RetSuccess-string"
+                        }
+                    }
+                }
+            }
+        },
         "/auth-check": {
             "post": {
                 "description": "Checks if jwt is valid",
@@ -715,6 +735,26 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/entities.RetFailed"
+                        }
+                    }
+                }
+            }
+        },
+        "/ready": {
+            "get": {
+                "description": "Readiness probe for health check",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "healthCheck"
+                ],
+                "summary": "Readiness probe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/blog_entities.RetSuccess-string"
                         }
                     }
                 }

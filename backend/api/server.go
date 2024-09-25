@@ -19,6 +19,7 @@ type Server struct {
 	topics handlers.Topics
 	tags   handlers.Tags
 	users  handlers.Users
+	probes handlers.Probes
 }
 
 func NewServer(
@@ -26,13 +27,15 @@ func NewServer(
 	blogs handlers.Blogs,
 	tags handlers.Tags,
 	topics handlers.Topics,
-	users handlers.Users) *Server {
+	users handlers.Users,
+	probes handlers.Probes) *Server {
 	return &Server{
 		config: config,
 		blogs:  blogs,
 		tags:   tags,
 		topics: topics,
 		users:  users,
+		probes: probes,
 	}
 }
 
@@ -74,6 +77,9 @@ func (s *Server) Start() error {
 	mux.HandleFunc(s.get("/topics/{id}"), WithMiddleware(s.topics.GetTopic))
 	mux.HandleFunc(s.put("/topics/{id}"), WithMiddleware(s.topics.UpdateTopic))
 	mux.HandleFunc(s.delete("/topics/{id}"), WithMiddleware(s.topics.DeleteTopic))
+
+	mux.HandleFunc(s.getRoot("/alive"), WithMiddleware(s.probes.LivenessProbe))
+	mux.HandleFunc(s.getRoot("/ready"), WithMiddleware(s.probes.ReadinessProbe))
 
 	s.server = &http.Server{
 		Addr:    fmt.Sprintf(":%d", s.config.Server.Port),

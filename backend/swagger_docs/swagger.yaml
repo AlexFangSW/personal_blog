@@ -253,6 +253,19 @@ info:
   title: Coding Notes
   version: "1.0"
 paths:
+  /alive:
+    get:
+      description: Liveness probe for health check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-string'
+      summary: Liveness probe
+      tags:
+      - healthCheck
   /auth-check:
     post:
       consumes:
@@ -727,6 +740,19 @@ paths:
       summary: Logout
       tags:
       - users
+  /ready:
+    get:
+      description: Readiness probe for health check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-string'
+      summary: Readiness probe
+      tags:
+      - healthCheck
   /tags:
     get:
       consumes:

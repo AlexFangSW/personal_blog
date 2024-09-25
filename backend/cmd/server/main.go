@@ -110,6 +110,7 @@ func run() error {
 	tagsHandler := handlers.NewTags(tagsRepo, authHelper)
 	topicsHandler := handlers.NewTopics(topicsRepo, authHelper)
 	usersHandler := handlers.NewUsers(usersRepo, jwtHelper, authHelper)
+	probesHandler := handlers.NewProbes()
 
 	// setup server
 	server := api.NewServer(
@@ -118,6 +119,7 @@ func run() error {
 		*tagsHandler,
 		*topicsHandler,
 		*usersHandler,
+		*probesHandler,
 	)
 
 	// start server
