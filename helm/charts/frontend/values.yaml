@@ -15,26 +15,26 @@ deployment:
   podLabels:
     blogComponent: frontend
   strategy: {}
-  readinessProbe: {}
-    # httpGet:
-    #   path: /ready
-    #   port: 8080
-    #   scheme: HTTP
-    # failureThreshold: 4
-    # successThreshold: 1
-    # initialDelaySeconds: 10
-    # timeoutSeconds: 1
-    # periodSeconds: 5
-  livenessProbe: {}
-    # httpGet:
-    #   path: /alive
-    #   port: 8080
-    #   scheme: HTTP
-    # failureThreshold: 3
-    # successThreshold: 1
-    # initialDelaySeconds: 10 
-    # timeoutSeconds: 1
-    # periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: api/ready
+      port: 3000
+      scheme: HTTP
+    failureThreshold: 4
+    successThreshold: 1
+    initialDelaySeconds: 10
+    timeoutSeconds: 1
+    periodSeconds: 5
+  livenessProbe:
+    httpGet:
+      path: api/alive
+      port: 3000
+      scheme: HTTP
+    failureThreshold: 3
+    successThreshold: 1
+    initialDelaySeconds: 10 
+    timeoutSeconds: 1
+    periodSeconds: 10
 
 service:
   type: ClusterIP
