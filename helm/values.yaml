@@ -60,7 +60,7 @@ backend:
     logger:
       level: INFO
     db:
-      dsnURL: "/data/blog.db"
+      dsnURL: "/app/data/blog.db"
       timeout: 30
       connections: 10
     jwt:
