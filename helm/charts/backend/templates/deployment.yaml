@@ -63,12 +63,10 @@ spec:
         {{- toYaml .Values.deployment.readinessProbe | nindent 10 }}
         {{- end }}
         command:
-          - server
-          - --config 
-          - /app/config.json
-          {{- if .Values.runDBMigration }}
-          - --migrate
-          {{- end }}
+          - /bin/sh        
+          - c
+        args:
+          - 'user-register {{ .Values.defaultUser.username }} {{ .Values.defaultUser.password }} && server --config /app/config.json {{ if .Values.runDBMigration }} --migrate {{end}}'
         volumeMounts:
         - mountPath: /app/config.json
           name: config
@@ -82,11 +80,6 @@ spec:
           value:  {{ $v | quote }}
         {{- end }}
         {{- end }}
-      securityContext:
-        fsGroup: 65534
-        fsGroupChangePolicy: OnRootMismatch
-        runAsGroup: 65534
-        runAsUser: 65534
       imagePullSecrets:
       - name: {{ .Values.deployment.pullsecret }}
       volumes:
