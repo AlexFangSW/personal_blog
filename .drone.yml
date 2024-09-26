@@ -52,6 +52,7 @@ steps:
     tags:
       - latest
       - 0.0.1-dev
+    mtu: "1450"
   depends_on:
     - test-backend
 
@@ -71,6 +72,7 @@ steps:
     tags:
       - latest
       - 0.0.1-dev
+    mtu: "1450"
   depends_on:
     - test-backend
 
