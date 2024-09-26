@@ -55,6 +55,25 @@ steps:
   depends_on:
     - test-backend
 
+- name: docker-backend-tools
+  image: docker.cloud.alexfangsw.com/cache/plugins/docker
+  settings:
+    username:
+      from_secret: docker-user
+    password:
+      from_secret: docker-password
+    registry: docker.cloud.alexfangsw.com
+    repo: docker.cloud.alexfangsw.com/blog/backend-tools
+    cache_from: docker.cloud.alexfangsw.com/blog/backend-tools:latest
+    context: ./backend/
+    target: binary
+    dockerfile: ./backend/Dockerfile
+    tags:
+      - latest
+      - 0.0.1-dev
+  depends_on:
+    - test-backend
+
 - name: docker-frontend
   image: docker.cloud.alexfangsw.com/cache/plugins/docker
   settings:
@@ -126,6 +145,25 @@ steps:
     repo: docker.cloud.alexfangsw.com/blog/backend
     cache_from: docker.cloud.alexfangsw.com/blog/backend:latest
     context: ./backend/
+    dockerfile: ./backend/Dockerfile
+    tags:
+      - latest
+      - ${DRONE_TAG#v}
+  depends_on:
+    - test-backend
+
+- name: docker-backend-tools
+  image: docker.cloud.alexfangsw.com/cache/plugins/docker
+  settings:
+    username:
+      from_secret: docker-user
+    password:
+      from_secret: docker-password
+    registry: docker.cloud.alexfangsw.com
+    repo: docker.cloud.alexfangsw.com/blog/backend-tools
+    cache_from: docker.cloud.alexfangsw.com/blog/backend-tools:latest
+    context: ./backend/
+    target: binary
     dockerfile: ./backend/Dockerfile
     tags:
       - latest

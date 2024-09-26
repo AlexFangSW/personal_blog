@@ -47,10 +47,6 @@ backend:
 
   runDBMigration: true
 
-  defaultUser:
-    username: changeme
-    password: changeme
-
   persistentVolumeClaim:
     enable: true
     size: 5Gi
