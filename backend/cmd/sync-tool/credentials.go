@@ -78,17 +78,19 @@ func login(ctx context.Context, done chan<- bool, baseURL, username, password st
 		done <- true
 	}()
 
-	// get current terminal state
-	currFd := int(os.Stdin.Fd())
-	currState, err := term.GetState(currFd)
-	if err != nil {
-		return "", fmt.Errorf("Get treminal current state error: %w", err)
-	}
+	if username == "" && password == "" {
+		// get current terminal state
+		currFd := int(os.Stdin.Fd())
+		currState, err := term.GetState(currFd)
+		if err != nil {
+			return "", fmt.Errorf("Get treminal current state error: %w", err)
+		}
 
-	defer func() {
-		slog.Debug("restore terminal state")
-		oErr = errors.Join(oErr, term.Restore(currFd, currState))
-	}()
+		defer func() {
+			slog.Debug("restore terminal state")
+			oErr = errors.Join(oErr, term.Restore(currFd, currState))
+		}()
+	}
 
 	processErr := make(chan error, 1)
 	result := make(chan string, 1)
