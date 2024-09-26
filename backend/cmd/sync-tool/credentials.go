@@ -16,6 +16,18 @@ import (
 	"golang.org/x/term"
 )
 
+type Credentials struct {
+	Username string
+	Password string
+}
+
+func NewCredentials(username, password string) Credentials {
+	return Credentials{
+		Username: username,
+		Password: password,
+	}
+}
+
 func getJWT(baseURL, username, password string) (oStr string, oErr error) {
 	slog.Debug("getJWT")
 
@@ -59,7 +71,7 @@ func getJWT(baseURL, username, password string) (oStr string, oErr error) {
 }
 
 // reads username and password and get jwt token
-func login(ctx context.Context, done chan<- bool, baseURL string) (oStr string, oErr error) {
+func login(ctx context.Context, done chan<- bool, baseURL, username, password string) (oStr string, oErr error) {
 	slog.Info("login")
 
 	defer func() {
@@ -82,24 +94,14 @@ func login(ctx context.Context, done chan<- bool, baseURL string) (oStr string, 
 	result := make(chan string, 1)
 
 	go func() {
-		// read username
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Username: ")
-		username, err := reader.ReadString('\n')
-		if err != nil {
-			processErr <- fmt.Errorf("Read username error: %w", err)
-			return
+		if username == "" && password == "" {
+			cred, err := stdinCredentials()
+			if err != nil {
+				processErr <- fmt.Errorf("stdinCredentials error: %w", err)
+			}
+			username = cred.Username
+			password = cred.Password
 		}
-		username = strings.TrimSuffix(username, "\n")
-
-		// read password
-		fmt.Print("Password: ")
-		bytepw, err := term.ReadPassword(int(os.Stdin.Fd()))
-		if err != nil {
-			processErr <- fmt.Errorf("Read password error: %w", err)
-			return
-		}
-		password := string(bytepw)
 
 		// get jwt
 		jwt, err := getJWT(baseURL, username, password)
@@ -119,4 +121,25 @@ func login(ctx context.Context, done chan<- bool, baseURL string) (oStr string, 
 	case jwt := <-result:
 		return jwt, nil
 	}
+}
+
+func stdinCredentials() (Credentials, error) {
+	// read username
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Username: ")
+	username, err := reader.ReadString('\n')
+	if err != nil {
+		return Credentials{}, fmt.Errorf("Read username error: %w", err)
+	}
+	username = strings.TrimSuffix(username, "\n")
+
+	// read password
+	fmt.Print("Password: ")
+	bytepw, err := term.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		return Credentials{}, fmt.Errorf("Read password error: %w", err)
+	}
+	password := string(bytepw)
+
+	return NewCredentials(username, password), nil
 }

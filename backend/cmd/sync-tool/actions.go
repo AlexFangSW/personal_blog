@@ -10,7 +10,13 @@ import (
 	"slices"
 )
 
-func syncAll(ctx context.Context, baseURL, sourcePath string, batchSize int) error {
+func syncAll(
+	ctx context.Context,
+	username,
+	password,
+	baseURL,
+	sourcePath string,
+	batchSize int) error {
 	slog.Info("syncAll")
 
 	loginDone := make(chan bool, 1)
@@ -19,7 +25,7 @@ func syncAll(ctx context.Context, baseURL, sourcePath string, batchSize int) err
 
 	go func() {
 		// login
-		jwt, err := login(ctx, loginDone, baseURL)
+		jwt, err := login(ctx, loginDone, baseURL, username, password)
 		fmt.Printf("\n")
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: login failed: %w", err)

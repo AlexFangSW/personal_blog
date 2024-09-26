@@ -23,6 +23,8 @@ func main() {
 		sourcePath string
 		verbose    int
 		batchSize  int
+		username   string
+		password   string
 	)
 
 	// use custom client to set timeout
@@ -50,6 +52,20 @@ func main() {
 			Usage:       "max `SIZE` of concurrent requests",
 			Destination: &batchSize,
 		},
+		&cli.StringFlag{
+			Name:        "username",
+			Value:       "",
+			Usage:       "blog username (optional)",
+			Destination: &username,
+			EnvVars:     []string{"BLOG_USERNAME"},
+		},
+		&cli.StringFlag{
+			Name:        "password",
+			Value:       "",
+			Usage:       "blog password (optional)",
+			Destination: &password,
+			EnvVars:     []string{"BLOG_PASSWORD"},
+		},
 	}
 
 	ctxCancel, cancel := context.WithCancel(context.Background())
@@ -62,10 +78,17 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:                   "sync",
-				Usage:                  "Sync everything",
+				Usage:                  `Sync everything. USERNAME and PASSWORD can be passed in as enviroment variables or input interactively.`,
 				UseShortOptionHandling: true,
 				Action: func(cCtx *cli.Context) error {
-					return syncAll(ctxCancel, url, sourcePath, batchSize)
+					return syncAll(
+						ctxCancel,
+						username,
+						password,
+						url,
+						sourcePath,
+						batchSize,
+					)
 				},
 				Flags: commonFlags,
 				Before: func(ctx *cli.Context) error {
