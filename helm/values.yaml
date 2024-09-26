@@ -108,7 +108,9 @@ frontend:
       initialDelaySeconds: 10 
       timeoutSeconds: 1
       periodSeconds: 10
-
+  
+  env:
+    BACKEND_BASE_URL: https://backend:8080/api/v1
 
   service:
     type: ClusterIP
