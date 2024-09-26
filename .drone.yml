@@ -52,9 +52,6 @@ steps:
     tags:
       - latest
       - 0.0.1-dev
-    mtu: "1450"
-  depends_on:
-    - test-backend
 
 - name: docker-backend-tools
   image: docker.cloud.alexfangsw.com/cache/plugins/docker
@@ -72,9 +69,6 @@ steps:
     tags:
       - latest
       - 0.0.1-dev
-    mtu: "1450"
-  depends_on:
-    - test-backend
 
 - name: docker-frontend
   image: docker.cloud.alexfangsw.com/cache/plugins/docker
@@ -110,9 +104,6 @@ steps:
     gitToken:
       from_secret: git-helm-token
     semver: 0.0.1+dev
-  depends_on:
-    - docker-backend
-    - docker-frontend
 
 ---
 kind: pipeline
@@ -151,8 +142,6 @@ steps:
     tags:
       - latest
       - ${DRONE_TAG#v}
-  depends_on:
-    - test-backend
 
 - name: docker-backend-tools
   image: docker.cloud.alexfangsw.com/cache/plugins/docker
@@ -170,8 +159,6 @@ steps:
     tags:
       - latest
       - ${DRONE_TAG#v}
-  depends_on:
-    - test-backend
 
 - name: docker-frontend
   image: docker.cloud.alexfangsw.com/cache/plugins/docker
@@ -207,9 +194,6 @@ steps:
     gitToken:
       from_secret: git-helm-token
     semver: ${DRONE_TAG#v}
-  depends_on:
-    - docker-backend
-    - docker-frontend
 
 --- 
 
