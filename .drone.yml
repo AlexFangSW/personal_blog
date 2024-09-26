@@ -56,6 +56,7 @@ steps:
   environment:
     BACKEND_IMAGE: docker.cloud.alexfangsw.com/blog/backend
     FRONTEND_IMAGE: docker.cloud.alexfangsw.com/blog/frontend
+    IMAGE_TAG: 0.0.1-dev
   settings:
     sourceDir: ./helm 
     targetRepo: 
@@ -67,8 +68,7 @@ steps:
       from_secret: git-email
     gitToken:
       from_secret: git-helm-token
-    semver: 0.0.1-dev
-    touchRevision: true
+    semver: 0.0.1+dev
   depends_on:
     - docker-backend
     - docker-frontend
@@ -137,6 +137,7 @@ steps:
   environment:
     BACKEND_IMAGE: docker.cloud.alexfangsw.com/blog/backend
     FRONTEND_IMAGE: docker.cloud.alexfangsw.com/blog/frontend
+    IMAGE_TAG: 0.0.1-dev
   settings:
     sourceDir: ./helm 
     targetRepo: 
@@ -148,5 +149,5 @@ steps:
       from_secret: git-email
     gitToken:
       from_secret: git-helm-token
-    semver: 0.0.1-dev
+    semver: 0.0.1+dev
     touchRevision: true

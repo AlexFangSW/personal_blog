@@ -1,6 +1,6 @@
 deployment:
-  image: "${BACKEND_IMAGE}:${PLUGIN_SEMVER}"
-  version: "${PLUGIN_SEMVER}"
+  image: "${BACKEND_IMAGE}:${IMAGE_TAG}"
+  version: "${IMAGE_TAG}"
   pullsecret: "docker.cloud.alexfangsw.com"
   replicas: 1
   resources:
