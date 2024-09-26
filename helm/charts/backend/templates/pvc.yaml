@@ -12,5 +12,4 @@ spec:
       storage: {{ .Values.persistentVolumeClaim.size }}
   storageClassName: {{ .Values.persistentVolumeClaim.storageClass }}
   volumeMode: Filesystem
-  volumeName: {{ .Release.Name }}-backend
 {{ end }}
