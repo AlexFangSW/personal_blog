@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { merianda } from "./fonts"
 import { LinkCard } from "./components/linkCard"
+import { revalidatePath } from "next/cache"
 
 export const dynamic = 'force-dynamic'
 
