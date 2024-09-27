@@ -502,7 +502,7 @@ func (b *Blogs) DeleteNow(ctx context.Context, id int) (int, error) {
 	}
 
 	// delete blog
-	affectedRows, err := b.models.blog.Delete(ctxTimeout, tx, id)
+	affectedRows, err := b.models.blog.DeleteNow(ctxTimeout, tx, id)
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			return 0, fmt.Errorf("DeleteNow: model delete blog rollback failed: %w", err)
