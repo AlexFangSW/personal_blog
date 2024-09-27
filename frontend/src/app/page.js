@@ -29,6 +29,7 @@ async function Topics() {
 }
 
 export default function Home() {
+  revalidatePath("/", "page")
   return (
     <div className="flex flex-col min-h-screen items-center p-5">
       <div className="flex flex-col items-center gap-y-5">

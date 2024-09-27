@@ -1,8 +1,8 @@
 import { merianda } from "@/app/fonts"
 import Link from "next/link"
-import { MDXRemote } from "next-mdx-remote/rsc"
 import { getCurrentBlog } from "@/app/util/blog"
 import { notFound, redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 
 export const dynamic = 'force-dynamic'
 
@@ -38,6 +38,7 @@ function BlogTopics({ topics }) {
 
 
 export default async function Page({ params }) {
+  revalidatePath("/blogs/[id]/[slug]", "page")
   const blogRes = await getCurrentBlog(params.id)
 
   if (blogRes.status >= 400) {

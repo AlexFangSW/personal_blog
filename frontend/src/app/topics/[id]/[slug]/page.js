@@ -5,6 +5,7 @@ import pinIcon from "../../../../../public/pin.svg"
 import { LinkCard } from "@/app/components/linkCard"
 import { getCurrentTopic } from "@/app/util/topic"
 import { notFound, redirect } from 'next/navigation'
+import { revalidatePath } from "next/cache"
 
 export const dynamic = 'force-dynamic'
 
@@ -114,6 +115,7 @@ async function Blogs({ topicID, tagID }) {
 
 
 export default async function Page({ params, searchParams }) {
+  revalidatePath("/topics/[id]/[slug]", "page")
   const selectedTag = searchParams["tag"]
   const topicRes = await getCurrentTopic(params.id)
 
