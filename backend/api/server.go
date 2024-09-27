@@ -78,8 +78,8 @@ func (s *Server) Start() error {
 	mux.HandleFunc(s.put("/topics/{id}"), WithMiddleware(s.topics.UpdateTopic))
 	mux.HandleFunc(s.delete("/topics/{id}"), WithMiddleware(s.topics.DeleteTopic))
 
-	mux.HandleFunc(s.getRoot("/alive"), WithMiddleware(s.probes.LivenessProbe))
-	mux.HandleFunc(s.getRoot("/ready"), WithMiddleware(s.probes.ReadinessProbe))
+	mux.HandleFunc(s.getRoot("/alive"), WithMiddlewareDebugAccessLog(s.probes.LivenessProbe))
+	mux.HandleFunc(s.getRoot("/ready"), WithMiddlewareDebugAccessLog(s.probes.ReadinessProbe))
 
 	s.server = &http.Server{
 		Addr:    fmt.Sprintf(":%d", s.config.Server.Port),

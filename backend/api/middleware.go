@@ -19,7 +19,23 @@ func WithMiddleware(
 ) http.HandlerFunc {
 
 	var finalHandler = internalError(base)
-	finalHandler = logPath(finalHandler)
+	finalHandler = logPath(finalHandler, "INFO")
+
+	for index, handler := range handlers {
+		slog.Info("handler", "number", index)
+		finalHandler = handler(finalHandler)
+	}
+
+	return finalHandler
+}
+
+func WithMiddlewareDebugAccessLog(
+	base apiHandler,
+	handlers ...func(http.HandlerFunc) http.HandlerFunc,
+) http.HandlerFunc {
+
+	var finalHandler = internalError(base)
+	finalHandler = logPath(finalHandler, "DEBUG")
 
 	for index, handler := range handlers {
 		slog.Info("handler", "number", index)
@@ -52,9 +68,14 @@ func (rlimit *RateLimit) RateLimit(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // logging request path
-func logPath(next http.HandlerFunc) http.HandlerFunc {
+func logPath(next http.HandlerFunc, level string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		slog.Info(r.Method + " " + r.URL.String())
+		if level == "DEBUG" {
+			slog.Debug(r.Method + " " + r.URL.String())
+		}
+		if level == "INFO" {
+			slog.Info(r.Method + " " + r.URL.String())
+		}
 		next(w, r)
 	}
 }
