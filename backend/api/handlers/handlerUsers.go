@@ -81,6 +81,12 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) error {
 
 	// update stored jwt token
 	if err := u.repo.UpdateJWT(r.Context(), newToken); err != nil {
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
@@ -117,6 +123,12 @@ func (u *Users) Logout(w http.ResponseWriter, r *http.Request) error {
 
 	// delete jwt from user
 	if err := u.repo.ClearJWT(r.Context()); err != nil {
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 

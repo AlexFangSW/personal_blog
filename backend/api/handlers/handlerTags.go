@@ -69,6 +69,12 @@ func (t *Tags) CreateTag(w http.ResponseWriter, r *http.Request) error {
 	outTag, err := t.repo.Create(r.Context(), *inTag)
 	if err != nil {
 		slog.Error("CreateTag: repo create failed", "error", err.Error())
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
@@ -106,6 +112,12 @@ func (t *Tags) ListTags(w http.ResponseWriter, r *http.Request) error {
 		tags, err := t.repo.ListByTopicID(r.Context(), topicIDs[0])
 		if err != nil {
 			slog.Error("ListTags: repo list failed", "error", err)
+
+			if sqliteErr, ok := getSQLiteError(err); ok {
+				slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+				return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+			}
+
 			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
 		return entities.NewRetSuccess(tags).WriteJSON(w)
@@ -114,6 +126,12 @@ func (t *Tags) ListTags(w http.ResponseWriter, r *http.Request) error {
 	tags, err := t.repo.List(r.Context())
 	if err != nil {
 		slog.Error("ListTags: repo list failed", "error", err)
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
@@ -149,9 +167,14 @@ func (t *Tags) GetTag(w http.ResponseWriter, r *http.Request) error {
 		slog.Error("GetTag: repo get failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
-		} else {
-			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
 	return entities.NewRetSuccess(*tag).WriteJSON(w)
@@ -206,9 +229,14 @@ func (t *Tags) UpdateTag(w http.ResponseWriter, r *http.Request) error {
 		slog.Error("UpdateTag: repo update failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
-		} else {
-			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
 	return entities.NewRetSuccess(*outTag).WriteJSON(w)
@@ -249,6 +277,12 @@ func (t *Tags) DeleteTag(w http.ResponseWriter, r *http.Request) error {
 	affectedRows, err := t.repo.Delete(r.Context(), id)
 	if err != nil {
 		slog.Error("DeleteTag: repo delete failed", "error", err.Error())
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 

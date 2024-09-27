@@ -98,6 +98,12 @@ func (b *Blogs) CreateBlog(w http.ResponseWriter, r *http.Request) error {
 	outBlog, err := b.repo.Create(r.Context(), *inBlog)
 	if err != nil {
 		slog.Error("CreateBlog: repo create failed", "error", err.Error())
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
@@ -184,6 +190,12 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 				if errors.Is(err, sql.ErrNoRows) {
 					return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 				}
+
+				if sqliteErr, ok := getSQLiteError(err); ok {
+					slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+					return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+				}
+
 				return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 			}
 			return entities.NewRetSuccess(blogs).WriteJSON(w)
@@ -197,6 +209,12 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 				if errors.Is(err, sql.ErrNoRows) {
 					return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 				}
+
+				if sqliteErr, ok := getSQLiteError(err); ok {
+					slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+					return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+				}
+
 				return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 			}
 			return entities.NewRetSuccess(blogs).WriteJSON(w)
@@ -210,6 +228,12 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 				if errors.Is(err, sql.ErrNoRows) {
 					return entities.NewRetSuccess([]entities.OutBlogSimple{}).WriteJSON(w)
 				}
+
+				if sqliteErr, ok := getSQLiteError(err); ok {
+					slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+					return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+				}
+
 				return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 			}
 			return entities.NewRetSuccess(blogs).WriteJSON(w)
@@ -221,6 +245,12 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 			if errors.Is(err, sql.ErrNoRows) {
 				return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 			}
+
+			if sqliteErr, ok := getSQLiteError(err); ok {
+				slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+				return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+			}
+
 			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
 		return entities.NewRetSuccess(blogs).WriteJSON(w)
@@ -236,6 +266,12 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 			if errors.Is(err, sql.ErrNoRows) {
 				return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 			}
+
+			if sqliteErr, ok := getSQLiteError(err); ok {
+				slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+				return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+			}
+
 			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
 		return entities.NewRetSuccess(blogs).WriteJSON(w)
@@ -249,6 +285,12 @@ func (b *Blogs) ListBlogs(w http.ResponseWriter, r *http.Request) error {
 			if errors.Is(err, sql.ErrNoRows) {
 				return entities.NewRetSuccess([]entities.OutBlog{}).WriteJSON(w)
 			}
+
+			if sqliteErr, ok := getSQLiteError(err); ok {
+				slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+				return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+			}
+
 			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
 		return entities.NewRetSuccess(blogs).WriteJSON(w)
@@ -336,6 +378,12 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 			if errors.Is(err, sql.ErrNoRows) {
 				return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 			}
+
+			if sqliteErr, ok := getSQLiteError(err); ok {
+				slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+				return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+			}
+
 			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
 
@@ -357,6 +405,12 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 		}
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 
 	}
@@ -430,6 +484,12 @@ func (b *Blogs) UpdateBlog(w http.ResponseWriter, r *http.Request) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusBadRequest).WriteJSON(w)
 		}
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 	return entities.NewRetSuccess(*updatedBlog).WriteJSON(w)
@@ -489,10 +549,16 @@ func (b *Blogs) CreateBlogWithID(w http.ResponseWriter, r *http.Request) error {
 	// create
 	createdBlog, err := b.repo.CreateWithID(r.Context(), *inBlog, id)
 	if err != nil {
-		slog.Error("CreateBlogWithID: update failed", "error", err)
+		slog.Error("CreateBlogWithID: create failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusBadRequest).WriteJSON(w)
 		}
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 	return entities.NewRetSuccess(*createdBlog).WriteJSON(w)
@@ -533,6 +599,12 @@ func (b *Blogs) SoftDeleteBlog(w http.ResponseWriter, r *http.Request) error {
 	affectedRows, err := b.repo.SoftDelete(r.Context(), id)
 	if err != nil {
 		slog.Error("SoftDeleteBlog: soft delete failed", "error", err)
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 	if affectedRows == 0 {
@@ -581,6 +653,12 @@ func (b *Blogs) RestoreDeletedBlog(w http.ResponseWriter, r *http.Request) error
 			slog.Error("RestoreDeletedBlog: restore blog failed", "error", err)
 			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
 		}
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
@@ -622,6 +700,12 @@ func (b *Blogs) DeleteBlog(w http.ResponseWriter, r *http.Request) error {
 	affectedRows, err := b.repo.Delete(r.Context(), id)
 	if err != nil {
 		slog.Error("DeleteBlog: delete failed", "error", err)
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 	if affectedRows == 0 {
@@ -667,6 +751,12 @@ func (b *Blogs) DeleteBlogNow(w http.ResponseWriter, r *http.Request) error {
 	affectedRows, err := b.repo.DeleteNow(r.Context(), id)
 	if err != nil {
 		slog.Error("DeleteBlogNow: delete failed", "error", err)
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 	if affectedRows == 0 {

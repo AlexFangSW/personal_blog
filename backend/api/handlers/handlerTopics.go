@@ -68,6 +68,12 @@ func (t *Topics) CreateTopic(w http.ResponseWriter, r *http.Request) error {
 	outTopic, err := t.repo.Create(r.Context(), *inTopic)
 	if err != nil {
 		slog.Error("CreateTopic: repo create failed", "error", err.Error())
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
@@ -124,9 +130,14 @@ func (t *Topics) GetTopic(w http.ResponseWriter, r *http.Request) error {
 		slog.Error("GetTopic: repo get failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
-		} else {
-			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
 	return entities.NewRetSuccess(*topic).WriteJSON(w)
@@ -182,9 +193,14 @@ func (t *Topics) UpdateTopic(w http.ResponseWriter, r *http.Request) error {
 		slog.Error("UpdateTopic: repo update failed", "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return entities.NewRetFailed(ErrorTargetNotFound, http.StatusNotFound).WriteJSON(w)
-		} else {
-			return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 		}
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
+		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 
 	return entities.NewRetSuccess(*outTopic).WriteJSON(w)
@@ -225,6 +241,12 @@ func (t *Topics) DeleteTopic(w http.ResponseWriter, r *http.Request) error {
 	affectedRows, err := t.repo.Delete(r.Context(), id)
 	if err != nil {
 		slog.Error("DeleteTopic: repo delete failed", "error", err.Error())
+
+		if sqliteErr, ok := getSQLiteError(err); ok {
+			slog.Error("got sqlite error", "error code", sqliteErr.Code, "extended error code", sqliteErr.ExtendedCode)
+			return entities.NewRetFailedCustom(err, int(sqliteErr.ExtendedCode), http.StatusInternalServerError).WriteJSON(w)
+		}
+
 		return entities.NewRetFailed(err, http.StatusInternalServerError).WriteJSON(w)
 	}
 

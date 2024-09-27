@@ -57,21 +57,32 @@ func (r *RetSuccess[T]) WriteJSON(w http.ResponseWriter) error {
 }
 
 type RetFailed struct {
-	Error  string `json:"error"`
-	Status int    `json:"status"`
-	Msg    string `json:"msg"`
+	Error      string `json:"error"`
+	Status     int    `json:"status"`
+	Msg        string `json:"msg"`
+	httpStatus int
 }
 
 func NewRetFailed(err error, status int) *RetFailed {
 	return &RetFailed{
-		Error:  err.Error(),
-		Status: status,
+		Error:      err.Error(),
+		Status:     status,
+		httpStatus: status,
+	}
+}
+
+// When the http status code differs from the cusotm status code
+func NewRetFailedCustom(err error, status, httpStatus int) *RetFailed {
+	return &RetFailed{
+		Error:      err.Error(),
+		Status:     status,
+		httpStatus: httpStatus,
 	}
 }
 
 func (r *RetFailed) WriteJSON(w http.ResponseWriter) error {
 	w.Header().Set("content-type", "application/json")
-	w.WriteHeader(r.Status)
+	w.WriteHeader(r.httpStatus)
 	if err := json.NewEncoder(w).Encode(r); err != nil {
 		slog.Error("WriteJSON: RetFailed encode error", "error", err.Error())
 		return fmt.Errorf("WriteJSON: RetFailed encode error: %w", err)

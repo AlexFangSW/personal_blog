@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"strconv"
 
+	"github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -89,4 +90,20 @@ func verifyUser(inUser entities.InUser, user entities.User) bool {
 		return checkPasswordHash(inUser.Password, user.Password)
 	}
 	return false
+}
+
+func getSQLiteError(err error) (sqliteErr sqlite3.Error, isSQLiteError bool) {
+	if !errors.As(err, &sqlite3.Error{}) {
+		return sqlite3.Error{}, false
+	}
+
+	currentErr := err
+	for errors.Unwrap(currentErr) != nil {
+		currentErr = errors.Unwrap(currentErr)
+	}
+
+	if sqliteErr, ok := currentErr.(sqlite3.Error); ok {
+		return sqliteErr, true
+	}
+	return sqlite3.Error{}, false
 }
