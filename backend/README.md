@@ -168,10 +168,7 @@ needs **JWT** token.
 
 ## CLI Tools
 ### SyncTool
-#### Installation
-```bash
-some command
-```
+> **This is build and placed alongside server binary in the docker image**
 
 I want to use my own editor to write notes.
 
@@ -190,10 +187,6 @@ it will be recorded, logged out and written to a file (**data-inconsistency.json
 Only after passing the validation process will the data be synced to the server.
 
 ### User register
-#### Installation 
-```bash
-some command
-```
 > **This is build and placed alongside server binary in the docker image**
 
 This project is only used by one person, with no intention of saving other user's stuff.
@@ -206,4 +199,4 @@ Only someone with direct access to the database can register.
 - CRUD for user table, directly operates on the database.
 
 ## TODO
-- Remove unecessary pointer return
+- Better error handling for sync tool
