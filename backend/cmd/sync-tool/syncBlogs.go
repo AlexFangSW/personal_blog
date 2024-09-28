@@ -103,14 +103,15 @@ func (s *SyncHelper) createBlog(inpt BlogInfo) (result FileIDMap, oErr error) {
 		return FileIDMap{}, fmt.Errorf("createBlog: encode body failed for blog %q: %w", inpt.Filename, err)
 	}
 
-	// If we somehow lost our database, we will have to create blogs with their original ids
 	apiURL := ""
 	if inpt.Frontmatter.ID == 0 {
+		// normal create, let the database generate id
 		apiURL, err = url.JoinPath(s.baseURL, "blogs")
 		if err != nil {
 			return FileIDMap{}, fmt.Errorf("createBlog: join api url failed for blog %q: %w", inpt.Filename, err)
 		}
 	} else {
+		// If we somehow lost our database, we will have to create blogs with their original ids
 		apiURL, err = url.JoinPath(s.baseURL, "blogs", strconv.Itoa(inpt.Frontmatter.ID))
 		if err != nil {
 			return FileIDMap{}, fmt.Errorf("createBlog: join api url failed for blog %q: %w", inpt.Filename, err)
