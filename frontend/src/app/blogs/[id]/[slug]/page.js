@@ -50,9 +50,9 @@ export default async function Page({ params }) {
   const currentBlog = blogRes.msg
 
   const createAtDate = new Date(currentBlog.created_at)
-  const createAtStr = `${createAtDate.getFullYear()}/${createAtDate.getMonth()}/${createAtDate.getDay()}`
-  const updateAt = new Date(currentBlog.updated_at)
-  const updateAtStr = `${updateAt.getFullYear()}/${updateAt.getMonth()}/${updateAt.getDay()}`
+  const createAtStr = `${createAtDate.getFullYear()}/${createAtDate.getUTCMonth() + 1}/${createAtDate.getUTCDate()}`
+  const updateAtDate = new Date(currentBlog.updated_at)
+  const updateAtStr = `${updateAtDate.getFullYear()}/${updateAtDate.getUTCMonth() + 1}/${updateAtDate.getUTCDate()}`
 
   // adjust slug
   if (currentBlog.slug != params.slug) {
