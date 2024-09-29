@@ -132,40 +132,56 @@ func groupTopics(localTopics []entities.InTopic, topics []entities.Topic) (Group
 func groupBlogs(localBlogs []BlogInfo, blogs []entities.OutBlogSimple) (BlogGroup[BlogInfo], error) {
 	slog.Info("groupBlogs")
 
-	blogMap := map[int]entities.OutBlogSimple{}
+	// ID map
+	blogIDMap := map[int]entities.OutBlogSimple{}
 	for _, blog := range blogs {
-		blogMap[blog.ID] = blog
+		blogIDMap[blog.ID] = blog
+	}
+
+	// title map
+	blogTitleMap := map[string]entities.OutBlogSimple{}
+	for _, blog := range blogs {
+		blogTitleMap[blog.Slug] = blog
 	}
 
 	result := BlogGroup[BlogInfo]{}
 	for _, localBlog := range localBlogs {
 		// if the blogs hasen't been created yet, the id will be '0',
 		// which should match nothing as well
-		remoteBlog, ok := blogMap[localBlog.Frontmatter.ID]
+		remoteBlog, idOK := blogIDMap[localBlog.Frontmatter.ID]
 
 		// the record dosen't exist on remote, we should create it.
 		// whether the blog should use its current ID will be decided at a later stage.
-		if !ok {
-			result.create = append(result.create, localBlog)
-			continue
+		if !idOK {
+			// We check id first so that we have the ability to change the title.
+			// But We might accidentally delete an entry in `ids.json`.
+			// To prevent a blog getting missjudged as `create`,
+			// check the title as well (The slug generated from the title has a unique constraint)
+			tmpRemoteBlog, titleOK := blogTitleMap[localBlog.Frontmatter.Title]
+			if !titleOK {
+				result.create = append(result.create, localBlog)
+				continue
+			}
+			remoteBlog = tmpRemoteBlog
+			localBlog.Frontmatter.ID = tmpRemoteBlog.ID
 		}
 
 		// the record is identical, do nothing
 		if blogEqual(localBlog, remoteBlog) {
 			result.noop = append(result.noop, localBlog)
-			delete(blogMap, localBlog.Frontmatter.ID)
+			delete(blogIDMap, localBlog.Frontmatter.ID)
 			continue
 
 		} else {
 			// the content is differrnt, we should update it
 			result.update = append(result.update, localBlog)
-			delete(blogMap, localBlog.Frontmatter.ID)
+			delete(blogIDMap, localBlog.Frontmatter.ID)
 			continue
 		}
 	}
 
 	// the remaining remote data should be deleted
-	for _, remoteBlog := range blogMap {
+	for _, remoteBlog := range blogIDMap {
 		result.delete = append(result.delete, remoteBlog)
 	}
 
