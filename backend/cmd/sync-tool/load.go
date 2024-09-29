@@ -100,6 +100,13 @@ func loadBlogs(blogDir string, idMap map[string]int) ([]BlogInfo, error) {
 	// split by '---' and use  yaml to unmartial the data
 	for _, file := range files {
 		filepath := fmt.Sprintf("%s/%s", blogDir, file.Name())
+
+		if !strings.HasSuffix(filepath, ".md") {
+			// only process markdown files
+			slog.Info("found a none markdown file, skiping", "filename", file.Name())
+			continue
+		}
+
 		rawData, err := os.ReadFile(filepath)
 		if err != nil {
 			return []BlogInfo{}, fmt.Errorf("loadBlogs: read file %q failed: %w", filepath, err)
