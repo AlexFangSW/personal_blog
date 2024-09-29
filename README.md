@@ -8,7 +8,7 @@ A opportunity to practice **GO** while creating something I could use.
 
 This project started around when **GO 1.22**  was released.
 At that time I was choosing which framework or libraries I sould use. 
-In the release notes, one thing cought my eye: 
+In the release notes, one thing caught my eye: 
 **[Enhanced routing patterns](https://tip.golang.org/doc/go1.22#enhanced_routing_patterns)**.
 This improved `net/http.ServeMux` quite a lot, adding features such as **path params**, **restrict methods to routes**...etc.
 
@@ -19,7 +19,7 @@ I thought, 'why not give the standard library a try ?' After than, this project 
 I enjoy using my own editor, and I also want to seperate my content from the source code.
 
 - Deploy the server, and create a user with **[UserRegister](./backend/README.md#userregister)** CLI tool.
-- Write blogs and organize it like [dummyData](./backend/dummyData/) directory and is stored in a seperated repository.
+- Write blogs, organize it like [dummyData](./backend/dummyData/) directory and store it in a separate repository.
 - When pushed, it triggers a CI/CD pipeline that uses **[SyncTool](./backend/README.md#synctool)** to sync data to the server.
 
 

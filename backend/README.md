@@ -32,7 +32,7 @@ Run
 
 ## API Documentation
 ### Overview
-APIs are seperated into **PUBLIC** and **PRIVATE**, 
+APIs are separated into **PUBLIC** and **PRIVATE**, 
 **PUBLIC** APIs can be access by anyone, while **PRIVATE** APIs 
 needs **JWT** token.
 
@@ -117,7 +117,7 @@ needs **JWT** token.
         - blog_topics (many to many)
 - **Repository**
     - A interface for CRUD operations on base tables such as: blogs, tags, topics
-    - Automaticly maintains many-to-many tables: blog_tags, blog_topics
+    - Automatically maintains many-to-many tables: blog_tags, blog_topics
 - **Handlers**
     - Core app logics, uses repository layer for CRUD operations
 
@@ -127,11 +127,11 @@ needs **JWT** token.
 ## Progress
 - Blogs
     - [x] Basic CRUD operations
-        - List operations will return empty 'content' field to reduse size.
+        - List operations will return empty 'content' field to reduce size.
     - List filters
         - [x] By topic ids
         - [x] By topic and tag ids
-        - [x] Option to return simple output with tags and topics as slugs (orignaly returns full struct of tags and topics)
+        - [x] Option to return simple output with tags and topics as slugs (originally returns full struct of tags and topics)
             - This reduces the size from 1M to about 310K on 1000 blogs with 2 to 3 tags and topics
     - [x] md5 to check if content is the same.
 - Tags
@@ -185,7 +185,7 @@ This prevents blog ids from changing if we lost the database and need to sync fr
 
 This project is only used by one person, with no intention of saving other user's stuff.
 
-And because of this, there is no api for registoring a new user.
+And because of this, there is no api for registering a new user.
 
 Only someone with direct access to the database can register.
 
