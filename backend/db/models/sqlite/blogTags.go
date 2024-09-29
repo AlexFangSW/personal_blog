@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"strings"
 )
 
@@ -49,10 +50,51 @@ func (b *BlogTags) Upsert(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []
 	return nil
 }
 
-func (b *BlogTags) Delete(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []int) error {
+func (b *BlogTags) Delete(ctx context.Context, tx *sql.Tx, blogID int) error {
+	stmt := `DELETE FROM blog_tags WHERE blog_id = ?;`
+
+	util.LogQuery(ctx, "DeleteBlogTags:", stmt)
+
+	res, err := tx.ExecContext(ctx, stmt, blogID)
+	if err != nil {
+		return fmt.Errorf("Delete: exec context failed: %w", err)
+	}
+	affectedRows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("Delete: aquire affected rows failed: %w", err)
+	}
+	slog.Debug("affected rows", "rows", affectedRows)
+
 	return nil
 }
 
 func (b *BlogTags) InverseDelete(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []int) error {
+	if len(tagIDs) == 0 {
+		return nil
+	}
+
+	values, err := genInCondition(tagIDs)
+	if err != nil {
+		return fmt.Errorf("InverseDelete: gen IN condition failed: %w", err)
+	}
+
+	stmt := `
+	DELETE FROM blog_tags
+	WHERE 
+		blog_id = ?
+	AND tag_id NOT IN ` + values
+
+	util.LogQuery(ctx, "InverseDeleteBlogTags:", stmt)
+
+	res, err := tx.ExecContext(ctx, stmt, blogID)
+	if err != nil {
+		return fmt.Errorf("InverseDelete: exec context failed: %w", err)
+	}
+	affectedRows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("InverseDelete: aquire affected rows failed: %w", err)
+	}
+	slog.Debug("affected rows", "rows", affectedRows)
+
 	return nil
 }

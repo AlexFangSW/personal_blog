@@ -84,56 +84,496 @@ func (b *Blogs) Create(ctx context.Context, blog entities.InBlog) (*entities.Out
 		return &entities.OutBlog{}, fmt.Errorf("Create: commit error: %w", err)
 	}
 
-	tags, err := b.models.tags.GetByBlogID(ctxTimeout, b.db, newBlog.ID)
+	outBlog, err := b.fillOutBlog(ctxTimeout, *newBlog)
 	if err != nil {
-		return &entities.OutBlog{}, fmt.Errorf("Create: model get tags by blog id error: %w", err)
-	}
-	topics, err := b.models.topics.GetByBlogID(ctxTimeout, b.db, newBlog.ID)
-	if err != nil {
-		return &entities.OutBlog{}, fmt.Errorf("Create: model get topics by blog id error: %w", err)
+		return &entities.OutBlog{}, fmt.Errorf("Create: fill OutBlog failed: %w", err)
 	}
 
-	outBlog := entities.NewOutBlog(*newBlog, tags, topics)
 	return outBlog, nil
 }
 
-func (b *Blogs) Update(ctx context.Context, blog entities.InBlog) (*entities.OutBlog, error) {
-	return &entities.OutBlog{}, nil
+func (b *Blogs) CreateWithID(ctx context.Context, blog entities.InBlog, id int) (*entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := b.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: begin transaction error: %w", err)
+	}
+
+	newBlog, err := b.models.blog.CreateWithID(ctxTimeout, tx, blog, id)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("CreateWithID: query rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: models create blog failed: %w", err)
+	}
+
+	if err := b.models.blogTags.Upsert(ctxTimeout, tx, newBlog.ID, blog.Tags); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("CreateWithID: model create blog_tags rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: model create blog_tags error: %w", err)
+	}
+
+	if err := b.models.blogTopics.Upsert(ctxTimeout, tx, newBlog.ID, blog.Topics); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("CreateWithID: model create blog_topics rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: model create blog_topics error: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: commit error: %w", err)
+	}
+
+	outBlog, err := b.fillOutBlog(ctxTimeout, *newBlog)
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("CreateWithID: fill OutBlog failed: %w", err)
+	}
+
+	return outBlog, nil
 }
 
+func (b *Blogs) Update(ctx context.Context, blog entities.InBlog, id int) (*entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := b.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("Update: begin transaction error: %w", err)
+	}
+
+	// Update blog
+	newBlog, err := b.models.blog.Update(ctxTimeout, tx, blog, id)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("Update: query rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("Update: models update blog failed: %w", err)
+	}
+
+	// Update many-to-many table
+	// Uses upsert + inverse delete
+	if err := b.models.blogTags.Upsert(ctxTimeout, tx, newBlog.ID, blog.Tags); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("Update: model update blog_tags rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("Update: model update blog_tags error: %w", err)
+	}
+
+	if err := b.models.blogTags.InverseDelete(ctxTimeout, tx, newBlog.ID, blog.Tags); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("Update: model inverse delete blog_tags rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("Update: model inverse delete blog_tags error: %w", err)
+	}
+
+	if err := b.models.blogTopics.Upsert(ctxTimeout, tx, newBlog.ID, blog.Topics); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("Update: model update blog_topics rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("Update: model update blog_topics error: %w", err)
+	}
+
+	if err := b.models.blogTopics.InverseDelete(ctxTimeout, tx, newBlog.ID, blog.Topics); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("Update: model inverse delete blog_topics rollback error: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("Update: model inverse delete blog_topics error: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("Update: commit error: %w", err)
+	}
+
+	outBlog, err := b.fillOutBlog(ctxTimeout, *newBlog)
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("Update: fill OutBlog failed: %w", err)
+	}
+
+	return outBlog, nil
+}
+
+/*
+Only return blog with field values:
+
+- visible: true
+
+- deleted_at: ""
+*/
 func (b *Blogs) Get(ctx context.Context, id int) (*entities.OutBlog, error) {
-	return &entities.OutBlog{}, nil
-}
-func (b *Blogs) AdminGet(ctx context.Context, id int) (*entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
 
-	return &entities.OutBlog{}, nil
+	blog, err := b.models.blog.Get(ctxTimeout, b.db, id)
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("Get: model get blog failed: %w", err)
+	}
+
+	outBlog, err := b.fillOutBlog(ctxTimeout, *blog)
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("Get: fill OutBlog failed: %w", err)
+	}
+
+	return outBlog, nil
 }
 
+/*
+Only return blogs with field values:
+
+- visible: true
+
+- deleted_at: ""
+*/
 func (b *Blogs) List(ctx context.Context) ([]entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
 
-	return []entities.OutBlog{}, nil
+	blogs, err := b.models.blog.List(ctxTimeout, b.db)
+	if err != nil {
+		return []entities.OutBlog{}, fmt.Errorf("List: model list blogs failed: %w", err)
+	}
+
+	result := []entities.OutBlog{}
+
+	for _, blog := range blogs {
+		outBlog, err := b.fillOutBlog(ctxTimeout, blog)
+		if err != nil {
+			return []entities.OutBlog{}, fmt.Errorf("List: fill OutBlog failed: %w", err)
+		}
+		result = append(result, *outBlog)
+	}
+
+	return result, nil
 }
-func (b *Blogs) ListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error) {
 
-	return []entities.OutBlog{}, nil
+/*
+Only return blogs with field values:
+
+- visible: true
+
+- deleted_at: ""
+*/
+func (b *Blogs) ListByTopicIDs(ctx context.Context, topicID []int) ([]entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	blogs, err := b.models.blog.ListByTopicIDs(ctxTimeout, b.db, topicID)
+	if err != nil {
+		return []entities.OutBlog{}, fmt.Errorf("ListByTopicIDs: model list blogs by topic id failed: %w", err)
+	}
+
+	result := []entities.OutBlog{}
+
+	for _, blog := range blogs {
+		outBlog, err := b.fillOutBlog(ctxTimeout, blog)
+		if err != nil {
+			return []entities.OutBlog{}, fmt.Errorf("ListByTopicIDs: fill OutBlog failed: %w", err)
+		}
+		result = append(result, *outBlog)
+	}
+
+	return result, nil
 }
 
+/*
+Only return blogs with field values:
+
+- visible: true
+
+- deleted_at: ""
+*/
+func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, topicID, tagID []int) ([]entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	blogs, err := b.models.blog.ListByTopicAndTagIDs(ctxTimeout, b.db, topicID, tagID)
+	if err != nil {
+		return []entities.OutBlog{}, fmt.Errorf("ListByTopicAndTagIDs: model list blogs by topic and tag ids failed: %w", err)
+	}
+
+	result := []entities.OutBlog{}
+
+	for _, blog := range blogs {
+		outBlog, err := b.fillOutBlog(ctxTimeout, blog)
+		if err != nil {
+			return []entities.OutBlog{}, fmt.Errorf("ListByTopicAndTagIDs: fill OutBlog failed: %w", err)
+		}
+		result = append(result, *outBlog)
+	}
+
+	return result, nil
+}
+
+// Get any blog regardless of visiblity and delete timestamp
+func (b *Blogs) AdminGet(ctx context.Context, id int) (*entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	blog, err := b.models.blog.AdminGet(ctxTimeout, b.db, id)
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("AdminGet: model admin get blog failed: %w", err)
+	}
+
+	outBlog, err := b.fillOutBlog(ctxTimeout, *blog)
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("AdminGet: fill OutBlog failed: %w", err)
+	}
+
+	return outBlog, nil
+}
+
+// Returns all blogs
 func (b *Blogs) AdminList(ctx context.Context) ([]entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
 
-	return []entities.OutBlog{}, nil
+	blogs, err := b.models.blog.AdminList(ctxTimeout, b.db)
+	if err != nil {
+		return []entities.OutBlog{}, fmt.Errorf("AdminList: model list blogs failed: %w", err)
+	}
+
+	result := []entities.OutBlog{}
+
+	for _, blog := range blogs {
+		outBlog, err := b.fillOutBlog(ctxTimeout, blog)
+		if err != nil {
+			return []entities.OutBlog{}, fmt.Errorf("AdminList: fill OutBlog failed: %w", err)
+		}
+		result = append(result, *outBlog)
+	}
+
+	return result, nil
 }
 
-func (b *Blogs) AdminListByTopicID(ctx context.Context, topicID int) ([]entities.OutBlog, error) {
+// return tags and topics as slugs
+func (b *Blogs) AdminListSimple(ctx context.Context) ([]entities.OutBlogSimple, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
 
-	return []entities.OutBlog{}, nil
+	blogs, err := b.models.blog.AdminList(ctxTimeout, b.db)
+	if err != nil {
+		return []entities.OutBlogSimple{}, fmt.Errorf("AdminListSimple: model list blogs failed: %w", err)
+	}
+
+	result := []entities.OutBlogSimple{}
+
+	for _, blog := range blogs {
+		outBlog, err := b.fillOutBlogSimple(ctxTimeout, blog)
+		if err != nil {
+			return []entities.OutBlogSimple{}, fmt.Errorf("AdminListSimple: fill OutBlogSimple failed: %w", err)
+		}
+		result = append(result, outBlog)
+	}
+
+	return result, nil
 }
 
-func (b *Blogs) SoftDelete(ctx context.Context, id int) error {
-	return nil
+// Returns all matched blogs
+func (b *Blogs) AdminListByTopicIDs(ctx context.Context, topicID []int) ([]entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	blogs, err := b.models.blog.AdminListByTopicIDs(ctxTimeout, b.db, topicID)
+	if err != nil {
+		return []entities.OutBlog{}, fmt.Errorf("AdminListByTopicIDs: model list blogs by topic id failed: %w", err)
+	}
+
+	result := []entities.OutBlog{}
+
+	for _, blog := range blogs {
+		outBlog, err := b.fillOutBlog(ctxTimeout, blog)
+		if err != nil {
+			return []entities.OutBlog{}, fmt.Errorf("AdminListByTopicIDs: fill OutBlog failed: %w", err)
+		}
+		result = append(result, *outBlog)
+	}
+
+	return result, nil
 }
-func (b *Blogs) Delele(ctx context.Context, id int) error {
-	return nil
+
+// Returns all matched blogs
+func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, topicID, tagID []int) ([]entities.OutBlog, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	blogs, err := b.models.blog.AdminListByTopicAndTagIDs(ctxTimeout, b.db, topicID, tagID)
+	if err != nil {
+		return []entities.OutBlog{}, fmt.Errorf("AdminListByTopicAndTagIDs: model list blogs by topic and tag ids failed: %w", err)
+	}
+
+	result := []entities.OutBlog{}
+
+	for _, blog := range blogs {
+		outBlog, err := b.fillOutBlog(ctxTimeout, blog)
+		if err != nil {
+			return []entities.OutBlog{}, fmt.Errorf("AdminListByTopicAndTagIDs: fill OutBlog failed: %w", err)
+		}
+		result = append(result, *outBlog)
+	}
+
+	return result, nil
 }
+
+func (b *Blogs) SoftDelete(ctx context.Context, id int) (int, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := b.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return 0, fmt.Errorf("SoftDelete: begin transaction failed: %w", err)
+	}
+
+	affectedRows, err := b.models.blog.SoftDelete(ctxTimeout, tx, id)
+	if err != nil {
+		return 0, fmt.Errorf("SoftDelete: blog soft delete failed: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("SoftDelete: commit failed: %w", err)
+	}
+
+	return affectedRows, nil
+}
+
+func (b *Blogs) Delete(ctx context.Context, id int) (int, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := b.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return 0, fmt.Errorf("Delete: begin transaction failed: %w", err)
+	}
+
+	// delete relations
+	if err := b.models.blogTags.Delete(ctxTimeout, tx, id); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("Delete: model delete blog_tags rollback error: %w", err)
+		}
+		return 0, fmt.Errorf("Delete: model delete blog_tags error: %w", err)
+	}
+
+	if err := b.models.blogTopics.Delete(ctxTimeout, tx, id); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("Delete: model delete blog_topics rollback error: %w", err)
+		}
+		return 0, fmt.Errorf("Delete: model delete blog_topics error: %w", err)
+	}
+
+	// delete blog
+	affectedRows, err := b.models.blog.Delete(ctxTimeout, tx, id)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("Delete: model delete blog rollback failed: %w", err)
+		}
+		return 0, fmt.Errorf("Delete: model delete blog failed: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("Delete: commit failed: %w", err)
+	}
+
+	return affectedRows, nil
+}
+
+func (b *Blogs) DeleteNow(ctx context.Context, id int) (int, error) {
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := b.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return 0, fmt.Errorf("DeleteNow: begin transaction failed: %w", err)
+	}
+
+	// delete relations
+	if err := b.models.blogTags.Delete(ctxTimeout, tx, id); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("DeleteNow: model delete blog_tags rollback error: %w", err)
+		}
+		return 0, fmt.Errorf("DeleteNow: model delete blog_tags error: %w", err)
+	}
+
+	if err := b.models.blogTopics.Delete(ctxTimeout, tx, id); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("DeleteNow: model delete blog_topics rollback error: %w", err)
+		}
+		return 0, fmt.Errorf("DeleteNow: model delete blog_topics error: %w", err)
+	}
+
+	// delete blog
+	affectedRows, err := b.models.blog.DeleteNow(ctxTimeout, tx, id)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return 0, fmt.Errorf("DeleteNow: model delete blog rollback failed: %w", err)
+		}
+		return 0, fmt.Errorf("DeleteNow: model delete blog failed: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("DeleteNow: commit failed: %w", err)
+	}
+
+	return affectedRows, nil
+}
+
 func (b *Blogs) RestoreDeleted(ctx context.Context, id int) (*entities.OutBlog, error) {
-	return &entities.OutBlog{}, nil
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Duration(b.config.Timeout)*time.Second)
+	defer cancel()
+
+	tx, err := b.db.BeginTx(ctxTimeout, &sql.TxOptions{})
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("RestoreDeleted: begin transaction failed: %w", err)
+	}
+
+	blog, err := b.models.blog.RestoreDeleted(ctxTimeout, tx, id)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return &entities.OutBlog{}, fmt.Errorf("RestoreDeleted: model restore deleted blog rollback failed: %w", err)
+		}
+		return &entities.OutBlog{}, fmt.Errorf("RestoreDeleted: model restore deleted blog failed: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("RestoreDeleted: commit failed: %w", err)
+	}
+
+	outBlog, err := b.fillOutBlog(ctxTimeout, *blog)
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("RestoreDeleted: fill OutBlog failed: %w", err)
+	}
+
+	return outBlog, nil
+}
+
+// Helper function to fill out OutBlog with tags and topics
+func (b *Blogs) fillOutBlog(ctx context.Context, blog entities.Blog) (*entities.OutBlog, error) {
+	tags, err := b.models.tags.ListByBlogID(ctx, b.db, blog.ID)
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("fillOutBlog: model get tags failed: %w", err)
+	}
+
+	topics, err := b.models.topics.ListByBlogID(ctx, b.db, blog.ID)
+	if err != nil {
+		return &entities.OutBlog{}, fmt.Errorf("fillOutBlog: model get topics failed: %w", err)
+	}
+
+	outBlog := entities.NewOutBlog(blog, tags, topics)
+	return outBlog, nil
+}
+
+// Helper function to fill out OutBlog with tags and topics
+func (b *Blogs) fillOutBlogSimple(ctx context.Context, blog entities.Blog) (entities.OutBlogSimple, error) {
+	tags, err := b.models.tags.ListSlugByBlogID(ctx, b.db, blog.ID)
+	if err != nil {
+		return entities.OutBlogSimple{}, fmt.Errorf("fillOutBlogSimple: model get tags failed: %w", err)
+	}
+
+	topics, err := b.models.topics.ListSlugByBlogID(ctx, b.db, blog.ID)
+	if err != nil {
+		return entities.OutBlogSimple{}, fmt.Errorf("fillOutBlogSimple: model get topics failed: %w", err)
+	}
+
+	outBlog := entities.NewOutBlogSimple(blog, tags, topics)
+	return outBlog, nil
 }

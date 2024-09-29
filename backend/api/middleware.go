@@ -3,19 +3,23 @@ package api
 import (
 	"log/slog"
 	"net/http"
+
+	"golang.org/x/time/rate"
 )
 
 type apiHandler func(w http.ResponseWriter, r *http.Request) error
 
 // Adds middleware on top of base handler func
-// A middleware for logging paths will be added by default
-func withMiddleware(
+// Default middlewares:
+// - error handling
+// - logging
+func WithMiddleware(
 	base apiHandler,
 	handlers ...func(http.HandlerFunc) http.HandlerFunc,
 ) http.HandlerFunc {
 
 	var finalHandler = internalError(base)
-	finalHandler = logPath(finalHandler)
+	finalHandler = logPath(finalHandler, "INFO")
 
 	for index, handler := range handlers {
 		slog.Info("handler", "number", index)
@@ -25,10 +29,53 @@ func withMiddleware(
 	return finalHandler
 }
 
-// logging request path
-func logPath(next http.HandlerFunc) http.HandlerFunc {
+func WithMiddlewareDebugAccessLog(
+	base apiHandler,
+	handlers ...func(http.HandlerFunc) http.HandlerFunc,
+) http.HandlerFunc {
+
+	var finalHandler = internalError(base)
+	finalHandler = logPath(finalHandler, "DEBUG")
+
+	for index, handler := range handlers {
+		slog.Info("handler", "number", index)
+		finalHandler = handler(finalHandler)
+	}
+
+	return finalHandler
+}
+
+type RateLimit struct {
+	limiter *rate.Limiter
+}
+
+func NewRateLimit(average, burst int) RateLimit {
+	slog.Debug("new rate limit", "average", average, "burst", burst)
+	return RateLimit{
+		limiter: rate.NewLimiter(rate.Limit(average), burst),
+	}
+}
+
+func (rlimit *RateLimit) RateLimit(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		slog.Info(r.Method + " " + r.URL.String())
+		if rlimit.limiter.Allow() == false {
+			http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
+// logging request path
+func logPath(next http.HandlerFunc, level string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if level == "DEBUG" {
+			slog.Debug(r.Method + " " + r.URL.String())
+		}
+		if level == "INFO" {
+			slog.Info(r.Method + " " + r.URL.String())
+		}
 		next(w, r)
 	}
 }
@@ -41,5 +88,13 @@ func internalError(next apiHandler) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 		}
+	}
+}
+
+// Wrap handlerFunc into apiHandler
+func apiHandlerWrapper(next http.HandlerFunc) apiHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		next.ServeHTTP(w, r)
+		return nil
 	}
 }

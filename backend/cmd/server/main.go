@@ -6,6 +6,8 @@ import (
 	"blog/config"
 	"blog/db/models/sqlite"
 	"blog/repositories"
+	"blog/swagger_docs"
+	_ "blog/swagger_docs"
 	"blog/util"
 	"context"
 	"database/sql"
@@ -18,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -29,6 +32,7 @@ func run() error {
 
 	// flags
 	configPath := flag.String("config", "./config.json", "Config filepath")
+	migrate := flag.Bool("migrate", false, "Migrate db")
 	flag.Parse()
 	slog.Info("load config", "path:", *configPath)
 
@@ -43,6 +47,10 @@ func run() error {
 	// init logger
 	util.InitLogger(config.Logger.Level)
 
+	// init swagger info
+	swagger_docs.SwaggerInfo.Host = "localhost:" + strconv.Itoa(config.Server.Port)
+	swagger_docs.SwaggerInfo.BasePath = config.Server.Prefix
+
 	// db connection
 	db, err := sql.Open("sqlite3", config.DB.DSNURL)
 	if err != nil {
@@ -54,7 +62,7 @@ func run() error {
 	// db prepare
 	model := sqlite.New(db, config.DB)
 	ctx := context.Background()
-	if err := model.Prepare(ctx); err != nil {
+	if err := model.Prepare(ctx, *migrate); err != nil {
 		return fmt.Errorf("run: model prepare failed: %w", err)
 	}
 
@@ -62,42 +70,56 @@ func run() error {
 	blogsModel := sqlite.NewBlogs()
 	blogTagsModel := sqlite.NewBlogTags()
 	blogTopicsModel := sqlite.NewBlogTopics()
-	TagsModel := sqlite.NewTags()
-	TopicsModel := sqlite.NewTopics()
+	tagsModel := sqlite.NewTags()
+	topicsModel := sqlite.NewTopics()
+	usersModel := sqlite.NewUsers()
 
 	// repositories
 	blogsRepoModels := repositories.NewBlogsRepoModels(
 		blogsModel,
 		blogTagsModel,
 		blogTopicsModel,
-		TagsModel,
-		TopicsModel,
+		tagsModel,
+		topicsModel,
 	)
 	blogsRepo := repositories.NewBlogs(db, config.DB, *blogsRepoModels)
 
 	tagsRepoModels := repositories.NewTagsRepoModels(
 		blogTagsModel,
-		TagsModel,
+		tagsModel,
 	)
 	tagsRepo := repositories.NewTags(db, config.DB, *tagsRepoModels)
 
 	topicsRepoModels := repositories.NewTopicsRepoModels(
 		blogTopicsModel,
-		TopicsModel,
+		topicsModel,
 	)
 	topicsRepo := repositories.NewTopics(db, config.DB, *topicsRepoModels)
 
+	usersRepoModels := repositories.NewUsersRepoModels(
+		usersModel,
+	)
+	usersRepo := repositories.NewUsers(db, config.DB, *usersRepoModels)
+
+	// helpers
+	jwtHelper := handlers.NewJWTHelper(config.JWT)
+	authHelper := handlers.NewAuthHelper(usersRepo, jwtHelper)
+
 	// handlers
-	blogsHandler := handlers.NewBlogs(blogsRepo)
-	tagsHandler := handlers.NewTags(tagsRepo)
-	topicsHandler := handlers.NewTopics(topicsRepo)
+	blogsHandler := handlers.NewBlogs(blogsRepo, authHelper)
+	tagsHandler := handlers.NewTags(tagsRepo, authHelper)
+	topicsHandler := handlers.NewTopics(topicsRepo, authHelper)
+	usersHandler := handlers.NewUsers(usersRepo, jwtHelper, authHelper)
+	probesHandler := handlers.NewProbes()
 
 	// setup server
 	server := api.NewServer(
-		config.Server,
-		blogsHandler,
-		tagsHandler,
-		topicsHandler,
+		*config,
+		*blogsHandler,
+		*tagsHandler,
+		*topicsHandler,
+		*usersHandler,
+		*probesHandler,
 	)
 
 	// start server
@@ -122,6 +144,9 @@ func run() error {
 	return server.Stop(shutdownTimeout)
 }
 
+// @title			Coding Notes
+// @version		1.0
+// @description	A place to document what I've learned.
 func main() {
 	if err := run(); err != nil {
 		log.Fatal(err)

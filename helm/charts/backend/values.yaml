@@ -1,0 +1,67 @@
+deployment:
+  image: "${BACKEND_IMAGE}:${IMAGE_TAG}"
+  version: "${IMAGE_TAG}"
+  pullsecret: "docker.cloud.alexfangsw.com"
+  replicas: 1
+  resources:
+    requests:
+      memory: "500Mi"
+    limits:
+      memory: "4Gi"
+  affinity: {}
+  tolerations: {}
+  nodeSelector: {}
+  podAnnotations: {}
+  podLabels:
+    blogComponent: backend
+  strategy: {}
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: 8080
+      scheme: HTTP
+    failureThreshold: 4
+    successThreshold: 1
+    initialDelaySeconds: 10
+    timeoutSeconds: 1
+    periodSeconds: 5
+  livenessProbe:
+    httpGet:
+      path: /alive
+      port: 8080
+      scheme: HTTP
+    failureThreshold: 3
+    successThreshold: 1
+    initialDelaySeconds: 10 
+    timeoutSeconds: 1
+    periodSeconds: 10
+
+service:
+  type: ClusterIP
+  annotations: {}
+  labels: {}
+
+runDBMigration: true
+
+persistentVolumeClaim:
+  enable: true
+  size: 5Gi
+  storageClass: longhorn
+
+settings:
+  server:
+    port: 8080
+    prefix: "/api/v1"
+    shutdownTimeout: 30
+  logger:
+    level: INFO
+  db:
+    dsnURL: "/data/blog.db"
+    timeout: 30
+    connections: 10
+  jwt:
+    issuer: alexfangsw
+    expire: 6
+    secret: 'change-me'
+  login:
+    rateLimit: 1

@@ -1,0 +1,42 @@
+deployment:
+  image: "${FRONTEND_IMAGE}:${IMAGE_TAG}"
+  version: "${IMAGE_TAG}"
+  pullsecret: "docker.cloud.alexfangsw.com"
+  replicas: 1
+  resources:
+    requests:
+      memory: "500Mi"
+    limits:
+      memory: "4Gi"
+  affinity: {}
+  tolerations: {}
+  nodeSelector: {}
+  podAnnotations: {}
+  podLabels:
+    blogComponent: frontend
+  strategy: {}
+  readinessProbe:
+    httpGet:
+      path: api/ready
+      port: 3000
+      scheme: HTTP
+    failureThreshold: 4
+    successThreshold: 1
+    initialDelaySeconds: 10
+    timeoutSeconds: 1
+    periodSeconds: 5
+  livenessProbe:
+    httpGet:
+      path: api/alive
+      port: 3000
+      scheme: HTTP
+    failureThreshold: 3
+    successThreshold: 1
+    initialDelaySeconds: 10 
+    timeoutSeconds: 1
+    periodSeconds: 10
+
+service:
+  type: ClusterIP
+  annotations: {}
+  labels: {}

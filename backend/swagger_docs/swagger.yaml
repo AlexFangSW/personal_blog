@@ -1,0 +1,1093 @@
+definitions:
+  blog_entities.RetSuccess-array_entities_OutBlog:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.OutBlog'
+        type: array
+      status:
+        type: integer
+    type: object
+  blog_entities.RetSuccess-array_entities_OutBlogSimple:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.OutBlogSimple'
+        type: array
+      status:
+        type: integer
+    type: object
+  blog_entities.RetSuccess-array_entities_Tag:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.Tag'
+        type: array
+      status:
+        type: integer
+    type: object
+  blog_entities.RetSuccess-array_entities_Topic:
+    properties:
+      error:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/entities.Topic'
+        type: array
+      status:
+        type: integer
+    type: object
+  blog_entities.RetSuccess-entities_JWT:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.JWT'
+      status:
+        type: integer
+    type: object
+  blog_entities.RetSuccess-entities_OutBlog:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.OutBlog'
+      status:
+        type: integer
+    type: object
+  blog_entities.RetSuccess-entities_RowsAffected:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.RowsAffected'
+      status:
+        type: integer
+    type: object
+  blog_entities.RetSuccess-entities_Tag:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.Tag'
+      status:
+        type: integer
+    type: object
+  blog_entities.RetSuccess-entities_Topic:
+    properties:
+      error:
+        type: string
+      msg:
+        $ref: '#/definitions/entities.Topic'
+      status:
+        type: integer
+    type: object
+  blog_entities.RetSuccess-string:
+    properties:
+      error:
+        type: string
+      msg:
+        type: string
+      status:
+        type: integer
+    type: object
+  entities.InTag:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  entities.InTopic:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  entities.JWT:
+    properties:
+      jwt:
+        type: string
+    type: object
+  entities.OutBlog:
+    properties:
+      content:
+        type: string
+      contentMD5:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      pined:
+        type: boolean
+      slug:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/entities.Tag'
+        type: array
+      title:
+        type: string
+      topics:
+        items:
+          $ref: '#/definitions/entities.Topic'
+        type: array
+      updated_at:
+        type: string
+      visible:
+        type: boolean
+    type: object
+  entities.OutBlogSimple:
+    properties:
+      content:
+        type: string
+      contentMD5:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      pined:
+        type: boolean
+      slug:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      topics:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      visible:
+        type: boolean
+    type: object
+  entities.ReqInBlog:
+    properties:
+      content:
+        type: string
+      description:
+        type: string
+      pined:
+        type: boolean
+      tags:
+        items:
+          type: integer
+        type: array
+      title:
+        type: string
+      topics:
+        items:
+          type: integer
+        type: array
+      visible:
+        type: boolean
+    type: object
+  entities.RetFailed:
+    properties:
+      error:
+        type: string
+      msg:
+        type: string
+      status:
+        type: integer
+    type: object
+  entities.RowsAffected:
+    properties:
+      affectedRows:
+        type: integer
+    type: object
+  entities.Tag:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  entities.Topic:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: A place to document what I've learned.
+  title: Coding Notes
+  version: "1.0"
+paths:
+  /alive:
+    get:
+      description: Liveness probe for health check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-string'
+      summary: Liveness probe
+      tags:
+      - healthCheck
+  /auth-check:
+    post:
+      consumes:
+      - application/json
+      description: Checks if jwt is valid
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-string'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: AuthorizeCheck
+      tags:
+      - users
+  /blogs:
+    get:
+      consumes:
+      - application/json
+      description: list blogs
+      parameters:
+      - default: false
+        description: show all blogs regardless of visibility or soft delete status
+        in: query
+        name: all
+        type: boolean
+      - description: jwt token
+        in: header
+        name: Authorization
+        type: string
+      - default: false
+        description: output blog with tags and topics as slugs, not as a full struct
+        in: query
+        name: simple
+        type: boolean
+      - collectionFormat: multi
+        description: 'filter by topic ids, return blogs that have relation with all
+          specified topics. ex: ?topic=1&topic=2'
+        in: query
+        items:
+          type: integer
+        name: topic
+        type: array
+      - collectionFormat: multi
+        description: 'filter by tag ids, return blogs that have relation with all
+          specified tags, CAN ONLY BE USED IN COMBINATION WITH TOPIC. ex: ?tag=1&tag=2'
+        in: query
+        items:
+          type: integer
+        name: tag
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-array_entities_OutBlogSimple'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: List blogs
+      tags:
+      - blogs
+    post:
+      consumes:
+      - application/json
+      description: blogs must have unique titles
+      parameters:
+      - description: new blog contents
+        in: body
+        name: blog
+        required: true
+        schema:
+          $ref: '#/definitions/entities.ReqInBlog'
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Create blog
+      tags:
+      - blogs
+  /blogs/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: update blog
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_RowsAffected'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Soft delete blog
+      tags:
+      - blogs
+    get:
+      consumes:
+      - application/json
+      description: get blog
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        type: string
+      - default: false
+        description: show all blogs regardless of visibility or soft delete status
+        in: query
+        name: all
+        type: boolean
+      - description: parse markdown to html before returning
+        in: query
+        name: parsed
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Get blog
+      tags:
+      - blogs
+    post:
+      consumes:
+      - application/json
+      description: create blog with given id
+      parameters:
+      - description: blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: new blog content
+        in: body
+        name: blog
+        required: true
+        schema:
+          $ref: '#/definitions/entities.ReqInBlog'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Create blog with given id
+      tags:
+      - blogs
+    put:
+      consumes:
+      - application/json
+      description: update blog
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: new blog content
+        in: body
+        name: blog
+        required: true
+        schema:
+          $ref: '#/definitions/entities.ReqInBlog'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Update blog
+      tags:
+      - blogs
+  /blogs/delete-now/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete blog now, skip soft delete
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_RowsAffected'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Delete blog now
+      tags:
+      - blogs
+  /blogs/deleted/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete blog
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_RowsAffected'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Delete blog
+      tags:
+      - blogs
+    patch:
+      consumes:
+      - application/json
+      description: restore delete blog
+      parameters:
+      - description: target blog id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_OutBlog'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Restore delete blog
+      tags:
+      - blogs
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: login to get jwt token
+      parameters:
+      - description: user credentials
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_JWT'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "412":
+          description: Precondition Failed
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Login
+      tags:
+      - users
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: logout, deletes jwt token, needs to have valid token in the first
+        place
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-string'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "412":
+          description: Precondition Failed
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Logout
+      tags:
+      - users
+  /ready:
+    get:
+      description: Readiness probe for health check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-string'
+      summary: Readiness probe
+      tags:
+      - healthCheck
+  /tags:
+    get:
+      consumes:
+      - application/json
+      description: list all tags
+      parameters:
+      - description: topic id
+        in: query
+        name: topic
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-array_entities_Tag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: List tags
+      tags:
+      - tags
+    post:
+      consumes:
+      - application/json
+      description: tags must have unique names
+      parameters:
+      - description: new tag contents
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/entities.InTag'
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Create tag
+      tags:
+      - tags
+  /tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete tag
+      parameters:
+      - description: target tag id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_RowsAffected'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Delete tag
+      tags:
+      - tags
+    get:
+      consumes:
+      - application/json
+      description: get tag by id
+      parameters:
+      - description: target tag id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Get tags
+      tags:
+      - tags
+    put:
+      consumes:
+      - application/json
+      description: update tag
+      parameters:
+      - description: target tag id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: new tag content
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/entities.InTag'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Update tag
+      tags:
+      - tags
+  /topics:
+    get:
+      consumes:
+      - application/json
+      description: list all topics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-array_entities_Topic'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: List topics
+      tags:
+      - topics
+    post:
+      consumes:
+      - application/json
+      description: topics must have unique names
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: new topic contents
+        in: body
+        name: topic
+        required: true
+        schema:
+          $ref: '#/definitions/entities.InTopic'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_Topic'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Create topic
+      tags:
+      - topics
+  /topics/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete topic
+      parameters:
+      - description: target topic id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_RowsAffected'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Delete topic
+      tags:
+      - topics
+    get:
+      consumes:
+      - application/json
+      description: get topic by id
+      parameters:
+      - description: target topic id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_Topic'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Get topic
+      tags:
+      - topics
+    put:
+      consumes:
+      - application/json
+      description: update topic
+      parameters:
+      - description: target tag id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: new topic content
+        in: body
+        name: topic
+        required: true
+        schema:
+          $ref: '#/definitions/entities.InTopic'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blog_entities.RetSuccess-entities_Topic'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entities.RetFailed'
+      summary: Update topic
+      tags:
+      - topics
+swagger: "2.0"

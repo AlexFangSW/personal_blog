@@ -2,24 +2,108 @@ package handlers
 
 import (
 	"blog/entities"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
+	"strconv"
+
+	"github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func writeJSON(w http.ResponseWriter, err error, msg any, status int) error {
-	w.Header().Set("content-type", "application/json")
-	w.WriteHeader(status)
-	var body *entities.Ret
-	if err != nil {
-		body = entities.NewRet(err.Error(), status, msg)
-	} else {
-		body = entities.NewRet(nil, status, msg)
+var (
+	ErrorTargetNotFound           = errors.New("target not found")
+	ErrorAuthorizationFailed      = errors.New("authorization failed")
+	ErrorAuthorizationHeaderEmpty = errors.New("authorization header empty")
+)
+
+var (
+	boolMap = map[string]bool{
+		"true":  true,
+		"1":     true,
+		"false": false,
+		"0":     false,
 	}
-	if err := json.NewEncoder(w).Encode(body); err != nil {
-		slog.Error("writeJSON: encode error", "error", err.Error())
-		return fmt.Errorf("writeJSON: encode error: %w", err)
+)
+
+func strListToBool(inpt []string) ([]bool, error) {
+	capacity := len(inpt)
+	if capacity == 0 {
+		return []bool{}, nil
 	}
-	return nil
+
+	result := make([]bool, 0, capacity)
+	for _, str := range inpt {
+		boolean, ok := boolMap[str]
+		if !ok {
+			return []bool{}, fmt.Errorf("strListToBool: inpt can't be converted to bool")
+		}
+		result = append(result, boolean)
+	}
+
+	return result, nil
+}
+
+func strListToInt(inpt []string) ([]int, error) {
+	capacity := len(inpt)
+	if capacity == 0 {
+		return []int{}, nil
+	}
+
+	result := make([]int, 0, capacity)
+	for _, str := range inpt {
+		number, err := strconv.Atoi(str)
+		if err != nil {
+			return []int{}, fmt.Errorf("strListToInt: inpt can't be converted to int")
+		}
+		result = append(result, number)
+	}
+
+	return result, nil
+}
+
+func removeDuplicate[T comparable](inpt []T) []T {
+	record := map[T]bool{}
+	list := []T{}
+	for _, item := range inpt {
+		if _, ok := record[item]; !ok {
+			record[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+func verifyUser(inUser entities.InUser, user entities.User) bool {
+	slog.Debug("verifyUser")
+	if inUser.Name == user.Name {
+		return checkPasswordHash(inUser.Password, user.Password)
+	}
+	return false
+}
+
+func getSQLiteError(err error) (sqliteErr sqlite3.Error, isSQLiteError bool) {
+	if !errors.As(err, &sqlite3.Error{}) {
+		return sqlite3.Error{}, false
+	}
+
+	currentErr := err
+	for errors.Unwrap(currentErr) != nil {
+		currentErr = errors.Unwrap(currentErr)
+	}
+
+	if sqliteErr, ok := currentErr.(sqlite3.Error); ok {
+		return sqliteErr, true
+	}
+	return sqlite3.Error{}, false
 }

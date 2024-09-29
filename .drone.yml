@@ -1,0 +1,229 @@
+kind: pipeline
+type: kubernetes
+name: push-testing
+
+trigger:
+  branch: 
+    exclude:
+      - development
+      - master
+  event: 
+  - push
+
+steps:
+- name: test-backend
+  image: golang:1.22-alpine
+  commands:
+    - cd ./backend/
+    - apk add build-base 
+    - CGO_ENABLED=1 go test ./...
+
+---
+kind: pipeline
+type: kubernetes
+name: development-build
+
+trigger:
+  branch: 
+  - development
+  event: 
+  - push
+
+steps:
+- name: test-backend
+  image: golang:1.22-alpine
+  commands:
+    - cd ./backend/
+    - apk add build-base 
+    - CGO_ENABLED=1 go test ./...
+
+- name: docker-backend
+  image: docker.cloud.alexfangsw.com/cache/plugins/docker
+  settings:
+    username:
+      from_secret: docker-user
+    password:
+      from_secret: docker-password
+    registry: docker.cloud.alexfangsw.com
+    repo: docker.cloud.alexfangsw.com/blog/backend
+    cache_from: docker.cloud.alexfangsw.com/blog/backend:latest
+    context: ./backend/
+    dockerfile: ./backend/Dockerfile
+    tags:
+      - latest
+      - 0.0.1-dev
+
+- name: docker-backend-tools
+  image: docker.cloud.alexfangsw.com/cache/plugins/docker
+  settings:
+    username:
+      from_secret: docker-user
+    password:
+      from_secret: docker-password
+    registry: docker.cloud.alexfangsw.com
+    repo: docker.cloud.alexfangsw.com/blog/backend-tools
+    cache_from: docker.cloud.alexfangsw.com/blog/backend-tools:latest
+    context: ./backend/
+    target: binary
+    dockerfile: ./backend/Dockerfile
+    tags:
+      - latest
+      - 0.0.1-dev
+
+- name: docker-frontend
+  image: docker.cloud.alexfangsw.com/cache/plugins/docker
+  settings:
+    username:
+      from_secret: docker-user
+    password:
+      from_secret: docker-password
+    registry: docker.cloud.alexfangsw.com
+    repo: docker.cloud.alexfangsw.com/blog/frontend
+    cache_from: docker.cloud.alexfangsw.com/blog/frontend:latest
+    context: ./frontend/
+    dockerfile: ./frontend/Dockerfile
+    tags:
+      - latest
+      - 0.0.1-dev
+
+- name: helm
+  image: docker.cloud.alexfangsw.com/drone-plugin/helm
+  environment:
+    BACKEND_IMAGE: docker.cloud.alexfangsw.com/blog/backend
+    FRONTEND_IMAGE: docker.cloud.alexfangsw.com/blog/frontend
+    IMAGE_TAG: 0.0.1-dev
+  settings:
+    sourceDir: ./helm 
+    targetRepo: 
+      from_secret: helm-repo
+    targetBranch: development
+    gitUser:
+      from_secret: git-user
+    gitEmail:
+      from_secret: git-email
+    gitToken:
+      from_secret: git-helm-token
+    semver: 0.0.1+dev
+
+---
+kind: pipeline
+type: kubernetes
+name: release
+
+trigger:
+  event:
+    - tag
+  ref:
+    include:
+      - refs/tags/v*
+    exclude:
+      - refs/tags/**-dev
+
+steps:
+- name: test-backend
+  image: golang:1.22-alpine
+  commands:
+    - cd ./backend/
+    - apk add build-base 
+    - CGO_ENABLED=1 go test ./...
+
+- name: docker-backend
+  image: docker.cloud.alexfangsw.com/cache/plugins/docker
+  settings:
+    username:
+      from_secret: docker-user
+    password:
+      from_secret: docker-password
+    registry: docker.cloud.alexfangsw.com
+    repo: docker.cloud.alexfangsw.com/blog/backend
+    cache_from: docker.cloud.alexfangsw.com/blog/backend:latest
+    context: ./backend/
+    dockerfile: ./backend/Dockerfile
+    tags:
+      - latest
+      - ${DRONE_TAG#v}
+
+- name: docker-backend-tools
+  image: docker.cloud.alexfangsw.com/cache/plugins/docker
+  settings:
+    username:
+      from_secret: docker-user
+    password:
+      from_secret: docker-password
+    registry: docker.cloud.alexfangsw.com
+    repo: docker.cloud.alexfangsw.com/blog/backend-tools
+    cache_from: docker.cloud.alexfangsw.com/blog/backend-tools:latest
+    context: ./backend/
+    target: binary
+    dockerfile: ./backend/Dockerfile
+    tags:
+      - latest
+      - ${DRONE_TAG#v}
+
+- name: docker-frontend
+  image: docker.cloud.alexfangsw.com/cache/plugins/docker
+  settings:
+    username:
+      from_secret: docker-user
+    password:
+      from_secret: docker-password
+    registry: docker.cloud.alexfangsw.com
+    repo: docker.cloud.alexfangsw.com/blog/frontend
+    cache_from: docker.cloud.alexfangsw.com/blog/frontend:latest
+    context: ./frontend/
+    dockerfile: ./frontend/Dockerfile
+    tags:
+      - latest
+      - ${DRONE_TAG#v}
+
+- name: helm
+  image: docker.cloud.alexfangsw.com/drone-plugin/helm
+  environment:
+    BACKEND_IMAGE: docker.cloud.alexfangsw.com/blog/backend
+    FRONTEND_IMAGE: docker.cloud.alexfangsw.com/blog/frontend
+    IMAGE_TAG: ${DRONE_TAG#v}
+  settings:
+    sourceDir: ./helm 
+    targetRepo: 
+      from_secret: helm-repo
+    targetBranch: release
+    gitUser:
+      from_secret: git-user
+    gitEmail:
+      from_secret: git-email
+    gitToken:
+      from_secret: git-helm-token
+    semver: ${DRONE_TAG#v}
+
+--- 
+
+kind: pipeline
+type: kubernetes
+name: helm-test
+
+trigger:
+  branch: 
+    - helm-dev
+  event:
+    - push
+
+steps:
+- name: helm
+  image: docker.cloud.alexfangsw.com/drone-plugin/helm
+  environment:
+    BACKEND_IMAGE: docker.cloud.alexfangsw.com/blog/backend
+    FRONTEND_IMAGE: docker.cloud.alexfangsw.com/blog/frontend
+    IMAGE_TAG: 0.0.1-dev
+  settings:
+    sourceDir: ./helm 
+    targetRepo: 
+      from_secret: helm-repo
+    targetBranch: test
+    gitUser:
+      from_secret: git-user
+    gitEmail:
+      from_secret: git-email
+    gitToken:
+      from_secret: git-helm-token
+    semver: 0.0.1+dev
+    touchRevision: true
