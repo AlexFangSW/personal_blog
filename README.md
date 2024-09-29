@@ -19,8 +19,8 @@ I thought, 'why not give the standard library a try ?' After than, this project 
 I enjoy using my own editor, and I also want to seperate my content from the source code.
 
 - Deploy the server, and create a user with **[UserRegister](./backend/README.md#userregister)** CLI tool.
-- Write blogs and organize it like [dummyData](./backend/dummyData/) directory.
-- Use **[SyncTool](./backend/README.md#synctool)** to sync data to the server.
+- Write blogs and organize it like [dummyData](./backend/dummyData/) directory and store is in a seperated repository.
+- When pushed, it triggers a CI/CD pipeline that uses **[SyncTool](./backend/README.md#synctool)** to sync data to the server.
 
 
 ## Project Stucture

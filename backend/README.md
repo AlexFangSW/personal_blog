@@ -101,8 +101,7 @@ needs **JWT** token.
     </details>
 
 ### Details
-> [Swaggo](https://github.com/swaggo/swag) (auto genrate swagger.json) dosn't support JWT auth yet. 
-> The 'Authorization' header is placed as a headers param.
+> [Swaggo](https://github.com/swaggo/swag)
 - Swagger Doc: [swagger.json](./docs/swagger.json)
 
 ## Code Architecture.
@@ -181,11 +180,6 @@ The notes should be organized like `dummyData` folder
 After the first sync, an **ids.json** file will be created, which maps blog filenames to their ids.
 This prevents blog ids from changing if we lost the database and need to sync from scratch.
 
-#### About referential integrity
-If some blog's frontmetter has a tag or topic that doesn't exist,
-it will be recorded, logged out and written to a file (**data-inconsistency.json**), after which the sync process will be terminated.
-Only after passing the validation process will the data be synced to the server.
-
 ### User register
 > **This is build and placed alongside server binary in the docker image**
 
@@ -197,4 +191,3 @@ Only someone with direct access to the database can register.
 
 #### Functions
 - CRUD for user table, directly operates on the database.
-
