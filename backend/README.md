@@ -198,5 +198,3 @@ Only someone with direct access to the database can register.
 #### Functions
 - CRUD for user table, directly operates on the database.
 
-## TODO
-- Better error handling for sync tool
