@@ -130,6 +130,10 @@ func syncAll(
 			return
 		}
 
+		if err := syncHelper.DeleteBlogs(updatedBlogs.delete); err != nil {
+			processErr <- fmt.Errorf("syncAll: delete blogs failed: %w", err)
+			return
+		}
 		newIDMapping, err := syncHelper.CreateBlogs(updatedBlogs.create)
 		if err != nil {
 			processErr <- fmt.Errorf("syncAll: create blogs failed: %w", err)
@@ -137,10 +141,6 @@ func syncAll(
 		}
 		if err := syncHelper.UpdateBlogs(updatedBlogs.update); err != nil {
 			processErr <- fmt.Errorf("syncAll: update blogs failed: %w", err)
-			return
-		}
-		if err := syncHelper.DeleteBlogs(updatedBlogs.delete); err != nil {
-			processErr <- fmt.Errorf("syncAll: delete blogs failed: %w", err)
 			return
 		}
 
