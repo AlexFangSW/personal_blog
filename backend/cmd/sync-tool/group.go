@@ -141,7 +141,7 @@ func groupBlogs(localBlogs []BlogInfo, blogs []entities.OutBlogSimple) (BlogGrou
 	// title map
 	blogTitleMap := map[string]entities.OutBlogSimple{}
 	for _, blog := range blogs {
-		blogTitleMap[blog.Slug] = blog
+		blogTitleMap[blog.Title] = blog
 	}
 
 	result := BlogGroup[BlogInfo]{}
