@@ -73,7 +73,7 @@ export default async function Page({ params }) {
           <div className="divider divider-horizontal"></div>
           <p>Updated at: {updateAtStr}</p>
         </div>
-        <p className="text-center">{currentBlog.description}</p>
+        <p className="prose">{currentBlog.description}</p>
         <div className="flex flex-row flex-wrap justify-center gap-3">
           <BlogTopics topics={currentBlog.topics} />
           <div className="divider divider-horizontal"></div>
