@@ -81,7 +81,7 @@ export default async function Page({ params }) {
         </div>
       </div>
       <div className="divider" >Content</div>
-      <div className="prose w-full prose-strong:text-neutral-content text-neutral-content" style={{ overflowWrap: "break-word" }} dangerouslySetInnerHTML={{ __html: currentBlog.content }}></div>
+      <div className="prose prose-li:padding-inline-start w-full prose-strong:text-neutral-content text-neutral-content" style={{ overflowWrap: "break-word" }} dangerouslySetInnerHTML={{ __html: currentBlog.content }}></div>
     </div >
   )
 }

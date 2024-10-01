@@ -87,7 +87,7 @@ func (s *SyncHelper) createBlog(inpt BlogInfo) (result FileIDMap, oErr error) {
 	// prepare request body
 	newBlog := entities.NewBlog(
 		inpt.Frontmatter.Title,
-		strings.Split(string(content), "---")[2],
+		strings.Join(strings.Split(string(content), "---")[2:], "---"),
 		inpt.Frontmatter.Description,
 		inpt.Frontmatter.Pined,
 		inpt.Frontmatter.Visible,
@@ -210,7 +210,7 @@ func (s SyncHelper) updateBlog(inpt BlogInfo) (oErr error) {
 	// prepare request body
 	newBlog := entities.NewBlog(
 		inpt.Frontmatter.Title,
-		strings.Split(string(content), "---")[2],
+		strings.Join(strings.Split(string(content), "---")[2:], "---"),
 		inpt.Frontmatter.Description,
 		inpt.Frontmatter.Pined,
 		inpt.Frontmatter.Visible,
