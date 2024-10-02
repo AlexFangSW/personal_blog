@@ -13,6 +13,8 @@ import (
 
 	"github.com/yuin/goldmark"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
+	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer/html"
 )
 
 // Concrete implementations are at repository/<name>
@@ -355,10 +357,16 @@ func (b *Blogs) GetBlog(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	mdParser := goldmark.New(
+		goldmark.WithRendererOptions(
+			html.WithUnsafe(),
+		),
 		goldmark.WithExtensions(
 			highlighting.NewHighlighting(
 				highlighting.WithStyle("gruvbox"),
 			),
+		),
+		goldmark.WithParserOptions(
+			parser.WithAutoHeadingID(),
 		),
 	)
 
