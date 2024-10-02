@@ -62,10 +62,10 @@ export default async function Page({ params }) {
   // https://github.com/tailwindlabs/tailwindcss-typography
   return (
     <div className="flex flex-col min-h-screen items-center p-5">
-      <h1 className={`title text-5xl text-center ${merianda.className}`}>
+      <h1 className={`title lg:w-[700px] text-5xl text-center ${merianda.className}`}>
         {currentBlog.title}
       </h1>
-      <div className="flex flex-col items-center lg:pt-10 pt-5 gap-y-5">
+      <div className="flex flex-col items-center lg:w-8/12 lg:pt-10 pt-5 gap-y-5">
         <div className="flex flex-col lg:flex-row flex-wrap justify-center items-center lg:gap-2">
           <p>By: AlexFangSW</p>
           <div className="divider divider-horizontal"></div>
@@ -73,7 +73,7 @@ export default async function Page({ params }) {
           <div className="divider divider-horizontal"></div>
           <p>Updated at: {updateAtStr}</p>
         </div>
-        <p className="prose">{currentBlog.description}</p>
+        <p className="prose lg:w-[700px] lg:max-w-none">{currentBlog.description}</p>
         <div className="flex flex-row flex-wrap justify-center gap-3">
           <BlogTopics topics={currentBlog.topics} />
           <div className="divider divider-horizontal"></div>
@@ -81,7 +81,7 @@ export default async function Page({ params }) {
         </div>
       </div>
       <div className="divider" >Content</div>
-      <div className="prose prose-li:padding-inline-start w-full prose-strong:text-neutral-content text-neutral-content" style={{ overflowWrap: "break-word" }} dangerouslySetInnerHTML={{ __html: currentBlog.content }}></div>
+      <div className="prose lg:w-[700px] lg:max-w-none prose-li:padding-inline-start prose-strong:text-neutral-content text-neutral-content" style={{ overflowWrap: "break-word" }} dangerouslySetInnerHTML={{ __html: currentBlog.content }}></div>
     </div >
   )
 }
