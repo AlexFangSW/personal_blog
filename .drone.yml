@@ -52,6 +52,7 @@ steps:
     tags:
       - latest
       - 0.0.1-dev
+    mtu: 1450
 
 - name: docker-backend-tools
   image: docker.cloud.alexfangsw.com/cache/plugins/docker
@@ -69,6 +70,7 @@ steps:
     tags:
       - latest
       - 0.0.1-dev
+    mtu: 1450
 
 - name: docker-frontend
   image: docker.cloud.alexfangsw.com/cache/plugins/docker
@@ -85,6 +87,7 @@ steps:
     tags:
       - latest
       - 0.0.1-dev
+    mtu: 1450
 
 - name: helm
   image: docker.cloud.alexfangsw.com/drone-plugin/helm
@@ -142,6 +145,7 @@ steps:
     tags:
       - latest
       - ${DRONE_TAG#v}
+    mtu: 1450
 
 - name: docker-backend-tools
   image: docker.cloud.alexfangsw.com/cache/plugins/docker
@@ -159,6 +163,7 @@ steps:
     tags:
       - latest
       - ${DRONE_TAG#v}
+    mtu: 1450
 
 - name: docker-frontend
   image: docker.cloud.alexfangsw.com/cache/plugins/docker
@@ -175,6 +180,7 @@ steps:
     tags:
       - latest
       - ${DRONE_TAG#v}
+    mtu: 1450
 
 - name: helm
   image: docker.cloud.alexfangsw.com/drone-plugin/helm
