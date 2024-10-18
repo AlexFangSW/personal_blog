@@ -16,6 +16,14 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="google-site-verification" content="_fWGovQfPY9FNJH0U2_DaOt2hkLyIpB3zJlC2b6Jcyw" />
       </head>
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-C15NTGQ9XB"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments)}
+        gtag('js', new Date());
+
+        gtag('config', 'G-C15NTGQ9XB');
+      </script>
       <body>
         <BlogNav />
         <ErrorBoundary fallback={<ErrorPage />} >
