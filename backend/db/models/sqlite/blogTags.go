@@ -20,28 +20,31 @@ func (b *BlogTags) Upsert(ctx context.Context, tx *sql.Tx, blogID int, tagIDs []
 		return nil
 	}
 
-	var values strings.Builder
-	for i, id := range tagIDs {
-		values.WriteString("(" + fmt.Sprint(blogID) + "," + fmt.Sprint(id) + ")")
-		if i < len(tagIDs)-1 {
-			values.WriteString(",")
-		}
+	valueStrings := make([]string, 0, len(tagIDs))
+	valueArgs := make([]any, 0, len(tagIDs)*2)
+
+	for _, id := range tagIDs {
+		valueStrings = append(valueStrings, "(?, ?)")
+		valueArgs = append(valueArgs, blogID)
+		valueArgs = append(valueArgs, id)
 	}
 
-	stmt := `
-	REPLACE INTO blog_tags
+	stmt := fmt.Sprintf(
+		`
+	REPLACE INTO blog_tags 
 	(
 		blog_id,
 		tag_id
 	)
-	VALUES 
-	` + values.String() + ";"
-
+	VALUES %s`,
+		strings.Join(valueStrings, ","),
+	)
 	util.LogQuery(ctx, "CreateBlogTags:", stmt)
 
 	_, insertErr := tx.ExecContext(
 		ctx,
 		stmt,
+		valueArgs...,
 	)
 	if insertErr != nil {
 		return fmt.Errorf("Create: insert blog_tags failed: %w", insertErr)
@@ -73,20 +76,27 @@ func (b *BlogTags) InverseDelete(ctx context.Context, tx *sql.Tx, blogID int, ta
 		return nil
 	}
 
-	values, err := genInCondition(tagIDs)
-	if err != nil {
-		return fmt.Errorf("InverseDelete: gen IN condition failed: %w", err)
+	valueStrings := make([]string, 0, len(tagIDs))
+	valueArgs := make([]any, 0, len(tagIDs)+1)
+	valueArgs = append(valueArgs, blogID)
+
+	for _, id := range tagIDs {
+		valueStrings = append(valueStrings, "?")
+		valueArgs = append(valueArgs, id)
 	}
 
-	stmt := `
+	stmt := fmt.Sprintf(
+		`
 	DELETE FROM blog_tags
 	WHERE 
 		blog_id = ?
-	AND tag_id NOT IN ` + values
+	AND tag_id NOT IN (%s)`,
+		strings.Join(valueStrings, ","),
+	)
 
 	util.LogQuery(ctx, "InverseDeleteBlogTags:", stmt)
 
-	res, err := tx.ExecContext(ctx, stmt, blogID)
+	res, err := tx.ExecContext(ctx, stmt, valueArgs...)
 	if err != nil {
 		return fmt.Errorf("InverseDelete: exec context failed: %w", err)
 	}
