@@ -6,7 +6,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strconv"
+	"slices"
+	"strings"
 	"time"
 )
 
@@ -206,13 +207,19 @@ func (b *Blogs) List(ctx context.Context, db *sql.DB) ([]entities.Blog, error) {
 
 // only return visible and none soft deleted blogs
 func (b *Blogs) ListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) ([]entities.Blog, error) {
-	values, err := genInCondition(topicIDs)
-	if err != nil {
-		return []entities.Blog{}, fmt.Errorf("ListByTopicIDs: gen topic IN condition failed: %w", err)
+	valueStrings := make([]string, 0, len(topicIDs))
+	valueArgs := make([]any, 0, len(topicIDs)+1)
+
+	for _, id := range topicIDs {
+		valueStrings = append(valueStrings, "?")
+		valueArgs = append(valueArgs, id)
 	}
 
+	valueArgs = append(valueArgs, len(topicIDs))
+
 	// Only return blogs that has relation with all input topics
-	stmt := `
+	stmt := fmt.Sprintf(
+		`
 	SELECT 
 		id,
 		created_at,
@@ -228,16 +235,18 @@ func (b *Blogs) ListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) 
 	WHERE id IN (
 		SELECT blog_id FROM (
 			SELECT blog_id,COUNT(blog_id) as count FROM blog_topics
-			WHERE topic_id IN ` + values + ` 
+			WHERE topic_id IN (%s) 
 			GROUP BY blog_id
-		) WHERE count = ` + strconv.Itoa(len(topicIDs)) + `
+		) WHERE count = ?
 	)
 	AND visible = 1 AND deleted_at = ""
-	ORDER BY updated_at DESC;`
+	ORDER BY updated_at DESC`,
+		strings.Join(valueStrings, ","),
+	)
 
 	util.LogQuery(ctx, "ListBlogsByTopicIDs:", stmt)
 
-	rows, err := db.QueryContext(ctx, stmt)
+	rows, err := db.QueryContext(ctx, stmt, valueArgs...)
 	if err != nil {
 		return []entities.Blog{}, fmt.Errorf("ListByTopicIDs: list blogs failed: %w", err)
 	}
@@ -259,18 +268,25 @@ func (b *Blogs) ListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) 
 
 // only return visible and none soft deleted blogs
 func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicIDs, tagIDs []int) ([]entities.Blog, error) {
-
-	topicCondition, err := genInCondition(topicIDs)
-	if err != nil {
-		return []entities.Blog{}, fmt.Errorf("ListByTopicAndTagIDs: gen topic IN condition failed: %w", err)
+	topicValueStrings := make([]string, 0, len(topicIDs))
+	topicValueArgs := make([]any, 0, len(topicIDs))
+	for _, id := range topicIDs {
+		topicValueStrings = append(topicValueStrings, "?")
+		topicValueArgs = append(topicValueArgs, id)
 	}
 
-	tagCondition, err := genInCondition(tagIDs)
-	if err != nil {
-		return []entities.Blog{}, fmt.Errorf("ListByTopicAndTagIDs: gen tag IN condition failed: %w", err)
+	tagValueStrings := make([]string, 0, len(tagIDs))
+	tagValueArgs := make([]any, 0, len(tagIDs))
+	for _, id := range tagIDs {
+		tagValueStrings = append(tagValueStrings, "?")
+		tagValueArgs = append(tagValueArgs, id)
 	}
 
-	stmt := `
+	valueArgs := slices.Concat(topicValueArgs, tagValueArgs)
+	valueArgs = append(valueArgs, len(topicIDs)*len(tagIDs))
+
+	stmt := fmt.Sprintf(
+		`
 	SELECT 
 		id,
 		created_at,
@@ -288,17 +304,20 @@ func (b *Blogs) ListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicIDs, 
 			SELECT blog_id, COUNT(blog_id) AS count FROM ( 
 				SELECT * FROM blog_topics JOIN blog_tags ON blog_topics.blog_id = blog_tags.blog_id 
 			)
-			WHERE topic_id IN ` + topicCondition + " AND tag_id IN" + tagCondition + `
+			WHERE topic_id IN (%s) AND tag_id IN (%s)
 			GROUP BY blog_id
-		) WHERE count = ` + strconv.Itoa(len(topicIDs)*len(tagIDs)) + `
+		) WHERE count = ?
 	) 
 	AND visible = 1 
 	AND deleted_at = ""
-	ORDER BY updated_at DESC;`
+	ORDER BY updated_at DESC;`,
+		strings.Join(topicValueStrings, ","),
+		strings.Join(tagValueStrings, ","),
+	)
 
 	util.LogQuery(ctx, "ListBlogsByTopicAndTagIDs:", stmt)
 
-	rows, err := db.QueryContext(ctx, stmt)
+	rows, err := db.QueryContext(ctx, stmt, valueArgs...)
 	if err != nil {
 		return []entities.Blog{}, fmt.Errorf("ListByTopicAndTagIDs: list blogs failed: %w", err)
 	}
@@ -378,13 +397,19 @@ func (b *Blogs) AdminList(ctx context.Context, db *sql.DB) ([]entities.Blog, err
 
 // return blogs regardless of visiblility and soft delete status
 func (b *Blogs) AdminListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []int) ([]entities.Blog, error) {
-	values, err := genInCondition(topicIDs)
-	if err != nil {
-		return []entities.Blog{}, fmt.Errorf("AdminListByTopicIDs: gen topic IN condition failed: %w", err)
+	valueStrings := make([]string, 0, len(topicIDs))
+	valueArgs := make([]any, 0, len(topicIDs)+1)
+
+	for _, id := range topicIDs {
+		valueStrings = append(valueStrings, "?")
+		valueArgs = append(valueArgs, id)
 	}
 
+	valueArgs = append(valueArgs, len(topicIDs))
+
 	// Only return blogs that has relation with all input topics
-	stmt := `
+	stmt := fmt.Sprintf(
+		`
 	SELECT 
 		id,
 		created_at,
@@ -400,15 +425,17 @@ func (b *Blogs) AdminListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []
 	WHERE id IN (
 		SELECT blog_id FROM (
 			SELECT blog_id,COUNT(blog_id) as count FROM blog_topics
-			WHERE topic_id IN ` + values + ` 
+			WHERE topic_id IN (%s)
 			GROUP BY blog_id
-		) WHERE count = ` + strconv.Itoa(len(topicIDs)) + `
+		) WHERE count = ?
 	)
-	ORDER BY updated_at DESC;`
+	ORDER BY updated_at DESC`,
+		strings.Join(valueStrings, ","),
+	)
 
 	util.LogQuery(ctx, "AdminListBlogsByTopicIDs:", stmt)
 
-	rows, err := db.QueryContext(ctx, stmt)
+	rows, err := db.QueryContext(ctx, stmt, valueArgs...)
 	if err != nil {
 		return []entities.Blog{}, fmt.Errorf("AdminListBlogsByTopicIDs: list blogs failed: %w", err)
 	}
@@ -430,17 +457,25 @@ func (b *Blogs) AdminListByTopicIDs(ctx context.Context, db *sql.DB, topicIDs []
 
 // return blogs regardless of visiblility and soft delete status
 func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topicIDs, tagIDs []int) ([]entities.Blog, error) {
-	topicCondition, err := genInCondition(topicIDs)
-	if err != nil {
-		return []entities.Blog{}, fmt.Errorf("AdminListByTopicAndTagIDs: gen topic IN condition failed: %w", err)
+	topicValueStrings := make([]string, 0, len(topicIDs))
+	topicValueArgs := make([]any, 0, len(topicIDs))
+	for _, id := range topicIDs {
+		topicValueStrings = append(topicValueStrings, "?")
+		topicValueArgs = append(topicValueArgs, id)
 	}
 
-	tagCondition, err := genInCondition(tagIDs)
-	if err != nil {
-		return []entities.Blog{}, fmt.Errorf("AdminListByTopicAndTagIDs: gen tag IN condition failed: %w", err)
+	tagValueStrings := make([]string, 0, len(tagIDs))
+	tagValueArgs := make([]any, 0, len(tagIDs))
+	for _, id := range tagIDs {
+		tagValueStrings = append(tagValueStrings, "?")
+		tagValueArgs = append(tagValueArgs, id)
 	}
 
-	stmt := `
+	valueArgs := slices.Concat(topicValueArgs, tagValueArgs)
+	valueArgs = append(valueArgs, len(topicIDs)*len(tagIDs))
+
+	stmt := fmt.Sprintf(
+		`
 	SELECT 
 		id,
 		created_at,
@@ -458,15 +493,17 @@ func (b *Blogs) AdminListByTopicAndTagIDs(ctx context.Context, db *sql.DB, topic
 			SELECT blog_id, COUNT(blog_id) AS count FROM ( 
 				SELECT * FROM blog_topics JOIN blog_tags ON blog_topics.blog_id = blog_tags.blog_id 
 			)
-			WHERE topic_id IN ` + topicCondition + " AND tag_id IN" + tagCondition + `
+			WHERE topic_id IN (%s) AND tag_id IN (%s)
 			GROUP BY blog_id
-		) WHERE count = ` + strconv.Itoa(len(topicIDs)*len(tagIDs)) + `
+		) WHERE count = ?	)
+	ORDER BY updated_at DESC`,
+		strings.Join(topicValueStrings, ","),
+		strings.Join(tagValueStrings, ","),
 	)
-	ORDER BY updated_at DESC;`
 
 	util.LogQuery(ctx, "AdminListBlogsByTopicAndTagIDs:", stmt)
 
-	rows, err := db.QueryContext(ctx, stmt)
+	rows, err := db.QueryContext(ctx, stmt, valueArgs...)
 	if err != nil {
 		return []entities.Blog{}, fmt.Errorf("AdminListByTopicAndTagIDs: list blogs failed: %w", err)
 	}
