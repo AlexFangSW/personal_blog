@@ -6,6 +6,6 @@
     "dsnURL": "./blog.db"
   },
   "jwt": {
-    "secret": "sl1qFhD2vp"
+    "secret": "REPLACE_ME"
   }
 }
